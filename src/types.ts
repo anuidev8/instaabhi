@@ -108,7 +108,16 @@ export interface VideoReelInput {
 export interface VideoReelDraft {
   id: string;
   topic: string;
+  /** Structured script fields — matches reference project schema */
+  headline: string;   // Hook (first 3–5 seconds)
+  body: string;       // Main value / steps
+  cta: string;        // Call-to-action
+  hashtags: string[];
+  brandScore: number;
+  /** Assembled from headline + body + cta — used for Fal TTS */
   script: string;
+  /** Full Instagram caption with hashtags — ready to post */
+  caption: string;
   scenes: ReelScene[];
   videoReelInput: VideoReelInput;
   status: VideoReelStatus;

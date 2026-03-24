@@ -1,16 +1,16 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Plus, Loader2, Sparkles, Trash2, X, Video, Download,
   ChevronRight, AlertCircle, Clock, Globe, Upload, Film,
-  CheckCircle2, Play, Mic, Clapperboard,
+  CheckCircle2, Play, Clapperboard, MessageSquare, Copy,
 } from 'lucide-react';
 import { VideoReelDraft, VideoReelInput, VideoReelMode, BrandContext } from '../types';
-import { generateVideoReelScript } from '../services/geminiService';
+import { generateVideoReelContent } from '../services/videoReelService';
 import { generateReelVideo, FalJobPayload } from '../services/falService';
 
-// ─── Brand Context ────────────────────────────────────────────────────────────
-// Edit these to match your brand. voiceId is an ElevenLabs voice ID.
+// ─── Brand Context (used by Fal video pipeline only) ─────────────────────────
+// Script + caption generation uses REEL_BRAND_CONTEXT from videoReelService internally.
 const BRAND_CONTEXT: BrandContext = {
   name: 'Meditate with Abhi',
   handle: '@meditatewithAbhi',
@@ -20,7 +20,7 @@ const BRAND_CONTEXT: BrandContext = {
   voiceId: (import.meta.env.VITE_ELEVENLABS_VOICE_ID as string | undefined)?.trim() || 'i6TuzGTpruZ0jkkUZQyp',
 };
 
-// ─── Suggested topics ────────────────────────────────────────────────────────
+// ─── Suggested topics (hidden from UI, kept for future use) ──────────────────
 const SUGGESTED_TOPICS = [
   '4-7-8 breathing for sleep',
   'Box breathing for anxiety',
@@ -56,7 +56,7 @@ function StatusBadge({ status }: { status: VideoReelDraft['status'] }) {
   );
 }
 
-// ─── Scene card ───────────────────────────────────────────────────────────────
+// ─── Scene card (hidden from main UI, kept for Fal pipeline reference) ────────
 function SceneCard({ scene, total }: { scene: VideoReelDraft['scenes'][0]; total: number; 'key'?: React.Key }) {
   return (
     <div className="bg-stone-50 rounded-xl border border-stone-200 p-4 space-y-2">
@@ -80,33 +80,58 @@ function SceneCard({ scene, total }: { scene: VideoReelDraft['scenes'][0]; total
 interface VideoReelsDraftTabProps {
   reelDrafts: VideoReelDraft[];
   setReelDrafts: React.Dispatch<React.SetStateAction<VideoReelDraft[]>>;
+  initialPrompt?: string;
+  onInitialPromptConsumed?: () => void;
 }
 
-export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts }: VideoReelsDraftTabProps) {
+export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts, initialPrompt, onInitialPromptConsumed }: VideoReelsDraftTabProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [generatingVideoId, setGeneratingVideoId] = useState<string | null>(null);
+  const [copiedScript, setCopiedScript] = useState<string | null>(null);
+  const [copiedCaption, setCopiedCaption] = useState<string | null>(null);
+
+  const handleCopyScript = (id: string, script: string) => {
+    navigator.clipboard.writeText(script);
+    setCopiedScript(id);
+    setTimeout(() => setCopiedScript(null), 2000);
+  };
+
+  const handleCopyCaption = (id: string, caption: string) => {
+    navigator.clipboard.writeText(caption);
+    setCopiedCaption(id);
+    setTimeout(() => setCopiedCaption(null), 2000);
+  };
 
   // ── Modal form state ──────────────────────────────────────────────────────
   const [prompt, setPrompt] = useState('');
   const [mode, setMode] = useState<VideoReelMode>('PROMPT_ONLY');
   const [refVideoUrl, setRefVideoUrl] = useState('');
   const [refImages, setRefImages] = useState<string[]>([]);
-  const [targetDuration, setTargetDuration] = useState(20);
+  const [targetDuration, setTargetDuration] = useState(30);
   const [language, setLanguage] = useState('en');
   const [isGeneratingScript, setIsGeneratingScript] = useState(false);
 
   const refImageInputRef = useRef<HTMLInputElement>(null);
+
+  // Open modal pre-filled when navigated from Content Calendar
+  useEffect(() => {
+    if (initialPrompt) {
+      setPrompt(initialPrompt);
+      setIsModalOpen(true);
+      onInitialPromptConsumed?.();
+    }
+  }, [initialPrompt]);
 
   const resetModal = () => {
     setPrompt('');
     setMode('PROMPT_ONLY');
     setRefVideoUrl('');
     setRefImages([]);
-    setTargetDuration(20);
+    setTargetDuration(30);
     setLanguage('en');
   };
 
-  // ── Step 1: Generate script from Gemini ──────────────────────────────────
+  // ── Step 1: Generate script + caption from Gemini (brand context) ─────────
   const handleGenerateScript = async () => {
     if (!prompt.trim()) return;
     setIsGeneratingScript(true);
@@ -121,12 +146,18 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts }: VideoR
     };
 
     try {
-      const { script, scenes } = await generateVideoReelScript(videoReelInput, BRAND_CONTEXT);
+      const { headline, body, cta, hashtags, brandScore, script, caption, scenes } = await generateVideoReelContent(videoReelInput);
 
       const newDraft: VideoReelDraft = {
         id: crypto.randomUUID(),
         topic: prompt.trim(),
+        headline,
+        body,
+        cta,
+        hashtags,
+        brandScore,
         script,
+        caption,
         scenes,
         videoReelInput,
         status: 'draft',
@@ -147,7 +178,6 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts }: VideoR
   const handleGenerateVideo = async (draft: VideoReelDraft) => {
     setGeneratingVideoId(draft.id);
 
-    // Mark as generating in UI
     setReelDrafts(prev =>
       prev.map(d => d.id === draft.id ? { ...d, status: 'generating' } : d)
     );
@@ -234,7 +264,7 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts }: VideoR
           </div>
           <h3 className="text-lg font-medium text-stone-900 mb-2">No video reels yet</h3>
           <p className="text-stone-500 max-w-sm mx-auto mb-6">
-            Click "New Reel" to generate a script and scenes, then produce your first AI-powered Instagram Reel.
+            Click "New Reel" to generate a script and caption, then produce your first AI-powered Instagram Reel.
           </p>
           <button
             onClick={() => setIsModalOpen(true)}
@@ -273,10 +303,6 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts }: VideoR
                       <Globe className="w-3.5 h-3.5" />
                       {LANGUAGES.find(l => l.code === draft.videoReelInput.language)?.label ?? draft.videoReelInput.language}
                     </span>
-                    <span className="flex items-center gap-1">
-                      <Clapperboard className="w-3.5 h-3.5" />
-                      {draft.scenes.length} scenes
-                    </span>
                   </div>
                 </div>
                 <button
@@ -291,35 +317,73 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts }: VideoR
               {/* Card body */}
               <div className="p-6 grid md:grid-cols-2 gap-8">
                 {/* Left: Script */}
-                <div>
-                  <h4 className="font-semibold text-stone-900 mb-3 flex items-center gap-2 text-sm">
-                    <Mic className="w-4 h-4 text-stone-400" />
-                    Voiceover Script
-                  </h4>
-                  <div className="bg-stone-50 rounded-xl border border-stone-200 p-4 text-sm text-stone-700 leading-relaxed max-h-48 overflow-y-auto custom-scrollbar whitespace-pre-wrap">
-                    {draft.script}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold text-stone-900 flex items-center gap-2 text-sm">
+                      <Clapperboard className="w-4 h-4 text-stone-400" />
+                      Script
+                    </h4>
+                    <button
+                      onClick={() => handleCopyScript(draft.id, draft.script ?? '')}
+                      className="flex items-center gap-1 text-xs text-stone-400 hover:text-stone-700 transition-colors"
+                      title="Copy script"
+                    >
+                      {copiedScript === draft.id ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copiedScript === draft.id ? 'Copied!' : 'Copy'}
+                    </button>
+                  </div>
+                  <p className="text-sm font-semibold text-stone-900">{draft.headline ?? draft.script}</p>
+                  <p className="text-[13px] text-stone-600 leading-relaxed whitespace-pre-wrap">{draft.body ?? ''}</p>
+                  {/* brandScore bar */}
+                  <div className="space-y-1 pt-1">
+                    <div className="flex items-center justify-between text-xs text-stone-500">
+                      <span>Brand score</span>
+                      <span className="font-semibold text-stone-700">{draft.brandScore ?? 0}/100</span>
+                    </div>
+                    <div className="h-1.5 bg-stone-200 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-emerald-500 transition-all"
+                        style={{ width: `${draft.brandScore ?? 0}%` }}
+                      />
+                    </div>
                   </div>
                 </div>
 
-                {/* Right: Scenes + actions */}
+                {/* Right: Caption + actions */}
                 <div className="space-y-4">
-                  <h4 className="font-semibold text-stone-900 flex items-center gap-2 text-sm">
-                    <Clapperboard className="w-4 h-4 text-stone-400" />
-                    Scene Breakdown
-                  </h4>
-                  <div className="space-y-3 max-h-48 overflow-y-auto custom-scrollbar pr-1">
-                    {draft.scenes.map(scene => (
-                      <SceneCard key={scene.index} scene={scene} total={draft.scenes.length} />
-                    ))}
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold text-stone-900 flex items-center gap-2 text-sm">
+                      <MessageSquare className="w-4 h-4 text-stone-400" />
+                      Instagram Caption
+                    </h4>
+                    <button
+                      onClick={() => handleCopyCaption(draft.id, draft.caption ?? '')}
+                      className="flex items-center gap-1 text-xs text-stone-400 hover:text-stone-700 transition-colors"
+                      title="Copy caption"
+                    >
+                      {copiedCaption === draft.id ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copiedCaption === draft.id ? 'Copied!' : 'Copy'}
+                    </button>
+                  </div>
+                  <div className="bg-stone-50 rounded-xl border border-stone-200 p-4 text-sm max-h-64 overflow-y-auto custom-scrollbar">
+                    <p className="text-[13px] text-stone-700 leading-relaxed whitespace-pre-wrap">{draft.caption ?? ''}</p>
+                  </div>
+
+                  {/* Scene Breakdown — hidden from UI, data kept for Fal pipeline */}
+                  <div className="hidden">
+                    <div className="space-y-3">
+                      {draft.scenes.map(scene => (
+                        <SceneCard key={scene.index} scene={scene} total={draft.scenes.length} />
+                      ))}
+                    </div>
                   </div>
 
                   {/* Action area */}
                   <div className="pt-2">
                     {draft.status === 'draft' && (
                       <button
-                        onClick={() => handleGenerateVideo(draft)}
-                        disabled={generatingVideoId !== null}
-                        className="w-full py-3 bg-stone-900 hover:bg-stone-800 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled
+                        className="w-full py-3 bg-stone-200 text-stone-400 rounded-xl font-medium flex items-center justify-center gap-2 cursor-not-allowed"
                       >
                         <Play className="w-5 h-5" />
                         Generate Reel Video
@@ -350,7 +414,6 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts }: VideoR
                           <Download className="w-5 h-5" />
                           Download Reel Video
                         </a>
-                        {/* Inline preview */}
                         <video
                           src={draft.finalVideoUrl}
                           controls
@@ -372,7 +435,6 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts }: VideoR
                         </div>
                         <button
                           onClick={() => {
-                            // Reset to draft status so user can retry
                             setReelDrafts(prev =>
                               prev.map(d =>
                                 d.id === draft.id
@@ -470,8 +532,8 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts }: VideoR
                   />
                 </div>
 
-                {/* Mode */}
-                <div>
+                {/* Mode — hidden for now */}
+                <div className="hidden">
                   <label className="block text-sm font-medium text-stone-700 mb-2">Mode</label>
                   <div className="grid grid-cols-3 gap-2">
                     {(
@@ -497,8 +559,8 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts }: VideoR
                   </div>
                 </div>
 
-                {/* Mode-specific inputs */}
-                {mode === 'FROM_REFERENCE_VIDEO' && (
+                {/* Mode-specific inputs — hidden for now */}
+                {false && mode === 'FROM_REFERENCE_VIDEO' && (
                   <div>
                     <label htmlFor="ref-video" className="block text-sm font-medium text-stone-700 mb-1.5">
                       Reference Video URL
@@ -514,7 +576,7 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts }: VideoR
                   </div>
                 )}
 
-                {mode === 'FROM_IMAGES' && (
+                {false && mode === 'FROM_IMAGES' && (
                   <div>
                     <label className="block text-sm font-medium text-stone-700 mb-1.5">
                       Reference Images (up to 4)
@@ -549,8 +611,8 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts }: VideoR
                   </div>
                 )}
 
-                {/* Duration + Language */}
-                <div className="grid grid-cols-2 gap-4">
+                {/* Duration + Language — hidden for now */}
+                <div className="hidden grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-stone-700 mb-1.5">
                       Target Duration

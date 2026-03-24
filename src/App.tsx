@@ -21,6 +21,8 @@ export default function App() {
   const [readyPosts, setReadyPosts] = useState<ReadyPost[]>([]);
   const [reelDrafts, setReelDrafts] = useState<VideoReelDraft[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [pendingReelPrompt, setPendingReelPrompt] = useState<string | undefined>(undefined);
+  const [pendingDraftTopic, setPendingDraftTopic] = useState<string | undefined>(undefined);
 
   // ── Persist & hydrate from IndexedDB ──────────────────────────────────────
   useEffect(() => {
@@ -86,7 +88,7 @@ export default function App() {
               }`}
             >
               <PenTool className="w-4 h-4" />
-              Drafts
+              Carousel Drafts
             </button>
             <button
               onClick={() => setActiveTab('visuals')}
@@ -140,6 +142,8 @@ export default function App() {
                 setDrafts={setDrafts}
                 setReadyPosts={setReadyPosts}
                 onPostReady={() => setActiveTab('visuals')}
+                initialTopic={pendingDraftTopic}
+                onInitialTopicConsumed={() => setPendingDraftTopic(undefined)}
               />
             </motion.div>
           )}
@@ -164,7 +168,12 @@ export default function App() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <VideoReelsDraftTab reelDrafts={reelDrafts} setReelDrafts={setReelDrafts} />
+              <VideoReelsDraftTab
+                reelDrafts={reelDrafts}
+                setReelDrafts={setReelDrafts}
+                initialPrompt={pendingReelPrompt}
+                onInitialPromptConsumed={() => setPendingReelPrompt(undefined)}
+              />
             </motion.div>
           )}
 
@@ -176,7 +185,16 @@ export default function App() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <ContentCalendarTab />
+              <ContentCalendarTab
+                onGenerateVideoScript={(title) => {
+                  setPendingReelPrompt(title);
+                  setActiveTab('reels');
+                }}
+                onCreateCarouselDraft={(title) => {
+                  setPendingDraftTopic(title);
+                  setActiveTab('drafts');
+                }}
+              />
             </motion.div>
           )}
         </AnimatePresence>

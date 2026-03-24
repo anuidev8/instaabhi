@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Plus, Copy, Upload, CheckCircle2, Loader2, Sparkles, Trash2, ArrowRight, PenTool, LayoutGrid, X, Wand2 } from 'lucide-react';
 import { Draft, ReadyPost } from '../types';
@@ -19,9 +19,11 @@ interface DraftsTabProps {
   setDrafts: React.Dispatch<React.SetStateAction<Draft[]>>;
   setReadyPosts: React.Dispatch<React.SetStateAction<ReadyPost[]>>;
   onPostReady: () => void;
+  initialTopic?: string;
+  onInitialTopicConsumed?: () => void;
 }
 
-export default function DraftsTab({ drafts, setDrafts, setReadyPosts, onPostReady }: DraftsTabProps) {
+export default function DraftsTab({ drafts, setDrafts, setReadyPosts, onPostReady, initialTopic, onInitialTopicConsumed }: DraftsTabProps) {
   const [isGeneratingDraft, setIsGeneratingDraft] = useState(false);
   const [isGeneratingImages, setIsGeneratingImages] = useState<string | null>(null);
   const [isBuildingPost, setIsBuildingPost] = useState<string | null>(null);
@@ -34,6 +36,15 @@ export default function DraftsTab({ drafts, setDrafts, setReadyPosts, onPostRead
   const [isTopicModalOpen, setIsTopicModalOpen] = useState(false);
   const [customTopic, setCustomTopic] = useState("");
   const [slideCount, setSlideCount] = useState(6); // default 6, max 8
+
+  // Open topic modal pre-filled when navigated from Content Calendar
+  useEffect(() => {
+    if (initialTopic) {
+      setCustomTopic(initialTopic);
+      setIsTopicModalOpen(true);
+      onInitialTopicConsumed?.();
+    }
+  }, [initialTopic]);
 
   const handleAutoBuildDraft = async (topic?: string) => {
     setIsTopicModalOpen(false);

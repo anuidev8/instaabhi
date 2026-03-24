@@ -585,17 +585,7 @@ export default function ContentVisualsTab({ readyPosts, setReadyPosts }: Content
         <p className="text-stone-500 mt-1">Your ready-to-post Instagram carousels.</p>
       </div>
 
-      <div
-        className={`rounded-xl border px-4 py-3 text-sm ${
-          isCheckingConnection
-            ? 'bg-stone-50 border-stone-200 text-stone-600'
-            : isInstagramConnected
-            ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-            : 'bg-red-50 border-red-200 text-red-700'
-        }`}
-      >
-        {isCheckingConnection ? 'Checking Instagram connection...' : connectionMessage}
-      </div>
+      {/* Instagram connection banner — hidden */}
 
       {readyPosts.length === 0 ? (
         <div className="text-center py-20 bg-white rounded-2xl border border-stone-200 border-dashed">
@@ -629,27 +619,7 @@ export default function ContentVisualsTab({ readyPosts, setReadyPosts }: Content
                   <p className="text-stone-500 text-sm">Topic: {post.topic}</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 justify-end">
-                  <button
-                    onClick={() => handleCreateInstagramDraft(post)}
-                    disabled={creatingDraftId === post.id || publishingPostId === post.id}
-                    className="text-xs font-semibold px-3 py-2 rounded-md bg-indigo-50 text-indigo-700 hover:bg-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    title="Create Instagram draft container"
-                  >
-                    {creatingDraftId === post.id ? 'Creating Draft...' : 'Send Draft to Instagram'}
-                  </button>
-                  <button
-                    onClick={() => handlePublishCarouselLive(post)}
-                    disabled={
-                      !isInstagramConnected ||
-                      creatingDraftId === post.id ||
-                      publishingPostId === post.id
-                    }
-                    className="text-xs font-semibold px-3 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
-                    title="Upload, create container, and publish live (carousel or single)"
-                  >
-                    <Share2 className="w-3.5 h-3.5" />
-                    {publishingPostId === post.id ? 'Publishing...' : 'Publish live to Instagram'}
-                  </button>
+                  {/* Instagram draft + publish buttons — hidden */}
                   <button 
                     onClick={() => handleDeletePost(post.id)}
                     className="text-stone-400 hover:text-red-500 transition-colors p-2"
@@ -659,26 +629,7 @@ export default function ContentVisualsTab({ readyPosts, setReadyPosts }: Content
                   </button>
                 </div>
               </div>
-              {(post.instagramDraftStatus === 'created' || post.instagramDraftStatus === 'error') && (
-                <div className={`px-6 py-3 text-sm border-b ${post.instagramDraftStatus === 'created' ? 'bg-emerald-50 text-emerald-800 border-emerald-100' : 'bg-red-50 text-red-700 border-red-100'}`}>
-                  {post.instagramDraftStatus === 'created'
-                    ? `Draft container created (id: ${post.instagramDraftCreationId}). Note: Meta Graph API does not guarantee this appears in Instagram app drafts.`
-                    : post.instagramDraftError}
-                </div>
-              )}
-              {(post.instagramPublishStatus === 'published' || post.instagramPublishStatus === 'error') && (
-                <div
-                  className={`px-6 py-3 text-sm border-b ${
-                    post.instagramPublishStatus === 'published'
-                      ? 'bg-emerald-50 text-emerald-900 border-emerald-100'
-                      : 'bg-red-50 text-red-700 border-red-100'
-                  }`}
-                >
-                  {post.instagramPublishStatus === 'published'
-                    ? `Published to Instagram${post.instagramPublishedMediaId ? ` (media id: ${post.instagramPublishedMediaId})` : ''}.`
-                    : post.instagramPublishError}
-                </div>
-              )}
+              {/* Instagram draft/publish status rows — hidden */}
 
               <div className="p-6 grid lg:grid-cols-12 gap-8">
                 {/* Left Column: Phone Mockup or Visual Grid */}
