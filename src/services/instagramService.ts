@@ -44,14 +44,20 @@ export async function sendDraftContainerToInstagram(params: {
   return payload as DraftContainerResponse;
 }
 
-export async function uploadImagesForInstagramDraft(images: string[]): Promise<string[]> {
+export async function uploadImagesForInstagramDraft(
+  images: string[],
+  options?: { folder?: string },
+): Promise<string[]> {
   const response = await fetch(`${API_BASE}/uploads/cloudinary`, {
     method: "POST",
     headers: {
       "content-type": "application/json",
       authorization: `Bearer ${DEV_USER_ID}`,
     },
-    body: JSON.stringify({ images }),
+    body: JSON.stringify({
+      images,
+      ...(options?.folder ? { folder: options.folder } : {}),
+    }),
   });
 
   const payload = await response.json().catch(() => ({}));

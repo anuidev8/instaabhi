@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Download, CheckCircle2, Trash2, LayoutGrid, Image as ImageIcon, Settings2, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Plus, Minus, ZoomIn, RotateCcw, Smartphone, Grid3X3, Share2 } from 'lucide-react';
+import { FileArchive, CheckCircle2, Trash2, LayoutGrid, Image as ImageIcon, Settings2, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Plus, Minus, ZoomIn, RotateCcw, Smartphone, Grid3X3, Share2 } from 'lucide-react';
 import { ReadyPost, CaptionBlocks } from '../types';
 import InstagramMobileMockup from './InstagramMobileMockup';
 import CaptionEditor from './CaptionEditor';
@@ -12,9 +12,13 @@ import {
   sendDraftContainerToInstagram,
   uploadImagesForInstagramDraft,
 } from '../services/instagramService';
+import { bitmapToSquareCarouselDataUrl, imageToSquareCarouselDataUrl, CAROUSEL_SLIDE_PX } from '../utils/carouselSlideExport';
+import { downloadCarouselSlidesAsZip } from '../utils/carouselZipDownload';
 
-function SplitImagesDisplay({ post, onDownloadAll }: { post: ReadyPost, onDownloadAll: (images: string[]) => void }) {
+function SplitImagesDisplay({ post }: { post: ReadyPost }) {
   const [splitImages, setSplitImages] = useState<string[]>([]);
+  const [zipBusy, setZipBusy] = useState(false);
+  const [zipError, setZipError] = useState<string | null>(null);
   const [cols, setCols] = useState(2);
   const [rows, setRows] = useState(4);
   const [offsetX, setOffsetX] = useState(0);
@@ -26,6 +30,10 @@ function SplitImagesDisplay({ post, onDownloadAll }: { post: ReadyPost, onDownlo
   const [slideOffsets, setSlideOffsets] = useState<Record<number, {x: number, y: number}>>({});
 
   const isGrid = post.images.length === 1;
+
+  useEffect(() => {
+    if (!isGrid && scale > 1) setScale(1);
+  }, [isGrid, scale]);
 
   const updateSlideOffset = (index: number, dx: number, dy: number) => {
     setSlideOffsets(prev => {
@@ -46,8 +54,9 @@ function SplitImagesDisplay({ post, onDownloadAll }: { post: ReadyPost, onDownlo
   };
 
   useEffect(() => {
+    setZipError(null);
     if (!post.images || post.images.length === 0) return;
-    
+
     if (isGrid) {
       const imgSrc = post.images[0];
       const img = new Image();
@@ -87,8 +96,8 @@ function SplitImagesDisplay({ post, onDownloadAll }: { post: ReadyPost, onDownlo
                 sourceX, sourceY, sWidth, sHeight, // Source
                 0, 0, cellWidth, cellHeight // Destination
               );
-              
-              newImages.push(canvas.toDataURL('image/png'));
+
+              newImages.push(bitmapToSquareCarouselDataUrl(canvas));
             }
           }
         }
@@ -102,31 +111,15 @@ function SplitImagesDisplay({ post, onDownloadAll }: { post: ReadyPost, onDownlo
           const img = new Image();
           img.crossOrigin = "anonymous";
           img.onload = () => {
-            const canvas = document.createElement('canvas');
-            const size = Math.min(img.width, img.height);
-            canvas.width = size;
-            canvas.height = size;
-            const ctx = canvas.getContext('2d');
-            
-            if (ctx) {
-              const sOffset = slideOffsets[index] || { x: 0, y: 0 };
-              
-              const sWidth = size / scale;
-              const sHeight = size / scale;
-              
-              const sourceX = -offsetX - sOffset.x + (img.width - sWidth) / 2;
-              const sourceY = -offsetY - sOffset.y + (img.height - sHeight) / 2;
-              
-              ctx.drawImage(
-                img,
-                sourceX, sourceY, sWidth, sHeight,
-                0, 0, size, size
-              );
-              
-              resolve(canvas.toDataURL('image/png'));
-            } else {
-              resolve(imgSrc);
-            }
+            const sOffset = slideOffsets[index] || { x: 0, y: 0 };
+            const out = imageToSquareCarouselDataUrl(img, {
+              scale,
+              offsetX,
+              offsetY,
+              slideOffsetX: sOffset.x,
+              slideOffsetY: sOffset.y,
+            });
+            resolve(out || imgSrc);
           };
           img.onerror = () => resolve(imgSrc);
           img.src = imgSrc;
@@ -136,6 +129,19 @@ function SplitImagesDisplay({ post, onDownloadAll }: { post: ReadyPost, onDownlo
       });
     }
   }, [post.images, padding, gap, cols, rows, offsetX, offsetY, scale, slideOffsets, isGrid]);
+
+  const handleDownloadZip = async () => {
+    if (splitImages.length === 0) return;
+    setZipBusy(true);
+    setZipError(null);
+    try {
+      await downloadCarouselSlidesAsZip(splitImages, post.topic);
+    } catch (err) {
+      setZipError(err instanceof Error ? err.message : 'Could not create ZIP.');
+    } finally {
+      setZipBusy(false);
+    }
+  };
 
   return (
     <div>
@@ -152,14 +158,20 @@ function SplitImagesDisplay({ post, onDownloadAll }: { post: ReadyPost, onDownlo
             <Settings2 className="w-4 h-4" /> {isGrid ? 'Adjust Split' : 'Adjust Images'}
           </button>
           <button
-            onClick={() => onDownloadAll(splitImages)}
-            className="text-sm font-medium text-emerald-600 hover:text-emerald-700 flex items-center gap-1.5 bg-emerald-50 px-3 py-1.5 rounded-md transition-colors"
-            disabled={splitImages.length === 0}
+            type="button"
+            onClick={() => void handleDownloadZip()}
+            className="text-sm font-medium text-emerald-600 hover:text-emerald-700 flex items-center gap-1.5 bg-emerald-50 px-3 py-1.5 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={splitImages.length === 0 || zipBusy}
+            title={`ZIP of ${CAROUSEL_SLIDE_PX}×${CAROUSEL_SLIDE_PX} PNGs — Instagram carousel 1:1, full image letterboxed (no crop)`}
           >
-            <Download className="w-4 h-4" /> Download All
+            <FileArchive className="w-4 h-4" /> {zipBusy ? 'Building ZIP…' : 'Download ZIP'}
           </button>
         </div>
       </div>
+
+      <p className="text-xs text-stone-500 mb-3 -mt-1">
+        Exports match Instagram carousel: {CAROUSEL_SLIDE_PX}×{CAROUSEL_SLIDE_PX} square; your artwork is scaled to fit inside without cropping (letterbox).
+      </p>
       
       {showSettings && (
         <motion.div 
@@ -236,15 +248,20 @@ function SplitImagesDisplay({ post, onDownloadAll }: { post: ReadyPost, onDownlo
                   <label className="font-medium text-stone-700 flex items-center gap-1.5"><ZoomIn className="w-4 h-4 text-stone-400" /> Zoom / Scale</label>
                   <span className="text-stone-500">{scale.toFixed(2)}x</span>
                 </div>
-                <input 
-                  type="range" 
-                  min="0.5" 
-                  max="2" 
+                <input
+                  type="range"
+                  min="0.5"
+                  max={isGrid ? 2 : 1}
                   step="0.01"
-                  value={scale} 
+                  value={scale}
                   onChange={(e) => setScale(Number(e.target.value))}
                   className="w-full accent-emerald-600"
                 />
+                {!isGrid && (
+                  <p className="text-xs text-stone-500 mt-1">
+                    Max 1× for multi-slide export: full image stays visible inside {CAROUSEL_SLIDE_PX}×{CAROUSEL_SLIDE_PX} (Instagram 1:1).
+                  </p>
+                )}
               </div>
               {isGrid && (
                 <>
@@ -290,8 +307,8 @@ function SplitImagesDisplay({ post, onDownloadAll }: { post: ReadyPost, onDownlo
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
           {splitImages.map((src, i) => (
-            <div key={i} className="relative group rounded-xl overflow-hidden border border-stone-200 shadow-sm aspect-[4/5] bg-stone-100 flex items-center justify-center">
-              <img src={src} alt={`Slide ${i + 1}`} className="w-full h-full object-cover" />
+            <div key={i} className="relative group rounded-xl overflow-hidden border border-stone-200 shadow-sm aspect-square bg-stone-100 flex items-center justify-center">
+              <img src={src} alt={`Slide ${i + 1}`} className="w-full h-full object-contain" />
               <div className="absolute top-2 left-2 bg-black/60 text-white text-xs font-medium px-2 py-1 rounded-md backdrop-blur-md">
                 {i + 1}
               </div>
@@ -308,6 +325,12 @@ function SplitImagesDisplay({ post, onDownloadAll }: { post: ReadyPost, onDownlo
             </div>
           ))}
         </div>
+      )}
+
+      {zipError && (
+        <p className="mt-2 text-sm text-red-600" role="alert">
+          {zipError}
+        </p>
       )}
     </div>
   );
@@ -336,18 +359,6 @@ export default function ContentVisualsTab({ readyPosts, setReadyPosts }: Content
       microInstruction: lines[1] || '',
       cta: lines[lines.length - 1] || '',
     };
-  };
-
-  const handleDownloadSlides = (post: ReadyPost, imagesToDownload: string[]) => {
-    imagesToDownload.forEach((dataUrl, i) => {
-      const link = document.createElement('a');
-      link.href = dataUrl;
-      const slideNumber = i + 1;
-      link.download = `${post.topic.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_slide_${slideNumber}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    });
   };
 
   const handleDeletePost = (id: string) => {
@@ -712,10 +723,7 @@ export default function ContentVisualsTab({ readyPosts, setReadyPosts }: Content
                       }}
                     />
                   ) : (
-                    <SplitImagesDisplay
-                      post={post}
-                      onDownloadAll={(images) => handleDownloadSlides(post, images)}
-                    />
+                    <SplitImagesDisplay post={post} />
                   )}
                 </div>
 

@@ -104,6 +104,13 @@ app.post("/uploads/cloudinary", async (req, res) => {
     return res.status(400).json({ error: "Maximum 10 images per upload batch" });
   }
 
+  const rawFolder =
+    typeof req.body?.folder === "string" ? req.body.folder.trim() : "";
+  const folder =
+    rawFolder && /^[a-zA-Z0-9_\-/]+$/.test(rawFolder)
+      ? rawFolder
+      : "meditate-with-abhi/instagram-drafts";
+
   try {
     const urls = await Promise.all(
       images.map(async (image: string, index: number) => {
@@ -117,7 +124,7 @@ app.post("/uploads/cloudinary", async (req, res) => {
         }
 
         const upload = await cloudinary.uploader.upload(trimmed, {
-          folder: "meditate-with-abhi/instagram-drafts",
+          folder,
           resource_type: "image",
         });
         if (!upload.secure_url) {

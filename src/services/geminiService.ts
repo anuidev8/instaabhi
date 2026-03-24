@@ -208,7 +208,8 @@ const IMAGE_MODEL =
  * Encodes the cosmic_gold_breathwork style from the @meditate_with_abhi brand.
  */
 const SHARED_IMAGE_CONTEXT =
-  'Square 1080x1080px Instagram carousel slide for @meditate_with_abhi / School of Breath. ' +
+  'Single square 1:1 Instagram carousel slide, exactly 1080x1080 pixels for @meditate_with_abhi / School of Breath. ' +
+  'One image only: no collages, no split or multi-panel layouts, no extra outer frames beyond the artwork itself. ' +
   'Background: deep dark cosmic nebula, near-black (#080614) blending into deep indigo (#1A1040), ' +
   'warm amber nebula clouds mid-distance, scattered gold particle dust and sparkles throughout. ' +
   'Overlay: semi-transparent golden sacred geometry mandala in background. ' +

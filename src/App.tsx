@@ -5,14 +5,15 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { LayoutGrid, PenTool, Loader2, Video } from 'lucide-react';
+import { LayoutGrid, PenTool, Loader2, Video, CalendarDays } from 'lucide-react';
 import { get, set } from 'idb-keyval';
 import { Draft, ReadyPost, VideoReelDraft } from './types';
 import DraftsTab from './components/DraftsTab';
 import ContentVisualsTab from './components/ContentVisualsTab';
 import VideoReelsDraftTab from './components/VideoReelsDraftTab';
+import ContentCalendarTab from './components/ContentCalendarTab';
 
-type Tab = 'drafts' | 'visuals' | 'reels';
+type Tab = 'drafts' | 'visuals' | 'reels' | 'calendar';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('drafts');
@@ -109,6 +110,17 @@ export default function App() {
               <Video className="w-4 h-4" />
               Video Reels
             </button>
+            <button
+              onClick={() => setActiveTab('calendar')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
+                activeTab === 'calendar'
+                  ? 'bg-stone-100 text-stone-900'
+                  : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50'
+              }`}
+            >
+              <CalendarDays className="w-4 h-4" />
+              Content Calendar
+            </button>
           </nav>
         </div>
       </header>
@@ -153,6 +165,18 @@ export default function App() {
               transition={{ duration: 0.2 }}
             >
               <VideoReelsDraftTab reelDrafts={reelDrafts} setReelDrafts={setReelDrafts} />
+            </motion.div>
+          )}
+
+          {activeTab === 'calendar' && (
+            <motion.div
+              key="calendar"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ContentCalendarTab />
             </motion.div>
           )}
         </AnimatePresence>
