@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { CaptionBlocks } from '../types';
 import { assembleCaptionFromBlocks, regenerateCaption } from '../services/geminiService';
+import { useWakeLock } from '../lib/useWakeLock';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 interface CaptionEditorProps {
@@ -87,6 +88,7 @@ export default function CaptionEditor({
   const [showRegenModal, setShowRegenModal] = useState(false);
   const [regenInstruction, setRegenInstruction] = useState('');
   const [isRegenerating, setIsRegenerating] = useState(false);
+  useWakeLock(isRegenerating);
   const [regenHistory, setRegenHistory] = useState<{ blocks: CaptionBlocks; hashtags: string[] }[]>([]);
 
   // Hashtag edit state

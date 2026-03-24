@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Plus, Copy, Upload, CheckCircle2, Loader2, Sparkles, Trash2, ArrowRight, PenTool, LayoutGrid, X, Wand2 } from 'lucide-react';
 import { Draft, ReadyPost } from '../types';
 import { generateDraft, generatePostContent, generateCarouselImagesWithProvider, type ImageProvider } from '../services/geminiService';
+import { useWakeLock } from '../lib/useWakeLock';
 
 const SUGGESTED_TOPICS = [
   "Square Breathing",
@@ -26,6 +27,7 @@ interface DraftsTabProps {
 export default function DraftsTab({ drafts, setDrafts, setReadyPosts, onPostReady, initialTopic, onInitialTopicConsumed }: DraftsTabProps) {
   const [isGeneratingDraft, setIsGeneratingDraft] = useState(false);
   const [isGeneratingImages, setIsGeneratingImages] = useState<string | null>(null);
+  useWakeLock(isGeneratingDraft || isGeneratingImages !== null);
   const [isBuildingPost, setIsBuildingPost] = useState<string | null>(null);
   const [imageProvider, setImageProvider] = useState<ImageProvider>('google');
   const [copiedPrompt, setCopiedPrompt] = useState<string | null>(null);

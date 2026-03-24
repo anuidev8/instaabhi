@@ -8,6 +8,7 @@ import {
 import { VideoReelDraft, VideoReelInput, VideoReelMode, BrandContext } from '../types';
 import { generateVideoReelContent } from '../services/videoReelService';
 import { generateReelVideo, FalJobPayload } from '../services/falService';
+import { useWakeLock } from '../lib/useWakeLock';
 
 // ─── Brand Context (used by Fal video pipeline only) ─────────────────────────
 // Script + caption generation uses REEL_BRAND_CONTEXT from videoReelService internally.
@@ -110,6 +111,7 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts, initialP
   const [targetDuration, setTargetDuration] = useState(30);
   const [language, setLanguage] = useState('en');
   const [isGeneratingScript, setIsGeneratingScript] = useState(false);
+  useWakeLock(isGeneratingScript);
 
   const refImageInputRef = useRef<HTMLInputElement>(null);
 

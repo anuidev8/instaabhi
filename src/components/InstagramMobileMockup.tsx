@@ -10,6 +10,7 @@ import {
   APP_MOCKUP_PATHS,
   type ImageProvider,
 } from '../services/geminiService';
+import { useWakeLock } from '../lib/useWakeLock';
 
 interface InstagramMobileMockupProps {
   post: ReadyPost;
@@ -26,6 +27,7 @@ export default function InstagramMobileMockup({
 }: InstagramMobileMockupProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [regeneratingIndex, setRegeneratingIndex] = useState<number | null>(null);
+  useWakeLock(regeneratingIndex !== null);
   const [showReplaceModal, setShowReplaceModal] = useState<number | null>(null);
 
   // Replace modal state
