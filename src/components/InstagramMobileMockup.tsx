@@ -1,8 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronLeft, ChevronRight, RefreshCw, Loader2, X, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, RefreshCw, Loader2, X, Sparkles, Wand2, Eye, EyeOff, ImageIcon } from 'lucide-react';
 import { ReadyPost } from '../types';
-import { regenerateSingleSlideImage, type ImageProvider } from '../services/geminiService';
+import {
+  regenerateSingleSlideImage,
+  getSlidePromptForIndex,
+  generateSlidePromptSuggestion,
+  buildLastSlideFromMockup,
+  APP_MOCKUP_PATHS,
+  type ImageProvider,
+} from '../services/geminiService';
 
 interface InstagramMobileMockupProps {
   post: ReadyPost;
@@ -20,27 +27,120 @@ export default function InstagramMobileMockup({
   const [currentSlide, setCurrentSlide] = useState(0);
   const [regeneratingIndex, setRegeneratingIndex] = useState<number | null>(null);
   const [showReplaceModal, setShowReplaceModal] = useState<number | null>(null);
-  const [changeInstruction, setChangeInstruction] = useState('');
+
+  // Replace modal state
+  const [promptText, setPromptText] = useState('');
+  const [showFullPrompt, setShowFullPrompt] = useState(false);
+  const [isSuggestingPrompt, setIsSuggestingPrompt] = useState(false);
+  const [suggestionHistory, setSuggestionHistory] = useState<string[]>([]);
+
+  // App mockup picker state (for last/recap slide)
+  const [selectedMockupIndex, setSelectedMockupIndex] = useState(0);
+  const [mockupPreviews, setMockupPreviews] = useState<Record<number, string>>({});
 
   const images = post.images;
+  const slideCount = post.slides.length;
   const canRegenerate =
-    (post.imagePrompt || (post.slideImagePrompts && post.slideImagePrompts.length >= 8)) &&
-    post.slides.length > 0;
+    (post.imagePrompt || (post.slideImagePrompts && post.slideImagePrompts.length >= slideCount)) &&
+    slideCount > 0;
 
-  const handleRegenerate = async (index: number) => {
+  const isRecapSlide = (index: number) => {
+    const slide = post.slides[index];
+    return index === slideCount - 1 || slide?.role === 'recap';
+  };
+
+  // When the replace modal opens, pre-fill the prompt with the AI-generated prompt for that slide
+  useEffect(() => {
+    if (showReplaceModal === null) return;
+    const existingPrompt = getSlidePromptForIndex(post, showReplaceModal);
+    setPromptText(existingPrompt);
+    setShowFullPrompt(false);
+    setSuggestionHistory([]);
+    // Reset mockup selector to a deterministic starting choice
+    setSelectedMockupIndex(showReplaceModal % APP_MOCKUP_PATHS.length);
+  }, [showReplaceModal]);
+
+  // Build mockup preview thumbnails on demand
+  const loadMockupPreview = async (mockupIdx: number) => {
+    if (mockupPreviews[mockupIdx]) return;
+    const slide = showReplaceModal !== null ? post.slides[showReplaceModal] : null;
+    try {
+      const preview = await buildLastSlideFromMockup(
+        APP_MOCKUP_PATHS[mockupIdx],
+        slide?.headline || 'READY TO RESET?',
+        slide?.body || 'Download The School of Breath App\nfor guided sessions.'
+      );
+      setMockupPreviews(prev => ({ ...prev, [mockupIdx]: preview }));
+    } catch { /* silent */ }
+  };
+
+  useEffect(() => {
+    if (showReplaceModal !== null && isRecapSlide(showReplaceModal)) {
+      // Pre-load first 3 previews
+      [0, 1, 2].forEach(loadMockupPreview);
+    }
+  }, [showReplaceModal]);
+
+  const handleAiSuggest = async () => {
+    if (showReplaceModal === null) return;
+    setIsSuggestingPrompt(true);
+    try {
+      const slide = post.slides[showReplaceModal];
+      const suggestion = await generateSlidePromptSuggestion(
+        slide || { text: promptText },
+        showReplaceModal,
+        slideCount,
+        promptText
+      );
+      setSuggestionHistory(prev => [promptText, ...prev.slice(0, 4)]);
+      setPromptText(prev => `${prev}\n\nIMPROVEMENT: ${suggestion}`);
+    } catch (err) {
+      console.error('AI suggest failed:', err);
+    } finally {
+      setIsSuggestingPrompt(false);
+    }
+  };
+
+  const handleRestoreSuggestion = (older: string) => {
+    setSuggestionHistory(prev => prev.slice(1));
+    setPromptText(older);
+  };
+
+  const handleRegenerateRecap = async (index: number) => {
+    setRegeneratingIndex(index);
+    setShowReplaceModal(null);
+    try {
+      const slide = post.slides[index];
+      const dataUrl = await buildLastSlideFromMockup(
+        APP_MOCKUP_PATHS[selectedMockupIndex],
+        slide?.headline || 'READY TO RESET?',
+        slide?.body || 'Download The School of Breath App\nfor guided sessions.'
+      );
+      const newImages = [...images];
+      newImages[index] = dataUrl;
+      onImagesChange(newImages);
+    } catch (err) {
+      console.error('Mockup regeneration failed:', err);
+      alert('Failed to apply app mockup. Please try again.');
+    } finally {
+      setRegeneratingIndex(null);
+    }
+  };
+
+  const handleRegenerateWithPrompt = async (index: number) => {
     if (!canRegenerate) {
       alert('This post was built from uploaded images. Regeneration requires AI-generated content.');
       return;
     }
     setRegeneratingIndex(index);
     setShowReplaceModal(null);
-    setChangeInstruction('');
     try {
+      // Use the (possibly edited) promptText as the changeInstruction override
       const newImage = await regenerateSingleSlideImage(
         post,
         index,
         imageProvider,
-        changeInstruction.trim() || undefined
+        promptText.trim() || undefined
       );
       const newImages = [...images];
       newImages[index] = newImage;
@@ -52,6 +152,17 @@ export default function InstagramMobileMockup({
       setRegeneratingIndex(null);
     }
   };
+
+  const handleRegenerate = (index: number) => {
+    if (isRecapSlide(index)) {
+      handleRegenerateRecap(index);
+    } else {
+      handleRegenerateWithPrompt(index);
+    }
+  };
+
+  const slideRole = showReplaceModal !== null ? (post.slides[showReplaceModal]?.role || null) : null;
+  const isModalRecap = showReplaceModal !== null && isRecapSlide(showReplaceModal);
 
   return (
     <div className="flex flex-col items-center gap-6">
@@ -127,7 +238,7 @@ export default function InstagramMobileMockup({
                 </div>
               )}
 
-              {/* Nav arrows (outside image area, for desktop) */}
+              {/* Nav arrows */}
               {images.length > 1 && (
                 <>
                   <button
@@ -146,7 +257,7 @@ export default function InstagramMobileMockup({
               )}
             </div>
 
-            {/* Action bar (Instagram-like) */}
+            {/* Action bar */}
             <div className="flex items-center gap-4 px-3 py-2 border-t border-stone-200 bg-white shrink-0">
               <div className="flex gap-4">
                 <span className="text-xl">♡</span>
@@ -160,7 +271,7 @@ export default function InstagramMobileMockup({
         </div>
       </div>
 
-      {/* Slide thumbnails with Replace */}
+      {/* Slide thumbnails */}
       <div className="flex flex-col items-center gap-3 w-full max-w-[280px]">
         <p className="text-sm text-stone-500">
           Slide {currentSlide + 1} of {images.length}
@@ -180,6 +291,12 @@ export default function InstagramMobileMockup({
                     <Loader2 className="w-5 h-5 text-white animate-spin" />
                   </div>
                 )}
+                {/* Recap badge */}
+                {isRecapSlide(i) && (
+                  <div className="absolute bottom-0 left-0 right-0 bg-amber-500/80 text-white text-[8px] font-bold text-center py-0.5">
+                    APP
+                  </div>
+                )}
               </button>
               {canRegenerate && regeneratingIndex === null && (
                 <button
@@ -195,12 +312,12 @@ export default function InstagramMobileMockup({
         </div>
         {canRegenerate && (
           <p className="text-xs text-stone-400 text-center">
-            Click the ↻ icon on any slide to replace or redo it
+            Click ↻ on any slide to replace or redo it
           </p>
         )}
       </div>
 
-      {/* Replace modal */}
+      {/* ─── Replace Modal ─────────────────────────────────────────────────── */}
       <AnimatePresence>
         {showReplaceModal !== null && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -212,62 +329,196 @@ export default function InstagramMobileMockup({
               className="absolute inset-0 bg-stone-900/50 backdrop-blur-sm"
             />
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, scale: 0.95, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full max-w-md bg-white rounded-2xl shadow-xl border border-stone-200 p-6"
+              className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-stone-200 overflow-hidden"
             >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-stone-900 flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-emerald-500" />
-                  Replace slide {showReplaceModal + 1}
-                </h3>
+              {/* Modal header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-stone-100 bg-stone-50/60">
+                <div>
+                  <h3 className="text-lg font-bold text-stone-900 flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-emerald-500" />
+                    Replace Slide {showReplaceModal + 1}
+                    {slideRole && (
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-stone-200 text-stone-600 uppercase tracking-wide">
+                        {slideRole.replace('_', ' ')}
+                      </span>
+                    )}
+                  </h3>
+                  <p className="text-xs text-stone-500 mt-0.5">
+                    {isModalRecap
+                      ? 'Pick an app mockup and apply it as the CTA slide.'
+                      : 'Edit the image prompt below or get an AI suggestion, then regenerate.'}
+                  </p>
+                </div>
                 <button
                   onClick={() => setShowReplaceModal(null)}
-                  className="p-2 text-stone-400 hover:text-stone-600 rounded-full hover:bg-stone-100"
+                  className="p-2 text-stone-400 hover:text-stone-600 rounded-full hover:bg-stone-100 transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <p className="text-sm text-stone-600 mb-4">
-                Regenerate this slide with AI. Optionally specify what to change:
-              </p>
-              <input
-                type="text"
-                value={changeInstruction}
-                onChange={(e) => setChangeInstruction(e.target.value)}
-                placeholder="e.g. Make the text larger, fix typo in headline, darker background..."
-                className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 mb-4 text-stone-900 placeholder:text-stone-400"
-              />
-              <div className="flex gap-2 mb-4">
-                <label className="flex-1 text-sm font-medium text-stone-700">Model:</label>
-                <select
-                  value={imageProvider}
-                  onChange={(e) => onImageProviderChange(e.target.value as ImageProvider)}
-                  className="flex-1 px-3 py-2 text-sm border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-                >
-                  <option value="google">Google (Nano Banana)</option>
-                  <option value="openai">OpenAI (GPT Image 1.5)</option>
-                </select>
+
+              <div className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
+
+                {/* ── RECAP / APP MOCKUP PICKER ────────────────────────── */}
+                {isModalRecap ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-sm font-medium text-stone-700">
+                      <ImageIcon className="w-4 h-4 text-amber-500" />
+                      Choose App Mockup
+                      <span className="text-xs text-stone-400 font-normal">(real School of Breath screenshots)</span>
+                    </div>
+
+                    <div className="grid grid-cols-4 gap-2">
+                      {APP_MOCKUP_PATHS.map((path, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => {
+                            setSelectedMockupIndex(idx);
+                            loadMockupPreview(idx);
+                          }}
+                          className={`relative rounded-xl overflow-hidden border-2 aspect-square transition-all ${
+                            selectedMockupIndex === idx
+                              ? 'border-emerald-500 ring-2 ring-emerald-200 shadow-md'
+                              : 'border-stone-200 hover:border-stone-300'
+                          }`}
+                        >
+                          {mockupPreviews[idx] ? (
+                            <img src={mockupPreviews[idx]} alt={`Mockup ${idx + 1}`} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-[#0A0720] to-[#1A1040] flex items-center justify-center">
+                              <span className="text-amber-400 text-xs font-bold">{idx + 1}</span>
+                            </div>
+                          )}
+                          {selectedMockupIndex === idx && (
+                            <div className="absolute inset-0 bg-emerald-500/20 flex items-center justify-center">
+                              <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center">
+                                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                              </div>
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Preview of selected composite */}
+                    {mockupPreviews[selectedMockupIndex] && (
+                      <div className="rounded-xl overflow-hidden border border-stone-200 bg-stone-50">
+                        <img
+                          src={mockupPreviews[selectedMockupIndex]}
+                          alt="Preview"
+                          className="w-full object-cover max-h-48"
+                        />
+                      </div>
+                    )}
+
+                    <p className="text-xs text-stone-400">
+                      The selected mockup will be composited with your CTA headline and handle on a dark overlay.
+                    </p>
+                  </div>
+                ) : (
+                  /* ── REGULAR SLIDE: PROMPT EDITOR ──────────────────── */
+                  <div className="space-y-4">
+
+                    {/* Prompt label + toggle full/short */}
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium text-stone-700">
+                        Image Prompt
+                        <span className="ml-1.5 text-xs text-stone-400 font-normal">
+                          (pre-filled from your original AI generation)
+                        </span>
+                      </label>
+                      <button
+                        onClick={() => setShowFullPrompt(v => !v)}
+                        className="flex items-center gap-1 text-xs text-stone-400 hover:text-stone-600 transition-colors"
+                      >
+                        {showFullPrompt ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                        {showFullPrompt ? 'Collapse' : 'Show full prompt'}
+                      </button>
+                    </div>
+
+                    {/* Prompt textarea */}
+                    <textarea
+                      value={promptText}
+                      onChange={(e) => setPromptText(e.target.value)}
+                      rows={showFullPrompt ? 10 : 4}
+                      className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-stone-800 text-sm placeholder:text-stone-400 resize-none font-mono leading-relaxed transition-all"
+                      placeholder="Edit the prompt, or use ✨ AI Suggest to get a brand-accurate improvement..."
+                    />
+
+                    {/* AI Suggest button + undo */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={handleAiSuggest}
+                        disabled={isSuggestingPrompt}
+                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-sm font-medium rounded-xl transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+                      >
+                        {isSuggestingPrompt ? (
+                          <><Loader2 className="w-4 h-4 animate-spin" /> Thinking…</>
+                        ) : (
+                          <><Wand2 className="w-4 h-4" /> ✨ AI Suggest</>
+                        )}
+                      </button>
+
+                      {suggestionHistory.length > 0 && (
+                        <button
+                          onClick={() => handleRestoreSuggestion(suggestionHistory[0])}
+                          className="text-xs text-stone-400 hover:text-stone-600 underline transition-colors"
+                        >
+                          ↩ Undo suggestion
+                        </button>
+                      )}
+
+                      <span className="ml-auto text-xs text-stone-400">
+                        {promptText.length} chars
+                      </span>
+                    </div>
+
+                    {/* What AI Suggest does */}
+                    <p className="text-xs text-stone-400 bg-stone-50 rounded-lg px-3 py-2 border border-stone-100">
+                      <strong className="text-stone-500">✨ AI Suggest</strong> — analyzes your slide's role, content, and current prompt against the brand's visual rules (cosmic gold, sacred geometry, glow, etc.) and appends a specific improvement instruction.
+                    </p>
+
+                    {/* Model selector */}
+                    <div className="flex items-center gap-3">
+                      <label className="text-sm font-medium text-stone-700 whitespace-nowrap">Image model:</label>
+                      <select
+                        value={imageProvider}
+                        onChange={(e) => onImageProviderChange(e.target.value as ImageProvider)}
+                        className="flex-1 px-3 py-2 text-sm border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white"
+                      >
+                        <option value="google">Google (Nano Banana)</option>
+                        <option value="openai">OpenAI (GPT Image 1.5)</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="flex gap-3">
+
+              {/* Modal footer */}
+              <div className="flex gap-3 px-6 py-4 border-t border-stone-100 bg-stone-50/60">
                 <button
                   onClick={() => setShowReplaceModal(null)}
-                  className="flex-1 py-2.5 rounded-xl border border-stone-200 text-stone-700 font-medium hover:bg-stone-50"
+                  className="flex-1 py-2.5 rounded-xl border border-stone-200 text-stone-700 font-medium hover:bg-stone-100 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
-                  onClick={() => handleRegenerate(showReplaceModal)}
+                  onClick={() => handleRegenerate(showReplaceModal!)}
                   disabled={regeneratingIndex !== null}
-                  className="flex-1 py-2.5 rounded-xl bg-emerald-600 text-white font-medium hover:bg-emerald-700 flex items-center justify-center gap-2 disabled:opacity-60"
+                  className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
                 >
                   {regeneratingIndex !== null ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <><Loader2 className="w-5 h-5 animate-spin" /> Generating…</>
+                  ) : isModalRecap ? (
+                    <><ImageIcon className="w-5 h-5" /> Apply Mockup</>
                   ) : (
-                    <RefreshCw className="w-5 h-5" />
+                    <><RefreshCw className="w-5 h-5" /> Regenerate Slide</>
                   )}
-                  Regenerate
                 </button>
               </div>
             </motion.div>

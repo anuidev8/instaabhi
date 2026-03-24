@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Copy, Download, CheckCircle2, Trash2, LayoutGrid, Image as ImageIcon, Settings2, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Plus, Minus, ZoomIn, RotateCcw, Smartphone, Grid3X3 } from 'lucide-react';
-import { ReadyPost } from '../types';
+import { Download, CheckCircle2, Trash2, LayoutGrid, Image as ImageIcon, Settings2, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Plus, Minus, ZoomIn, RotateCcw, Smartphone, Grid3X3 } from 'lucide-react';
+import { ReadyPost, CaptionBlocks } from '../types';
 import InstagramMobileMockup from './InstagramMobileMockup';
+import CaptionEditor from './CaptionEditor';
+import { assembleCaptionFromBlocks } from '../services/geminiService';
 import type { ImageProvider } from '../services/geminiService';
 
 function SplitImagesDisplay({ post, onDownloadAll }: { post: ReadyPost, onDownloadAll: (images: string[]) => void }) {
@@ -311,21 +313,18 @@ interface ContentVisualsTabProps {
 }
 
 export default function ContentVisualsTab({ readyPosts, setReadyPosts }: ContentVisualsTabProps) {
-  const [copiedCaption, setCopiedCaption] = useState<string | null>(null);
-  const [copiedHashtags, setCopiedHashtags] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'mockup' | 'grid'>('mockup');
   const [imageProvider, setImageProvider] = useState<ImageProvider>('google');
 
-  const handleCopyCaption = (id: string, caption: string) => {
-    navigator.clipboard.writeText(caption);
-    setCopiedCaption(id);
-    setTimeout(() => setCopiedCaption(null), 2000);
-  };
-
-  const handleCopyHashtags = (id: string, hashtags: string[]) => {
-    navigator.clipboard.writeText(hashtags.map(h => `#${h}`).join(' '));
-    setCopiedHashtags(id);
-    setTimeout(() => setCopiedHashtags(null), 2000);
+  /** Build a fallback CaptionBlocks from a flat caption string (for older posts without blocks) */
+  const buildFallbackBlocks = (caption: string): CaptionBlocks => {
+    const lines = caption.split('\n\n');
+    return {
+      hook: lines[0] || caption,
+      points: [],
+      microInstruction: lines[1] || '',
+      cta: lines[lines.length - 1] || '',
+    };
   };
 
   const handleDownloadSlides = (post: ReadyPost, imagesToDownload: string[]) => {
@@ -347,6 +346,18 @@ export default function ContentVisualsTab({ readyPosts, setReadyPosts }: Content
   const handlePostImagesChange = (postId: string, newImages: string[]) => {
     setReadyPosts(prev =>
       prev.map((p) => (p.id === postId ? { ...p, images: newImages } : p))
+    );
+  };
+
+  const handleCaptionChange = (postId: string, blocks: CaptionBlocks, caption: string) => {
+    setReadyPosts(prev =>
+      prev.map(p => p.id === postId ? { ...p, captionBlocks: blocks, caption } : p)
+    );
+  };
+
+  const handleHashtagsChange = (postId: string, hashtags: string[]) => {
+    setReadyPosts(prev =>
+      prev.map(p => p.id === postId ? { ...p, hashtags } : p)
     );
   };
 
@@ -447,50 +458,20 @@ export default function ContentVisualsTab({ readyPosts, setReadyPosts }: Content
                   )}
                 </div>
 
-                {/* Right Column: Caption & Hashtags */}
-                <div className="lg:col-span-5 space-y-6">
-                  {/* Caption */}
-                  <div className="bg-stone-50 rounded-xl p-5 border border-stone-200 h-full flex flex-col">
-                    <div className="flex justify-between items-center mb-3">
-                      <h4 className="font-semibold text-stone-900 text-sm">Caption</h4>
-                      <button 
-                        onClick={() => handleCopyCaption(post.id, post.caption)}
-                        className="text-stone-500 hover:text-stone-700 text-sm font-medium flex items-center gap-1.5 transition-colors"
-                      >
-                        {copiedCaption === post.id ? (
-                          <><CheckCircle2 className="w-4 h-4 text-emerald-600" /> <span className="text-emerald-600">Copied</span></>
-                        ) : (
-                          <><Copy className="w-4 h-4" /> Copy</>
-                        )}
-                      </button>
-                    </div>
-                    <div className="text-sm text-stone-700 whitespace-pre-wrap flex-1 overflow-y-auto custom-scrollbar pr-2 max-h-[200px]">
-                      {post.caption}
-                    </div>
-                  </div>
-
-                  {/* Hashtags */}
-                  <div className="bg-stone-50 rounded-xl p-5 border border-stone-200">
-                    <div className="flex justify-between items-center mb-3">
-                      <h4 className="font-semibold text-stone-900 text-sm">Hashtags ({post.hashtags.length})</h4>
-                      <button 
-                        onClick={() => handleCopyHashtags(post.id, post.hashtags)}
-                        className="text-stone-500 hover:text-stone-700 text-sm font-medium flex items-center gap-1.5 transition-colors"
-                      >
-                        {copiedHashtags === post.id ? (
-                          <><CheckCircle2 className="w-4 h-4 text-emerald-600" /> <span className="text-emerald-600">Copied</span></>
-                        ) : (
-                          <><Copy className="w-4 h-4" /> Copy</>
-                        )}
-                      </button>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {post.hashtags.map((tag, i) => (
-                        <span key={i} className="text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100">
-                          #{tag}
-                        </span>
-                      ))}
-                    </div>
+                {/* Right Column: Caption Editor */}
+                <div className="lg:col-span-5">
+                  <div className="bg-white rounded-xl border border-stone-200 p-5 h-full overflow-y-auto max-h-[600px] custom-scrollbar">
+                    <CaptionEditor
+                      postId={post.id}
+                      topic={post.topic}
+                      slidesText={post.slides.map(s => s.headline ? `${s.headline}: ${s.body || ''}` : s.text)}
+                      captionBlocks={
+                        post.captionBlocks ?? buildFallbackBlocks(post.caption)
+                      }
+                      hashtags={post.hashtags}
+                      onCaptionChange={(blocks, caption) => handleCaptionChange(post.id, blocks, caption)}
+                      onHashtagsChange={(hashtags) => handleHashtagsChange(post.id, hashtags)}
+                    />
                   </div>
                 </div>
               </div>

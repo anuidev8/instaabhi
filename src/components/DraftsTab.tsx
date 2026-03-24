@@ -43,7 +43,24 @@ export default function DraftsTab({ drafts, setDrafts, setReadyPosts, onPostRead
       const newDraft: Draft = {
         id: crypto.randomUUID(),
         topic: data.topic,
-        slides: data.slides,
+        // Normalise slides: ensure `text` is always populated (headline + body)
+        slides: (data.slides || []).map((s: {
+          text?: string;
+          role?: string;
+          headline?: string;
+          body?: string;
+          stepNumber?: number;
+          saveWorthy?: boolean;
+          visualNotes?: string;
+        }) => ({
+          text: s.text || [s.headline, s.body].filter(Boolean).join('\n'),
+          role: s.role,
+          headline: s.headline,
+          body: s.body,
+          stepNumber: s.stepNumber,
+          saveWorthy: s.saveWorthy,
+          visualNotes: s.visualNotes,
+        })),
         imagePrompt: data.imagePrompt,
         slideImagePrompts: data.slideImagePrompts,
         uploadedImages: [],
@@ -96,8 +113,9 @@ export default function DraftsTab({ drafts, setDrafts, setReadyPosts, onPostRead
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!activeDraftId || !e.target.files) return;
-
-    const files = Array.from(e.target.files as FileList).slice(0, 8); // Max 8 images
+    const draft = drafts.find(d => d.id === activeDraftId);
+    const maxSlides = draft?.slides?.length ?? 8;
+    const files = Array.from(e.target.files as FileList).slice(0, maxSlides);
     if (files.length === 0) return;
 
     const readers = files.map(file => {
@@ -144,6 +162,7 @@ export default function DraftsTab({ drafts, setDrafts, setReadyPosts, onPostRead
         slides: draft.slides,
         images: draft.uploadedImages,
         caption: data.caption,
+        captionBlocks: data.captionBlocks,
         hashtags: data.hashtags,
         title: data.title,
         imagePrompt: draft.imagePrompt,
@@ -250,12 +269,40 @@ export default function DraftsTab({ drafts, setDrafts, setReadyPosts, onPostRead
                     Slide Content
                   </h4>
                   <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                    {draft.slides.map((slide, i) => (
-                      <div key={i} className="flex gap-3 text-sm">
-                        <span className="font-mono text-stone-400 font-medium w-5 shrink-0">{i + 1}.</span>
-                        <p className="text-stone-700 bg-stone-50 p-3 rounded-lg flex-1 border border-stone-100">{slide.text}</p>
-                      </div>
-                    ))}
+                    {draft.slides.map((slide, i) => {
+                      const roleColors: Record<string, string> = {
+                        hook: 'bg-amber-100 text-amber-700',
+                        second_hook: 'bg-orange-100 text-orange-700',
+                        science: 'bg-blue-100 text-blue-700',
+                        step: 'bg-emerald-100 text-emerald-700',
+                        testimonial: 'bg-purple-100 text-purple-700',
+                        recap: 'bg-stone-200 text-stone-600',
+                      };
+                      const roleLabel = slide.role
+                        ? slide.role.replace('_', ' ').toUpperCase()
+                        : null;
+                      const roleColor = slide.role ? (roleColors[slide.role] || 'bg-stone-100 text-stone-500') : '';
+                      return (
+                        <div key={i} className="flex gap-3 text-sm">
+                          <span className="font-mono text-stone-400 font-medium w-5 shrink-0 mt-0.5">{i + 1}.</span>
+                          <div className="bg-stone-50 p-3 rounded-lg flex-1 border border-stone-100 space-y-1.5">
+                            {roleLabel && (
+                              <span className={`inline-block text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${roleColor}`}>
+                                {roleLabel}{slide.stepNumber ? ` ${slide.stepNumber}` : ''}
+                                {slide.saveWorthy ? ' ★' : ''}
+                              </span>
+                            )}
+                            {slide.headline
+                              ? <>
+                                  <p className="text-stone-900 font-semibold leading-snug">{slide.headline}</p>
+                                  {slide.body && <p className="text-stone-500 text-xs leading-relaxed">{slide.body}</p>}
+                                </>
+                              : <p className="text-stone-700">{slide.text}</p>
+                            }
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -280,7 +327,7 @@ export default function DraftsTab({ drafts, setDrafts, setReadyPosts, onPostRead
                       {draft.imagePrompt}
                     </div>
                     <p className="text-xs text-stone-500">
-                      Paste this prompt into ChatGPT or Gemini to generate your 8 individual slide images.
+                      Paste this prompt into ChatGPT or Gemini to generate your {draft.slides.length} individual slide image{draft.slides.length === 1 ? '' : 's'}.
                     </p>
                   </div>
 
@@ -348,7 +395,7 @@ export default function DraftsTab({ drafts, setDrafts, setReadyPosts, onPostRead
                   <div>
                     <button 
                       onClick={() => handleBuildPost(draft)}
-                      disabled={draft.uploadedImages.length === 0 || isBuildingPost === draft.id}
+                      disabled={draft.uploadedImages.length !== draft.slides.length || isBuildingPost === draft.id}
                       className="w-full py-3 bg-stone-900 hover:bg-stone-800 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isBuildingPost === draft.id ? (
@@ -357,9 +404,11 @@ export default function DraftsTab({ drafts, setDrafts, setReadyPosts, onPostRead
                         <>Build Instagram Post <ArrowRight className="w-5 h-5" /></>
                       )}
                     </button>
-                    {draft.uploadedImages.length === 0 && (
+                    {draft.uploadedImages.length !== draft.slides.length && (
                       <p className="text-xs text-center text-stone-500 mt-2">
-                        Upload your generated images to build the final post.
+                        {draft.uploadedImages.length === 0
+                          ? 'Upload or generate images to build the final post.'
+                          : `Add ${draft.slides.length - draft.uploadedImages.length} more image${draft.slides.length - draft.uploadedImages.length === 1 ? '' : 's'} to match your ${draft.slides.length} slides.`}
                       </p>
                     )}
                   </div>

@@ -1,5 +1,30 @@
+/**
+ * Role of each carousel slide in the narrative arc.
+ * hook → second_hook → science → step(s) → recap
+ */
+export type SlideRole =
+  | 'hook'          // Felt problem + bold promise (slide 1)
+  | 'second_hook'   // Technique name + legitimacy (slide 2)
+  | 'science'       // The physiology "why" (slide 3)
+  | 'step'          // One breath step per slide (slides 4-N-1)
+  | 'testimonial'   // Social proof / quote (optional)
+  | 'recap';        // Save prompt + app CTA (last slide always)
+
 export interface Slide {
+  /** Full display text (legacy — kept for backward compat) */
   text: string;
+  /** Semantic role in the carousel narrative arc */
+  role?: SlideRole;
+  /** Big bold headline (gold color in visuals) */
+  headline?: string;
+  /** Supporting body copy (white in visuals) */
+  body?: string;
+  /** Step number for 'step' role slides (1-based) */
+  stepNumber?: number;
+  /** Whether this slide is especially save-worthy (used for analytics / highlight) */
+  saveWorthy?: boolean;
+  /** Visual direction note for the image generator */
+  visualNotes?: string;
 }
 
 export interface Draft {
@@ -15,6 +40,21 @@ export interface Draft {
   imageModelUsed?: string;
 }
 
+/**
+ * Structured caption blocks for the viral Instagram format.
+ * Each block maps to a distinct visual/editable section in the UI.
+ */
+export interface CaptionBlocks {
+  /** 1–2 punchy hook lines. Felt pain + bold promise. */
+  hook: string;
+  /** Numbered points (displayed as 1️⃣ 2️⃣ 3️⃣ …). Technique, science, steps. */
+  points: string[];
+  /** "Try this tonight" micro-instruction. 1–2 lines. */
+  microInstruction: string;
+  /** Soft CTA block. Save + app + handle. */
+  cta: string;
+}
+
 export interface ReadyPost {
   id: string;
   topic: string;
@@ -23,6 +63,8 @@ export interface ReadyPost {
   caption: string;
   hashtags: string[];
   title: string;
+  /** Structured editable caption blocks (viral format) */
+  captionBlocks?: CaptionBlocks;
   /** For per-slide regeneration */
   imagePrompt?: string;
   slideImagePrompts?: string[];
