@@ -69,6 +69,13 @@ export interface ReadyPost {
   imagePrompt?: string;
   slideImagePrompts?: string[];
   imageProvider?: 'google' | 'openai';
+  instagramDraftCreationId?: string;
+  instagramDraftStatus?: "idle" | "creating" | "created" | "error";
+  instagramDraftError?: string;
+  /** After successful media_publish — live IG media id */
+  instagramPublishedMediaId?: string;
+  instagramPublishStatus?: "idle" | "publishing" | "published" | "error";
+  instagramPublishError?: string;
 }
 
 // ─── Video Reels ────────────────────────────────────────────────────────────

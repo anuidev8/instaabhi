@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Download, CheckCircle2, Trash2, LayoutGrid, Image as ImageIcon, Settings2, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Plus, Minus, ZoomIn, RotateCcw, Smartphone, Grid3X3 } from 'lucide-react';
+import { Download, CheckCircle2, Trash2, LayoutGrid, Image as ImageIcon, Settings2, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Plus, Minus, ZoomIn, RotateCcw, Smartphone, Grid3X3, Share2 } from 'lucide-react';
 import { ReadyPost, CaptionBlocks } from '../types';
 import InstagramMobileMockup from './InstagramMobileMockup';
 import CaptionEditor from './CaptionEditor';
 import { assembleCaptionFromBlocks } from '../services/geminiService';
 import type { ImageProvider } from '../services/geminiService';
+import {
+  confirmInstagramPublish,
+  getInstagramConnectionStatus,
+  sendDraftContainerToInstagram,
+  uploadImagesForInstagramDraft,
+} from '../services/instagramService';
 
 function SplitImagesDisplay({ post, onDownloadAll }: { post: ReadyPost, onDownloadAll: (images: string[]) => void }) {
   const [splitImages, setSplitImages] = useState<string[]>([]);
@@ -315,6 +321,11 @@ interface ContentVisualsTabProps {
 export default function ContentVisualsTab({ readyPosts, setReadyPosts }: ContentVisualsTabProps) {
   const [viewMode, setViewMode] = useState<'mockup' | 'grid'>('mockup');
   const [imageProvider, setImageProvider] = useState<ImageProvider>('google');
+  const [creatingDraftId, setCreatingDraftId] = useState<string | null>(null);
+  const [publishingPostId, setPublishingPostId] = useState<string | null>(null);
+  const [isCheckingConnection, setIsCheckingConnection] = useState(true);
+  const [isInstagramConnected, setIsInstagramConnected] = useState(false);
+  const [connectionMessage, setConnectionMessage] = useState<string>('');
 
   /** Build a fallback CaptionBlocks from a flat caption string (for older posts without blocks) */
   const buildFallbackBlocks = (caption: string): CaptionBlocks => {
@@ -361,11 +372,218 @@ export default function ContentVisualsTab({ readyPosts, setReadyPosts }: Content
     );
   };
 
+  const handleCreateInstagramDraft = async (post: ReadyPost) => {
+    if (!isInstagramConnected) {
+      setReadyPosts((prev) =>
+        prev.map((p) =>
+          p.id === post.id
+            ? {
+                ...p,
+                instagramDraftStatus: 'error',
+                instagramDraftError:
+                  'Instagram is not connected for this user. Check /auth/instagram/debug and backend token setup.',
+              }
+            : p,
+        ),
+      );
+      return;
+    }
+
+    setCreatingDraftId(post.id);
+    setReadyPosts((prev) =>
+      prev.map((p) =>
+        p.id === post.id
+          ? { ...p, instagramDraftStatus: 'creating', instagramDraftError: undefined }
+          : p,
+      ),
+    );
+
+    try {
+      const imageUrls = await uploadImagesForInstagramDraft(post.images);
+      if (imageUrls.length === 0) {
+        throw new Error('No valid image URLs returned from Cloudinary upload.');
+      }
+
+      const result = await sendDraftContainerToInstagram({
+        imageUrls,
+        caption: post.caption,
+      });
+
+      setReadyPosts((prev) =>
+        prev.map((p) =>
+          p.id === post.id
+            ? {
+                ...p,
+                instagramDraftStatus: 'created',
+                instagramDraftCreationId: result.creationId,
+                instagramDraftError: undefined,
+              }
+            : p,
+        ),
+      );
+    } catch (error) {
+      setReadyPosts((prev) =>
+        prev.map((p) =>
+          p.id === post.id
+            ? {
+                ...p,
+                instagramDraftStatus: 'error',
+                instagramDraftError: error instanceof Error ? error.message : 'Failed to create draft container.',
+              }
+            : p,
+        ),
+      );
+    } finally {
+      setCreatingDraftId(null);
+    }
+  };
+
+  /** Upload → create carousel/single container → media_publish (goes live on the account). */
+  const handlePublishCarouselLive = async (post: ReadyPost) => {
+    if (!isInstagramConnected) {
+      setReadyPosts((prev) =>
+        prev.map((p) =>
+          p.id === post.id
+            ? {
+                ...p,
+                instagramPublishStatus: 'error',
+                instagramPublishError:
+                  'Instagram is not connected. Fix token / debug endpoint first.',
+              }
+            : p,
+        ),
+      );
+      return;
+    }
+
+    setPublishingPostId(post.id);
+    setReadyPosts((prev) =>
+      prev.map((p) =>
+        p.id === post.id
+          ? {
+              ...p,
+              instagramPublishStatus: 'publishing',
+              instagramPublishError: undefined,
+            }
+          : p,
+      ),
+    );
+
+    try {
+      let creationId = post.instagramDraftCreationId;
+
+      if (!creationId || post.instagramDraftStatus !== 'created') {
+        const imageUrls = await uploadImagesForInstagramDraft(post.images);
+        if (imageUrls.length === 0) {
+          throw new Error('No valid image URLs returned from Cloudinary upload.');
+        }
+        const draft = await sendDraftContainerToInstagram({
+          imageUrls,
+          caption: post.caption,
+        });
+        creationId = draft.creationId;
+        setReadyPosts((prev) =>
+          prev.map((p) =>
+            p.id === post.id
+              ? {
+                  ...p,
+                  instagramDraftCreationId: draft.creationId,
+                  instagramDraftStatus: 'created',
+                  instagramDraftError: undefined,
+                }
+              : p,
+          ),
+        );
+      }
+
+      if (!creationId) {
+        throw new Error('No container id to publish.');
+      }
+
+      const published = await confirmInstagramPublish(creationId);
+      const mediaId =
+        published.meta && typeof published.meta === 'object' && 'id' in published.meta
+          ? String((published.meta as { id?: string }).id ?? '')
+          : '';
+
+      setReadyPosts((prev) =>
+        prev.map((p) =>
+          p.id === post.id
+            ? {
+                ...p,
+                instagramPublishStatus: 'published',
+                instagramPublishedMediaId: mediaId || undefined,
+                instagramPublishError: undefined,
+              }
+            : p,
+        ),
+      );
+    } catch (error) {
+      setReadyPosts((prev) =>
+        prev.map((p) =>
+          p.id === post.id
+            ? {
+                ...p,
+                instagramPublishStatus: 'error',
+                instagramPublishError:
+                  error instanceof Error ? error.message : 'Failed to publish carousel.',
+              }
+            : p,
+        ),
+      );
+    } finally {
+      setPublishingPostId(null);
+    }
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const checkConnection = async () => {
+      setIsCheckingConnection(true);
+      try {
+        const status = await getInstagramConnectionStatus();
+        if (!isMounted) return;
+        setIsInstagramConnected(Boolean(status.hasConnection));
+        setConnectionMessage(
+          status.hasConnection
+            ? `Connected as ${status.userId}${status.connection ? ` (IG: ${status.connection.ig_user_id})` : ''}`
+            : `Not connected for user ${status.userId}`,
+        );
+      } catch (error) {
+        if (!isMounted) return;
+        setIsInstagramConnected(false);
+        setConnectionMessage(
+          error instanceof Error ? error.message : 'Failed to verify Instagram connection.',
+        );
+      } finally {
+        if (isMounted) setIsCheckingConnection(false);
+      }
+    };
+
+    checkConnection();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   return (
     <div className="space-y-8">
       <div>
         <h2 className="text-2xl font-bold tracking-tight text-stone-900">Content Visuals</h2>
         <p className="text-stone-500 mt-1">Your ready-to-post Instagram carousels.</p>
+      </div>
+
+      <div
+        className={`rounded-xl border px-4 py-3 text-sm ${
+          isCheckingConnection
+            ? 'bg-stone-50 border-stone-200 text-stone-600'
+            : isInstagramConnected
+            ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+            : 'bg-red-50 border-red-200 text-red-700'
+        }`}
+      >
+        {isCheckingConnection ? 'Checking Instagram connection...' : connectionMessage}
       </div>
 
       {readyPosts.length === 0 ? (
@@ -399,14 +617,57 @@ export default function ContentVisualsTab({ readyPosts, setReadyPosts }: Content
                   </div>
                   <p className="text-stone-500 text-sm">Topic: {post.topic}</p>
                 </div>
-                <button 
-                  onClick={() => handleDeletePost(post.id)}
-                  className="text-stone-400 hover:text-red-500 transition-colors p-2"
-                  title="Delete post"
-                >
-                  <Trash2 className="w-5 h-5" />
-                </button>
+                <div className="flex flex-wrap items-center gap-2 justify-end">
+                  <button
+                    onClick={() => handleCreateInstagramDraft(post)}
+                    disabled={creatingDraftId === post.id || publishingPostId === post.id}
+                    className="text-xs font-semibold px-3 py-2 rounded-md bg-indigo-50 text-indigo-700 hover:bg-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    title="Create Instagram draft container"
+                  >
+                    {creatingDraftId === post.id ? 'Creating Draft...' : 'Send Draft to Instagram'}
+                  </button>
+                  <button
+                    onClick={() => handlePublishCarouselLive(post)}
+                    disabled={
+                      !isInstagramConnected ||
+                      creatingDraftId === post.id ||
+                      publishingPostId === post.id
+                    }
+                    className="text-xs font-semibold px-3 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
+                    title="Upload, create container, and publish live (carousel or single)"
+                  >
+                    <Share2 className="w-3.5 h-3.5" />
+                    {publishingPostId === post.id ? 'Publishing...' : 'Publish live to Instagram'}
+                  </button>
+                  <button 
+                    onClick={() => handleDeletePost(post.id)}
+                    className="text-stone-400 hover:text-red-500 transition-colors p-2"
+                    title="Delete post"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
+              {(post.instagramDraftStatus === 'created' || post.instagramDraftStatus === 'error') && (
+                <div className={`px-6 py-3 text-sm border-b ${post.instagramDraftStatus === 'created' ? 'bg-emerald-50 text-emerald-800 border-emerald-100' : 'bg-red-50 text-red-700 border-red-100'}`}>
+                  {post.instagramDraftStatus === 'created'
+                    ? `Draft container created (id: ${post.instagramDraftCreationId}). Note: Meta Graph API does not guarantee this appears in Instagram app drafts.`
+                    : post.instagramDraftError}
+                </div>
+              )}
+              {(post.instagramPublishStatus === 'published' || post.instagramPublishStatus === 'error') && (
+                <div
+                  className={`px-6 py-3 text-sm border-b ${
+                    post.instagramPublishStatus === 'published'
+                      ? 'bg-emerald-50 text-emerald-900 border-emerald-100'
+                      : 'bg-red-50 text-red-700 border-red-100'
+                  }`}
+                >
+                  {post.instagramPublishStatus === 'published'
+                    ? `Published to Instagram${post.instagramPublishedMediaId ? ` (media id: ${post.instagramPublishedMediaId})` : ''}.`
+                    : post.instagramPublishError}
+                </div>
+              )}
 
               <div className="p-6 grid lg:grid-cols-12 gap-8">
                 {/* Left Column: Phone Mockup or Visual Grid */}

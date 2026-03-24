@@ -1,197 +1,180 @@
-# Meditate with Abhi - IG Creator
+# Meditate with Abhi — Instagram Creator
 
-A React + Vite app that helps you create Instagram carousel posts for a meditation brand:
-
-- generate a draft topic + 8 slide texts with Gemini
-- generate a long image prompt for external image tools
-- upload slide images
-- generate title, caption, and hashtags with Gemini
-- split/crop visuals and download all final slides
+A single-page web app for **“Meditate with Abhi” / School of Breath** that helps produce Instagram **carousel drafts**, **final post packages** (visuals + captions), and **AI-generated video reels**. Content generation is driven by **Google Gemini**; images can use **Gemini (Nano Banana)** or **OpenAI**; reels use **fal.ai** (video pipeline) and **ElevenLabs** (voice).
 
 ---
 
-## What this app does
+## What the app does (product flow)
 
-The app has two main tabs:
-
-1. **Drafts**
-   - Auto-generate carousel draft content (topic + 8 slides + image prompt).
-   - Copy the image prompt into ChatGPT/Gemini/Midjourney to create images.
-   - Upload generated images.
-   - Build a final Instagram post (title, caption, hashtags).
-
-2. **Content Visuals**
-   - Preview ready-to-post content.
-   - Adjust split/crop for uploaded visuals.
-   - Copy caption and hashtags.
-   - Download all slides as PNG files.
+1. **Drafts** — Pick a breathwork/meditation topic. Gemini generates a **narrative carousel** (default 6 slides, max 8): hook → technique → science → steps → recap/CTA, aligned with a fixed **brand visual system** (cosmic gold, sacred geometry, minimal on-slide text). You can **generate slide images with AI**, **upload your own**, then **build a ready post** (caption + hashtags + structured blocks).
+2. **Content Visuals** — Review **ready posts** in a phone mockup, **edit captions** (block-based viral format), **crop/split** carousel images for export, optionally **send a draft container** to Instagram via the Meta Graph API (requires backend + Cloudinary for public URLs).
+3. **Video Reels** — Gemini writes a **timed script + scenes**; **fal.ai** runs TTS, per-scene video, concat, and audio merge. Modes: **prompt only**, **reference video URL**, or **reference images** for character consistency.
 
 ---
 
 ## Tech stack
 
-- **Frontend**: React 19 + TypeScript
-- **Build tool**: Vite
-- **Styling**: Tailwind CSS v4
-- **Animation**: Motion + Lucide icons
-- **Local persistence**: IndexedDB via `idb-keyval`
-- **AI provider**: Gemini (`@google/genai`)
+| Layer | Technology |
+|--------|------------|
+| Frontend | React 19, Vite 6, Tailwind CSS 4, Motion, Lucide, idb-keyval |
+| AI (text + carousel images) | `@google/genai` (Gemini), optional OpenAI for images |
+| Reels video | `@fal-ai/client` (Minimax video, ffmpeg merge APIs) |
+| Voice | ElevenLabs (via env / `BrandContext.voiceId`) |
+| Persistence | **IndexedDB** (browser) — no server-side user DB |
+| Instagram helper API | Express 5 on `server/index.ts` (OAuth/manual token, Graph calls, Cloudinary upload) |
 
 ---
 
-## Project structure
+## Repository layout
 
-```text
+```
 src/
-  App.tsx                          # app shell, tabs, and persisted state
-  main.tsx                         # React entry point
-  index.css                        # Tailwind + custom scrollbar utility
-  types.ts                         # Draft and ReadyPost interfaces
-  services/
-    geminiService.ts               # AI generation logic (draft + post copy)
+  App.tsx                 # Tabs, global state, IndexedDB hydrate/save
+  main.tsx, index.css
+  types.ts                # Domain types (Draft, ReadyPost, reels, brand)
   components/
-    DraftsTab.tsx                  # draft generation/upload/build workflow
-    ContentVisualsTab.tsx          # final visuals, crop/split, download
+    DraftsTab.tsx         # Carousel draft lifecycle
+    ContentVisualsTab.tsx # Mockup, caption editor, image tools, IG draft push
+    CaptionEditor.tsx
+    InstagramMobileMockup.tsx
+    VideoReelsDraftTab.tsx
+  services/
+    geminiService.ts      # All Gemini prompts + JSON schemas + image APIs
+    falService.ts         # Reel video pipeline (fal + TTS)
+    instagramService.ts   # HTTP client → local Express IG server
+server/
+  index.ts                # Instagram + Cloudinary HTTP API
 ```
 
 ---
 
-## Data model
+## Business logic (detailed)
 
-### `Draft`
+### 1. Carousel drafts (`DraftsTab` + `generateDraft`)
 
-- `id`: unique draft id
-- `topic`: carousel topic
-- `slides`: array of slide text objects
-- `imagePrompt`: long prompt to generate images externally
-- `uploadedImages`: uploaded images as base64 data URLs
-- `status`: `'draft' | 'images_uploaded'`
+- **Input**: Optional topic string, slide count `n` ∈ [1, 8] (UI default 6).
+- **Model**: Gemini with fallback list (`GEMINI_MODEL_DRAFT` → `gemini-3.1-pro-preview` → `gemini-2.5-pro` → `gemini-2.0-flash`). Non–“not found” errors stop immediately; missing models are skipped.
+- **System behavior** (“Carousel Catalyst”):
+  - Enforces **School of Breath / @meditate_with_abhi** visual language: dark cosmic field, gold typography hierarchy, sacred geometry, **image-first** slides (short headline + optional one-line body; no paragraphs on slides).
+  - Last slide is always the **marketing CTA** (app download framing).
+- **Outputs**:
+  - `topic`, `slides[]` with `role`, `headline`, `body`, optional `stepNumber` / `visualNotes`
+  - `imagePrompt`: long copy-paste prompt for external tools
+  - `slideImagePrompts`: `n` strings (≤450 chars) for **per-slide** API image generation
+- **Normalization**: If Gemini returns fewer than `n` slides or prompts, the app **pads** with simple placeholders so downstream image steps always have `n` items.
 
-### `ReadyPost`
+### 2. Carousel images (`generateCarouselImagesWithProvider`)
 
-- `id`: carries over from draft
-- `topic`, `slides`, `images`
-- `title`: post title
-- `caption`: full Instagram caption
-- `hashtags`: hashtag list
+- **Providers**: `google` (Gemini native image / “Nano Banana”) or `openai` (GPT Image — needs `OPENAI_API_KEY`).
+- **Google**: Uses `process.env.GEMINI_IMAGE_MODEL` (Vite-injected), defaulting to `gemini-3.1-flash-image-preview` per code comments.
+- **Draft state**: Successful generation sets `uploadedImages` to the image data URLs/URLs, `status: 'images_uploaded'`, and `imageModelUsed`. Users may instead **upload files** (read as base64 data URLs) with the same outcome.
+
+### 3. Ready post / caption (`generatePostContent` + `CaptionEditor`)
+
+- **Trigger**: “Build post” sends **topic + full slide text** to Gemini (`MODEL_CANDIDATES.post`).
+- **Caption structure** (`CaptionBlocks`):
+  - `hook` — 1–2 short lines
+  - `points` — 3–5 benefit lines (no numerals in AI output; UI adds 1️⃣2️⃣… via `assembleCaptionFromBlocks`)
+  - `microInstruction` — tiny “try this” line
+  - `cta` — save + app / link in bio
+- **Hashtags**: Target **exactly 18** tags (no `#` in stored array). Model output is trimmed or **padded** with brand fallbacks (`MeditateWithAbhi`, `SchoolOfBreath`, etc.).
+- **Flat `caption`**: Assembled string for Instagram APIs / copy; blocks remain editable in the UI.
+- **Additional helpers** in `geminiService`: `regenerateCaption`, `regenerateSingleSlideImage`, `generateSlidePromptSuggestion`, `buildLastSlideFromMockup` — for iterative refinement without redoing the whole draft.
+
+### 4. Content visuals (`ContentVisualsTab`)
+
+- **Preview**: Renders carousels in `InstagramMobileMockup`.
+- **Image tooling**:
+  - Multiple images → **square crop** per slide (canvas) with offset/scale.
+  - Single “grid” image → **split into a rows×cols grid** of slides for download.
+- **Instagram “draft container”**:
+  - Images must be **public HTTPS URLs** for Meta. Local/base64 images go through **`POST /uploads/cloudinary`** on the Express server; returned URLs are sent to **`POST /instagram/publish/draft`**.
+  - **Single image** → one media container; **multiple** → child items + `CAROUSEL` container with caption on the parent.
+  - UI state: `instagramDraftStatus` (`idle` | `creating` | `created` | `error`) and Meta’s `creationId`. The app notes that **Graph API containers are not guaranteed to appear as in-app Instagram drafts** — that behavior is platform-dependent.
+
+### 5. Video reels (`VideoReelsDraftTab` + `generateVideoReelScript` + `falService.generateReelVideo`)
+
+- **Brand context**: Hard-coded defaults in `VideoReelsDraftTab.tsx` (`BRAND_CONTEXT`) — name, handle, niche, voice, pillars; `voiceId` from `VITE_ELEVENLABS_VOICE_ID` or a default ID.
+- **Script step**: `generateVideoReelScript` uses reel model candidates (`GEMINI_MODEL_REELS` + fallbacks). Returns continuous **`script`** and **`scenes`** (2–4 segments) with `start`/`end`/`duration`, `narrative` (voiceover slice), and `visualPrompt`.
+- **Modes**:
+  - `PROMPT_ONLY` — character identity inferred from topic.
+  - `FROM_REFERENCE_VIDEO` — style/pacing reference from URL (prompt text guides rewrite).
+  - `FROM_IMAGES` — reference faces/visual identity from uploaded images (Gemini may analyze up to N images for consistency text fed into video prompts).
+- **Video step**: `falService` builds **per-scene 9:16 prompts** (`buildSceneVideoPrompt`) including brand + consistency rules, then:
+  1. ElevenLabs TTS → audio URL on fal storage  
+  2. `fal-ai/minimax/video-01-live` per scene  
+  3. Concat if >1 scene (`merge-videos`)  
+  4. Merge audio + video (`merge-audio-video`)  
+- **Credentials**: If `VITE_FAL_KEY` is set, fal runs **from the browser** (documented as dev-only/insecure). Otherwise fal client uses `proxyUrl: '/api/fal/proxy'` — you must provide a matching backend proxy in production (this repo’s Express server does **not** implement that proxy).
+
+### 6. Local Instagram + Cloudinary server (`server/index.ts`)
+
+- **In-memory** `Map` of user → `{ user_access_token, page_id, ig_user_id }` (resets on process restart).
+- **User id**: `Authorization: Bearer …`, or `?userId=`, or `DEV_USER_ID` env, default `dev-user`.
+- **Connection paths**:
+  - Startup: `INSTAGRAM_USER_ACCESS_TOKEN` → resolve Page + Instagram Business user id, store connection.
+  - `POST /auth/instagram/manual-connect` — paste token; optional long-lived exchange if app id/secret exist.
+  - `GET /auth/instagram/login` + `GET /auth/instagram/callback` — full OAuth when `META_*` is configured.
+- **Cloudinary**: `POST /uploads/cloudinary` accepts up to 10 strings — either `data:image/...` or existing `http(s)` URLs — returns `urls[]`.
+- **Graph**:
+  - `GET /instagram/posts` — list media
+  - `POST /instagram/insights` — batch metrics (impressions, reach, engagement, saved, video_views)
+  - `POST /instagram/publish/create` + `confirm` — single-image publish flow
+  - `POST /instagram/publish/draft` — carousel/single container creation (used by the web app)
 
 ---
 
-## End-to-end logic flow
+## Client-side persistence (IndexedDB via `idb-keyval`)
 
-### 1) App boot and local data load
+| Key | Content |
+|-----|---------|
+| `meditate-drafts` | `Draft[]` |
+| `meditate-ready-posts` | `ReadyPost[]` |
+| `meditate-reel-drafts` | `VideoReelDraft[]` |
 
-`App.tsx` loads state from IndexedDB on first render:
-
-- key: `meditate-drafts`
-- key: `meditate-ready-posts`
-
-After loading, all updates to drafts/posts are saved automatically back to IndexedDB.
-
-### 2) Draft generation (`DraftsTab` + `geminiService.generateDraft`)
-
-- User opens topic modal and picks a suggested or custom topic.
-- App calls Gemini with a strict JSON schema.
-- Response is parsed and normalized to exactly 8 slides (truncate/pad).
-- New draft is inserted at the top of the drafts list.
-
-### 3) Image creation + upload
-
-- User copies `imagePrompt`.
-- User generates images in an external AI image tool.
-- User uploads up to 8 images.
-- Files are read using `FileReader` and stored as base64 data URLs in draft state.
-
-### 4) Build final post (`geminiService.generatePostContent`)
-
-- App sends draft topic + slide texts to Gemini.
-- Gemini returns JSON: `title`, `caption`, and `hashtags`.
-- Hashtags are normalized to exactly 18 entries (truncate/pad).
-- Draft is removed, `ReadyPost` is created, and UI switches to **Content Visuals**.
-
-### 5) Visual output adjustments (`ContentVisualsTab`)
-
-The app computes downloadable slide images in two modes:
-
-- **Single-image grid split mode** (`post.images.length === 1`)
-  - splits one large image into a configurable rows x columns grid.
-  - supports gap, padding, scale, global offset, and per-slide offset.
-- **Multi-image crop mode** (`post.images.length > 1`)
-  - square-crops each uploaded image with scale/offset controls.
-
-Final images are generated on canvas and downloaded as PNG files.
+Data loads on app mount; each collection saves when its React state changes (after initial load completes).
 
 ---
 
 ## Environment variables
 
-Use `.env` or `.env.local`:
+Copy `.env.example` to `.env` and fill values. Important groups:
 
-```bash
-GEMINI_API_KEY=your_key_here
-APP_URL=http://localhost:3000
-```
+- **Gemini**: `GEMINI_API_KEY` (required for text + Google images). Optional: `GEMINI_MODEL_DRAFT`, `GEMINI_MODEL_REELS`, `GEMINI_MODEL_POST`, `GEMINI_IMAGE_MODEL`.
+- **OpenAI** (optional): `OPENAI_API_KEY` if using OpenAI for carousel images.
+- **Vite-injected** in `vite.config.ts`: `GEMINI_API_KEY`, `GEMINI_IMAGE_MODEL`, `OPENAI_API_KEY` are exposed to the client as `process.env.*` for the bundle.
+- **Reels / fal**: `VITE_FAL_KEY` (dev-only direct client), or implement `/api/fal/proxy`. ElevenLabs: `VITE_ELEVENLABS_*` or server-side equivalents as you harden the app.
+- **Instagram server**: `META_APP_ID`, `META_APP_SECRET`, `META_REDIRECT_URI`, `META_GRAPH_VERSION`, `META_SCOPE`, `IG_SERVER_PORT`, `IG_CONNECTED_REDIRECT`, `DEV_USER_ID`, `INSTAGRAM_USER_ACCESS_TOKEN` (optional pre-connect), `CLOUDINARY_*`.
+- **Frontend → server**: `VITE_IG_API_BASE_URL`, `VITE_DEV_USER_ID`.
 
-`APP_URL` is optional for local use in current logic.
-
----
-
-## Run locally
-
-### Prerequisites
-
-- Node.js 18+ (recommended)
-- npm
-
-### Install and run
-
-```bash
-npm install
-npm run dev
-```
-
-App runs at:
-
-- `http://localhost:3000`
-
-### Build and preview
-
-```bash
-npm run build
-npm run preview
-```
-
-### Type-check
-
-```bash
-npm run lint
-```
+See `.env.example` for comments on each variable.
 
 ---
 
-## Notes and limitations
+## Scripts
 
-- The app currently calls Gemini directly from the frontend. This is simple for prototyping but not ideal for production key security.
-- Uploaded images are stored as base64 in IndexedDB; large image sets can consume browser storage quickly.
-- Gemini responses are JSON-parsed. If a malformed response is returned, generation can fail and show an error alert.
-- There is no user auth or backend database in the current implementation.
+```bash
+npm run dev      # Vite dev server (default port 3000, host 0.0.0.0)
+npm run server   # Express Instagram helper (default 8787)
+npm run all      # Both via concurrently
+npm run build    # Production build to dist/
+npm run preview  # Preview production build
+npm run lint     # Typecheck (tsc --noEmit)
+```
+
+**Typical local setup**: run `npm run all` (or `dev` + `server`), configure Gemini + Cloudinary + Instagram token/OAuth so “Send to Instagram draft” can obtain public image URLs and a connected Graph user.
 
 ---
 
-## Dependency notes
+## Security & production notes
 
-`express` is present in dependencies but not currently used by application code.
+- **`VITE_*` secrets** (Fal, ElevenLabs) are visible in the browser bundle — treat as **development convenience** only.
+- **Instagram user tokens** on the sample server live in **memory**; use proper auth, encryption, and a real user model for production.
+- **CORS** is open on the Express app — restrict origins if you deploy it.
+- **fal proxy**: If you omit `VITE_FAL_KEY`, ensure a **`/api/fal/proxy`** implementation exists on whatever host serves the SPA, or reels will fail at runtime.
 
 ---
 
-## Quick usage checklist
+## Summary
 
-1. Open **Drafts**.
-2. Click **Auto-Build Draft**.
-3. Select a suggested/custom topic.
-4. Copy image prompt and generate visuals externally.
-5. Upload images for the draft.
-6. Click **Build Instagram Post**.
-7. Go to **Content Visuals** and adjust split/crop if needed.
-8. Copy caption/hashtags and download all slides.
-# instaabhi
+The **business logic** centers on a **repeatable Instagram growth template** for a meditation/breathwork brand: Gemini structures **educational carousels** and **viral captions**, optional image providers illustrate slides in a **fixed luxury-spiritual art direction**, and a second pipeline produces **short-form reels** from scripted scenes + TTS + generative video. The Express side bridges **Cloudinary** and **Meta** so multi-image posts can be submitted as API containers. All creator state is **local-first** in the browser unless you extend the backend.
