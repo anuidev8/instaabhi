@@ -56,35 +56,6 @@ app.get("/health", (_req, res) => {
   res.json({ ok: true });
 });
 
-app.get("/auth/instagram/debug", (req, res) => {
-  const userId = getUserId(req);
-  const connection = connections.get(userId);
-  const token = process.env.INSTAGRAM_USER_ACCESS_TOKEN?.trim() ?? "";
-
-  res.json({
-    ok: true,
-    userId,
-    hasConnection: Boolean(connection),
-    connection: connection
-      ? {
-          page_id: connection.page_id,
-          ig_user_id: connection.ig_user_id,
-          createdAt: connection.createdAt,
-          tokenPreview: maskToken(connection.user_access_token),
-        }
-      : null,
-    env: {
-      devUserId: process.env.DEV_USER_ID ?? "dev-user",
-      metaAppId: metaAppId || null,
-      hasMetaAppSecret: Boolean(metaAppSecret),
-      metaRedirectUri: metaRedirectUri || null,
-      graphVersion,
-      hasStartupToken: Boolean(token),
-      startupTokenPreview: token ? maskToken(token) : null,
-    },
-  });
-});
-
 app.post("/uploads/cloudinary", async (req, res) => {
   if (!hasCloudinaryConfig()) {
     return res.status(400).json({
@@ -647,12 +618,6 @@ function hasOAuthConfig(): boolean {
 
 function hasCloudinaryConfig(): boolean {
   return Boolean(cloudinaryCloudName && cloudinaryApiKey && cloudinaryApiSecret);
-}
-
-function maskToken(value: string): string {
-  if (!value) return "";
-  if (value.length <= 12) return `${value.slice(0, 4)}...`;
-  return `${value.slice(0, 8)}...${value.slice(-4)}`;
 }
 
 async function createMediaContainer({

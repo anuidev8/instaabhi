@@ -199,23 +199,24 @@ export default function DraftsTab({ drafts, setDrafts, setReadyPosts, onPostRead
   };
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 sm:space-y-8">
+      <div className="flex items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-stone-900">Carousel Drafts</h2>
-          <p className="text-stone-500 mt-1">Generate and manage your Instagram carousel ideas.</p>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-stone-900">Carousel Drafts</h2>
+          <p className="text-stone-500 mt-1 text-sm sm:text-base">Generate and manage your Instagram carousel ideas.</p>
         </div>
         <button
           onClick={() => setIsTopicModalOpen(true)}
           disabled={isGeneratingDraft}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed shadow-sm"
+          className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg font-medium transition-colors flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed shadow-sm text-sm sm:text-base shrink-0 min-h-[44px]"
         >
           {isGeneratingDraft ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
+            <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
           ) : (
-            <Sparkles className="w-5 h-5" />
+            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
           )}
-          Auto-Build Draft
+          <span className="hidden sm:inline">Auto-Build Draft</span>
+          <span className="sm:hidden">New Draft</span>
         </button>
       </div>
 
@@ -255,26 +256,26 @@ export default function DraftsTab({ drafts, setDrafts, setReadyPosts, onPostRead
               transition={{ delay: index * 0.05 }}
               className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden"
             >
-              <div className="p-6 border-b border-stone-100 flex justify-between items-start">
-                <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="px-2.5 py-1 bg-stone-100 text-stone-600 text-xs font-semibold uppercase tracking-wider rounded-md">
+              <div className="p-4 sm:p-6 border-b border-stone-100 flex justify-between items-start gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-2 flex-wrap">
+                    <span className="px-2.5 py-1 bg-stone-100 text-stone-600 text-xs font-semibold uppercase tracking-wider rounded-md shrink-0">
                       Draft
                     </span>
-                    <h3 className="text-xl font-bold text-stone-900">{draft.topic}</h3>
+                    <h3 className="text-lg sm:text-xl font-bold text-stone-900 leading-snug">{draft.topic}</h3>
                   </div>
                   <p className="text-stone-500 text-sm">{draft.slides.length} Slides • AI Generated</p>
                 </div>
-                <button 
+                <button
                   onClick={() => handleDeleteDraft(draft.id)}
-                  className="text-stone-400 hover:text-red-500 transition-colors p-2"
+                  className="text-stone-400 hover:text-red-500 transition-colors p-2 shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center"
                   title="Delete draft"
                 >
                   <Trash2 className="w-5 h-5" />
                 </button>
               </div>
 
-              <div className="p-6 grid md:grid-cols-2 gap-8">
+              <div className="p-4 sm:p-6 grid md:grid-cols-2 gap-6 sm:gap-8">
                 {/* Left Column: Slides */}
                 <div>
                   <h4 className="font-semibold text-stone-900 mb-4 flex items-center gap-2">
@@ -447,22 +448,22 @@ export default function DraftsTab({ drafts, setDrafts, setReadyPosts, onPostRead
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="relative w-full max-w-lg bg-white rounded-2xl shadow-xl border border-stone-200 overflow-hidden"
+              className="relative w-full max-w-lg bg-white rounded-2xl shadow-xl border border-stone-200 overflow-hidden max-h-[90vh] flex flex-col"
             >
-              <div className="p-6 border-b border-stone-100 flex items-center justify-between">
+              <div className="p-4 sm:p-6 border-b border-stone-100 flex items-center justify-between shrink-0">
                 <div>
-                  <h3 className="text-xl font-bold text-stone-900">Choose a Topic</h3>
+                  <h3 className="text-lg sm:text-xl font-bold text-stone-900">Choose a Topic</h3>
                   <p className="text-stone-500 text-sm mt-1">Select a trending topic or enter your own.</p>
                 </div>
                 <button
                   onClick={() => setIsTopicModalOpen(false)}
-                  className="p-2 text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded-full transition-colors"
+                  className="p-2 text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded-full transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <div className="p-6 space-y-6">
+              <div className="p-4 sm:p-6 space-y-5 sm:space-y-6 overflow-y-auto">
                 <div>
                   <label className="block text-sm font-medium text-stone-700 mb-2">
                     Number of slides
@@ -512,14 +513,14 @@ export default function DraftsTab({ drafts, setDrafts, setReadyPosts, onPostRead
                   <label htmlFor="custom-topic" className="block text-sm font-medium text-stone-700 mb-2">
                     Custom Topic
                   </label>
-                  <div className="flex gap-3">
+                  <div className="flex flex-col xs:flex-row gap-2 sm:gap-3">
                     <input
                       id="custom-topic"
                       type="text"
                       value={customTopic}
                       onChange={(e) => setCustomTopic(e.target.value)}
                       placeholder="e.g., The science of sighing..."
-                      className="flex-1 px-4 py-2 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-stone-900 placeholder:text-stone-400"
+                      className="flex-1 px-4 py-2.5 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-stone-900 placeholder:text-stone-400 min-h-[44px]"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && customTopic.trim()) {
                           handleAutoBuildDraft(customTopic.trim());
@@ -529,7 +530,7 @@ export default function DraftsTab({ drafts, setDrafts, setReadyPosts, onPostRead
                     <button
                       onClick={() => handleAutoBuildDraft(customTopic.trim())}
                       disabled={!customTopic.trim()}
-                      className="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                      className="px-4 py-2.5 bg-stone-900 hover:bg-stone-800 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap min-h-[44px]"
                     >
                       Generate
                     </button>

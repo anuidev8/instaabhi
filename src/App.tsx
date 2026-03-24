@@ -71,63 +71,67 @@ export default function App() {
   return (
     <div className="min-h-screen bg-stone-50 text-stone-900 font-sans">
       <header className="bg-white border-b border-stone-200 sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white font-serif italic font-bold">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white font-serif italic font-bold text-sm sm:text-base">
               A
             </div>
-            <h1 className="text-xl font-semibold tracking-tight">Meditate with Abhi</h1>
+            <h1 className="text-base sm:text-xl font-semibold tracking-tight hidden sm:block">Meditate with Abhi</h1>
+            <h1 className="text-base font-semibold tracking-tight sm:hidden">MwA</h1>
           </div>
-          <nav className="flex gap-1">
+          {/* Tab nav — scrollable on mobile, full labels on desktop */}
+          <nav className="flex gap-0.5 sm:gap-1 overflow-x-auto scrollbar-none -mr-4 pr-4 sm:mr-0 sm:pr-0">
             <button
               onClick={() => setActiveTab('drafts')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
+              className={`px-2.5 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 min-h-[44px] ${
                 activeTab === 'drafts'
                   ? 'bg-stone-100 text-stone-900'
                   : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50'
               }`}
             >
-              <PenTool className="w-4 h-4" />
-              Carousel Drafts
+              <PenTool className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline">Carousel Drafts</span>
+              <span className="sm:hidden">Drafts</span>
             </button>
             <button
               onClick={() => setActiveTab('visuals')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
+              className={`px-2.5 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 min-h-[44px] ${
                 activeTab === 'visuals'
                   ? 'bg-stone-100 text-stone-900'
                   : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50'
               }`}
             >
-              <LayoutGrid className="w-4 h-4" />
-              Content Visuals
+              <LayoutGrid className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline">Content Visuals</span>
+              <span className="sm:hidden">Visuals</span>
             </button>
             <button
               onClick={() => setActiveTab('reels')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
+              className={`px-2.5 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 min-h-[44px] ${
                 activeTab === 'reels'
                   ? 'bg-stone-100 text-stone-900'
                   : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50'
               }`}
             >
-              <Video className="w-4 h-4" />
-              Video Reels
+              <Video className="w-4 h-4 shrink-0" />
+              Reels
             </button>
             <button
               onClick={() => setActiveTab('calendar')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
+              className={`px-2.5 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 min-h-[44px] ${
                 activeTab === 'calendar'
                   ? 'bg-stone-100 text-stone-900'
                   : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50'
               }`}
             >
-              <CalendarDays className="w-4 h-4" />
-              Content Calendar
+              <CalendarDays className="w-4 h-4 shrink-0" />
+              Calendar
             </button>
           </nav>
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
         <AnimatePresence mode="wait">
           {activeTab === 'drafts' && (
             <motion.div

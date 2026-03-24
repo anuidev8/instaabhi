@@ -240,21 +240,22 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts, initialP
 
   // ─────────────────────────────────────────────────────────────────────────
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-stone-900">Video Reels Draft</h2>
-          <p className="text-stone-500 mt-1">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-stone-900">Video Reels Draft</h2>
+          <p className="text-stone-500 mt-1 text-sm sm:text-base">
             AI-generated short-form video scripts + automated Reel production via Fal.
           </p>
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-sm"
+          className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-sm text-sm sm:text-base shrink-0 min-h-[44px]"
         >
-          <Video className="w-5 h-5" />
-          New Reel
+          <Video className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span className="hidden sm:inline">New Reel</span>
+          <span className="sm:hidden">New</span>
         </button>
       </div>
 
@@ -290,13 +291,13 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts, initialP
               className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden"
             >
               {/* Card header */}
-              <div className="p-6 border-b border-stone-100 flex justify-between items-start">
-                <div>
-                  <div className="flex items-center gap-3 mb-2">
+              <div className="p-4 sm:p-6 border-b border-stone-100 flex justify-between items-start gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-2 flex-wrap">
                     <StatusBadge status={draft.status} />
-                    <h3 className="text-xl font-bold text-stone-900">{draft.topic}</h3>
+                    <h3 className="text-lg sm:text-xl font-bold text-stone-900 leading-snug">{draft.topic}</h3>
                   </div>
-                  <div className="flex items-center gap-4 text-stone-500 text-sm">
+                  <div className="flex items-center gap-3 sm:gap-4 text-stone-500 text-sm flex-wrap">
                     <span className="flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5" />
                       {draft.videoReelInput.targetDurationSeconds}s target
@@ -309,7 +310,7 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts, initialP
                 </div>
                 <button
                   onClick={() => handleDelete(draft.id)}
-                  className="text-stone-400 hover:text-red-500 transition-colors p-2"
+                  className="text-stone-400 hover:text-red-500 transition-colors p-2 shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center"
                   title="Delete draft"
                 >
                   <Trash2 className="w-5 h-5" />
@@ -317,7 +318,7 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts, initialP
               </div>
 
               {/* Card body */}
-              <div className="p-6 grid md:grid-cols-2 gap-8">
+              <div className="p-4 sm:p-6 grid md:grid-cols-2 gap-6 sm:gap-8">
                 {/* Left: Script */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
@@ -476,12 +477,12 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts, initialP
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="relative w-full max-w-xl bg-white rounded-2xl shadow-xl border border-stone-200 overflow-hidden max-h-[90vh] flex flex-col"
+              className="relative w-full max-w-xl bg-white rounded-2xl shadow-xl border border-stone-200 overflow-hidden max-h-[92vh] flex flex-col"
             >
               {/* Modal header */}
-              <div className="p-6 border-b border-stone-100 flex items-center justify-between shrink-0">
-                <div>
-                  <h3 className="text-xl font-bold text-stone-900">New Video Reel</h3>
+              <div className="p-4 sm:p-6 border-b border-stone-100 flex items-center justify-between shrink-0 gap-3">
+                <div className="min-w-0">
+                  <h3 className="text-lg sm:text-xl font-bold text-stone-900">New Video Reel</h3>
                   <p className="text-stone-500 text-sm mt-1">
                     AI will write a script + scene plan, then Fal produces the video.
                   </p>
@@ -489,14 +490,14 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts, initialP
                 <button
                   onClick={() => setIsModalOpen(false)}
                   disabled={isGeneratingScript}
-                  className="p-2 text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded-full transition-colors"
+                  className="p-2 text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded-full transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               {/* Modal body */}
-              <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar">
+              <div className="p-4 sm:p-6 space-y-5 sm:space-y-6 overflow-y-auto custom-scrollbar">
                 {/* Suggested topics */}
                 <div>
                   <label className="block text-sm font-medium text-stone-700 mb-2">
@@ -655,7 +656,7 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts, initialP
               </div>
 
               {/* Modal footer */}
-              <div className="p-6 border-t border-stone-100 flex gap-3 shrink-0">
+              <div className="p-4 sm:p-6 border-t border-stone-100 flex gap-3 shrink-0">
                 <button
                   onClick={() => setIsModalOpen(false)}
                   disabled={isGeneratingScript}

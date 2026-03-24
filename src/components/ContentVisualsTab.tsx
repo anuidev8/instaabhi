@@ -8,7 +8,6 @@ import { assembleCaptionFromBlocks } from '../services/geminiService';
 import type { ImageProvider } from '../services/geminiService';
 import {
   confirmInstagramPublish,
-  getInstagramConnectionStatus,
   sendDraftContainerToInstagram,
   uploadImagesForInstagramDraft,
 } from '../services/instagramService';
@@ -145,22 +144,22 @@ function SplitImagesDisplay({ post }: { post: ReadyPost }) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
         <h4 className="font-semibold text-stone-900 flex items-center gap-2">
           <ImageIcon className="w-4 h-4 text-stone-400" />
           Carousel Slides
         </h4>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={() => setShowSettings(!showSettings)}
-            className={`text-sm font-medium flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-colors ${showSettings ? 'bg-stone-200 text-stone-800' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}
+            className={`text-sm font-medium flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-colors min-h-[36px] ${showSettings ? 'bg-stone-200 text-stone-800' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}
           >
             <Settings2 className="w-4 h-4" /> {isGrid ? 'Adjust Split' : 'Adjust Images'}
           </button>
           <button
             type="button"
             onClick={() => void handleDownloadZip()}
-            className="text-sm font-medium text-emerald-600 hover:text-emerald-700 flex items-center gap-1.5 bg-emerald-50 px-3 py-1.5 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="text-sm font-medium text-emerald-600 hover:text-emerald-700 flex items-center gap-1.5 bg-emerald-50 px-3 py-1.5 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[36px]"
             disabled={splitImages.length === 0 || zipBusy}
             title={`ZIP of ${CAROUSEL_SLIDE_PX}×${CAROUSEL_SLIDE_PX} PNGs — Instagram carousel 1:1, full image letterboxed (no crop)`}
           >
@@ -346,9 +345,6 @@ export default function ContentVisualsTab({ readyPosts, setReadyPosts }: Content
   const [imageProvider, setImageProvider] = useState<ImageProvider>('google');
   const [creatingDraftId, setCreatingDraftId] = useState<string | null>(null);
   const [publishingPostId, setPublishingPostId] = useState<string | null>(null);
-  const [isCheckingConnection, setIsCheckingConnection] = useState(true);
-  const [isInstagramConnected, setIsInstagramConnected] = useState(false);
-  const [connectionMessage, setConnectionMessage] = useState<string>('');
 
   /** Build a fallback CaptionBlocks from a flat caption string (for older posts without blocks) */
   const buildFallbackBlocks = (caption: string): CaptionBlocks => {
@@ -384,22 +380,6 @@ export default function ContentVisualsTab({ readyPosts, setReadyPosts }: Content
   };
 
   const handleCreateInstagramDraft = async (post: ReadyPost) => {
-    if (!isInstagramConnected) {
-      setReadyPosts((prev) =>
-        prev.map((p) =>
-          p.id === post.id
-            ? {
-                ...p,
-                instagramDraftStatus: 'error',
-                instagramDraftError:
-                  'Instagram is not connected for this user. Check /auth/instagram/debug and backend token setup.',
-              }
-            : p,
-        ),
-      );
-      return;
-    }
-
     setCreatingDraftId(post.id);
     setReadyPosts((prev) =>
       prev.map((p) =>
@@ -451,22 +431,6 @@ export default function ContentVisualsTab({ readyPosts, setReadyPosts }: Content
 
   /** Upload → create carousel/single container → media_publish (goes live on the account). */
   const handlePublishCarouselLive = async (post: ReadyPost) => {
-    if (!isInstagramConnected) {
-      setReadyPosts((prev) =>
-        prev.map((p) =>
-          p.id === post.id
-            ? {
-                ...p,
-                instagramPublishStatus: 'error',
-                instagramPublishError:
-                  'Instagram is not connected. Fix token / debug endpoint first.',
-              }
-            : p,
-        ),
-      );
-      return;
-    }
-
     setPublishingPostId(post.id);
     setReadyPosts((prev) =>
       prev.map((p) =>
@@ -547,42 +511,11 @@ export default function ContentVisualsTab({ readyPosts, setReadyPosts }: Content
     }
   };
 
-  useEffect(() => {
-    let isMounted = true;
-
-    const checkConnection = async () => {
-      setIsCheckingConnection(true);
-      try {
-        const status = await getInstagramConnectionStatus();
-        if (!isMounted) return;
-        setIsInstagramConnected(Boolean(status.hasConnection));
-        setConnectionMessage(
-          status.hasConnection
-            ? `Connected as ${status.userId}${status.connection ? ` (IG: ${status.connection.ig_user_id})` : ''}`
-            : `Not connected for user ${status.userId}`,
-        );
-      } catch (error) {
-        if (!isMounted) return;
-        setIsInstagramConnected(false);
-        setConnectionMessage(
-          error instanceof Error ? error.message : 'Failed to verify Instagram connection.',
-        );
-      } finally {
-        if (isMounted) setIsCheckingConnection(false);
-      }
-    };
-
-    checkConnection();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight text-stone-900">Content Visuals</h2>
-        <p className="text-stone-500 mt-1">Your ready-to-post Instagram carousels.</p>
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-stone-900">Content Visuals</h2>
+        <p className="text-stone-500 mt-1 text-sm sm:text-base">Your ready-to-post Instagram carousels.</p>
       </div>
 
       {/* Instagram connection banner — hidden */}
@@ -608,21 +541,21 @@ export default function ContentVisualsTab({ readyPosts, setReadyPosts }: Content
               className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden"
             >
               {/* Header */}
-              <div className="p-6 border-b border-stone-100 flex justify-between items-start bg-stone-50/50">
-                <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 text-xs font-semibold uppercase tracking-wider rounded-md flex items-center gap-1">
+              <div className="p-4 sm:p-6 border-b border-stone-100 flex justify-between items-start gap-3 bg-stone-50/50">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-2 flex-wrap">
+                    <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 text-xs font-semibold uppercase tracking-wider rounded-md flex items-center gap-1 shrink-0">
                       <CheckCircle2 className="w-3.5 h-3.5" /> Ready to Post
                     </span>
-                    <h3 className="text-xl font-bold text-stone-900">{post.title}</h3>
+                    <h3 className="text-lg sm:text-xl font-bold text-stone-900 leading-snug">{post.title}</h3>
                   </div>
                   <p className="text-stone-500 text-sm">Topic: {post.topic}</p>
                 </div>
-                <div className="flex flex-wrap items-center gap-2 justify-end">
+                <div className="flex flex-wrap items-center gap-2 justify-end shrink-0">
                   {/* Instagram draft + publish buttons — hidden */}
-                  <button 
+                  <button
                     onClick={() => handleDeletePost(post.id)}
-                    className="text-stone-400 hover:text-red-500 transition-colors p-2"
+                    className="text-stone-400 hover:text-red-500 transition-colors p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
                     title="Delete post"
                   >
                     <Trash2 className="w-5 h-5" />
@@ -631,7 +564,7 @@ export default function ContentVisualsTab({ readyPosts, setReadyPosts }: Content
               </div>
               {/* Instagram draft/publish status rows — hidden */}
 
-              <div className="p-6 grid lg:grid-cols-12 gap-8">
+              <div className="p-4 sm:p-6 grid lg:grid-cols-12 gap-6 sm:gap-8">
                 {/* Left Column: Phone Mockup or Visual Grid */}
                 <div className="lg:col-span-7 space-y-4">
                   <div className="flex items-center justify-between">
@@ -680,7 +613,7 @@ export default function ContentVisualsTab({ readyPosts, setReadyPosts }: Content
 
                 {/* Right Column: Caption Editor */}
                 <div className="lg:col-span-5">
-                  <div className="bg-white rounded-xl border border-stone-200 p-5 h-full overflow-y-auto max-h-[600px] custom-scrollbar">
+                  <div className="bg-white rounded-xl border border-stone-200 p-4 sm:p-5 h-full overflow-y-auto lg:max-h-[600px] custom-scrollbar">
                     <CaptionEditor
                       postId={post.id}
                       topic={post.topic}

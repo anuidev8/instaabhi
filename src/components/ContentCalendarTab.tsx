@@ -443,11 +443,11 @@ const CaptionModal: FC<{
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.95, opacity: 0, y: 10 }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className="bg-white rounded-2xl shadow-2xl border border-stone-200 w-full max-w-lg max-h-[85vh] flex flex-col"
+        className="bg-white rounded-2xl shadow-2xl border border-stone-200 w-full max-w-lg max-h-[92vh] flex flex-col"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-start justify-between p-4 border-b border-stone-100">
+        <div className="flex items-start justify-between p-3 sm:p-4 border-b border-stone-100">
           <div className="space-y-1.5 flex-1 min-w-0 pr-3">
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${fmt.bg} ${fmt.text}`}>
@@ -469,21 +469,21 @@ const CaptionModal: FC<{
         </div>
 
         {/* Caption editor */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4">
           <textarea
             value={text}
             onChange={e => setText(e.target.value)}
-            className="w-full h-full min-h-[280px] text-sm text-stone-700 leading-relaxed bg-stone-50 border border-stone-200 rounded-xl p-3 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400"
+            className="w-full h-full min-h-[240px] sm:min-h-[280px] text-sm text-stone-700 leading-relaxed bg-stone-50 border border-stone-200 rounded-xl p-3 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400"
             spellCheck
           />
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-stone-100 flex items-center justify-between gap-3">
+        <div className="p-3 sm:p-4 border-t border-stone-100 flex items-center justify-between gap-3">
           <p className="text-xs text-stone-400">{text.length} chars · Edit freely</p>
           <button
             onClick={handleCopy}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium transition-colors min-h-[44px]"
           >
             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
             {copied ? 'Copied!' : 'Copy Caption'}
@@ -580,7 +580,7 @@ export default function ContentCalendarTab({ onGenerateVideoScript, onCreateCaro
   const isCurrentWeek = viewingOffset === 0;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 sm:space-y-5">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
@@ -590,7 +590,7 @@ export default function ContentCalendarTab({ onGenerateVideoScript, onCreateCaro
         <button
           onClick={handleRefresh}
           disabled={isRefreshing}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white text-sm font-medium transition-colors self-start sm:self-auto"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white text-sm font-medium transition-colors self-start sm:self-auto min-h-[44px]"
         >
           <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
           Refresh Week
@@ -598,23 +598,23 @@ export default function ContentCalendarTab({ onGenerateVideoScript, onCreateCaro
       </div>
 
       {/* Week navigation */}
-      <div className="flex items-center justify-between bg-white border border-stone-200 rounded-xl px-4 py-3">
+      <div className="flex items-center justify-between bg-white border border-stone-200 rounded-xl px-3 sm:px-4 py-2 sm:py-3">
         <button
           onClick={() => handleNavigate(-1)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-stone-100 text-stone-600 text-sm font-medium transition-colors"
+          className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 rounded-lg hover:bg-stone-100 text-stone-600 text-sm font-medium transition-colors min-h-[44px]"
         >
           <ChevronLeft className="w-4 h-4" />
           Prev
         </button>
-        <div className="text-center">
-          <p className="text-sm font-semibold text-stone-800">{formatWeekRange(viewingOffset)}</p>
+        <div className="text-center px-2">
+          <p className="text-xs sm:text-sm font-semibold text-stone-800">{formatWeekRange(viewingOffset)}</p>
           {isCurrentWeek && (
             <span className="text-xs text-emerald-600 font-medium">Current Week</span>
           )}
         </div>
         <button
           onClick={() => handleNavigate(1)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-stone-100 text-stone-600 text-sm font-medium transition-colors"
+          className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 rounded-lg hover:bg-stone-100 text-stone-600 text-sm font-medium transition-colors min-h-[44px]"
         >
           Next
           <ChevronRight className="w-4 h-4" />
@@ -622,21 +622,23 @@ export default function ContentCalendarTab({ onGenerateVideoScript, onCreateCaro
       </div>
 
       {/* Summary bar */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
         {[
           { label: 'Reels', count: reelCount, bg: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200' },
           { label: 'Carousels', count: carouselCount, bg: 'bg-sky-50', text: 'text-sky-700', border: 'border-sky-200' },
           { label: 'Stories', count: storyCount, bg: 'bg-pink-50', text: 'text-pink-700', border: 'border-pink-200' },
           { label: 'Static', count: staticCount, bg: 'bg-stone-50', text: 'text-stone-600', border: 'border-stone-200' },
         ].map(({ label, count, bg, text, border }) => (
-          <div key={label} className={`${bg} border ${border} rounded-xl p-3 text-center`}>
-            <p className={`text-2xl font-bold ${text}`}>{count}</p>
+          <div key={label} className={`${bg} border ${border} rounded-xl p-2 sm:p-3 text-center`}>
+            <p className={`text-xl sm:text-2xl font-bold ${text}`}>{count}</p>
             <p className={`text-xs font-medium ${text} opacity-80`}>{label}</p>
           </div>
         ))}
       </div>
 
       {/* 7-day calendar grid */}
+      {/* On mobile: horizontally scrollable. On lg+: natural grid. */}
+      <p className="text-xs text-stone-400 sm:hidden">Scroll horizontally to see all 7 days →</p>
       <AnimatePresence mode="wait">
         <motion.div
           key={`${viewingOffset}-${refreshSeed}`}
@@ -645,7 +647,7 @@ export default function ContentCalendarTab({ onGenerateVideoScript, onCreateCaro
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.25 }}
         >
-          <div className="overflow-x-auto pb-2">
+          <div className="overflow-x-auto pb-3 -mx-4 px-4 sm:mx-0 sm:px-0" style={{ WebkitOverflowScrolling: 'touch' } as Record<string, string>}>
             <div className="flex gap-3" style={{ minWidth: 'max-content' }}>
               {DAY_LABELS.map((day, dayIndex) => {
                 const dayPosts = calendar.posts.filter(p => p.dayIndex === dayIndex);
@@ -654,7 +656,7 @@ export default function ContentCalendarTab({ onGenerateVideoScript, onCreateCaro
                 const isToday = new Date().toDateString() === date.toDateString();
 
                 return (
-                  <div key={day} className="w-[210px] shrink-0 space-y-2">
+                  <div key={day} className="w-[185px] sm:w-[210px] shrink-0 space-y-2">
                     {/* Day header */}
                     <div className={`rounded-xl px-3 py-2 text-center ${isToday ? 'bg-emerald-600 text-white' : 'bg-white border border-stone-200'}`}>
                       <p className={`text-xs font-bold uppercase tracking-wide ${isToday ? 'text-emerald-100' : 'text-stone-500'}`}>{day.slice(0, 3)}</p>

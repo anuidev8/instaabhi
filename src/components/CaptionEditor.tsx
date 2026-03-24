@@ -207,30 +207,30 @@ export default function CaptionEditor({
     <div className="space-y-4">
 
       {/* ── Header bar ──────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <h4 className="font-semibold text-stone-900 text-sm flex items-center gap-1.5">
           <Sparkles className="w-4 h-4 text-amber-500" />
           Caption
         </h4>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 flex-wrap">
           {regenHistory.length > 0 && (
             <button
               onClick={handleUndoRegen}
-              className="text-xs text-stone-400 hover:text-stone-600 underline transition-colors"
+              className="text-xs text-stone-400 hover:text-stone-600 underline transition-colors min-h-[36px] px-1"
             >
               Undo
             </button>
           )}
           <button
             onClick={() => setShowRegenModal(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-semibold rounded-lg shadow-sm transition-all"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-semibold rounded-lg shadow-sm transition-all min-h-[36px]"
           >
             <Wand2 className="w-3.5 h-3.5" />
-            AI Regenerate
+            AI Regen
           </button>
           <button
             onClick={handleCopyCaption}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-600 text-xs font-medium rounded-lg transition-colors"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-600 text-xs font-medium rounded-lg transition-colors min-h-[36px]"
           >
             {copied === 'caption'
               ? <><CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /><span className="text-emerald-600">Copied</span></>
@@ -309,9 +309,9 @@ export default function CaptionEditor({
               initial={{ opacity: 0, scale: 0.95, y: 8 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-stone-200 overflow-hidden"
+              className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-stone-200 overflow-hidden max-h-[90vh] flex flex-col"
             >
-              <div className="flex items-center justify-between px-5 py-3 border-b border-stone-100">
+              <div className="flex items-center justify-between px-4 sm:px-5 py-3 border-b border-stone-100 shrink-0">
                 <h3 className="font-semibold text-stone-900 flex items-center gap-2 text-sm">
                   <Wand2 className="w-4 h-4 text-amber-500" />
                   AI Regenerate Caption
@@ -321,7 +321,7 @@ export default function CaptionEditor({
                 </button>
               </div>
 
-              <div className="p-5 space-y-4">
+              <div className="p-4 sm:p-5 space-y-4 overflow-y-auto">
                 <textarea
                   value={regenInstruction}
                   onChange={e => setRegenInstruction(e.target.value)}

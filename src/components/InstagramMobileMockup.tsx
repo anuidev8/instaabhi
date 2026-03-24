@@ -167,10 +167,10 @@ export default function InstagramMobileMockup({
   const isModalRecap = showReplaceModal !== null && isRecapSlide(showReplaceModal);
 
   return (
-    <div className="flex flex-col items-center gap-6">
-      {/* Phone frame */}
-      <div className="relative">
-        <div className="w-[280px] rounded-[2.5rem] border-[10px] border-stone-800 bg-stone-900 p-2 shadow-2xl">
+    <div className="flex flex-col items-center gap-4 sm:gap-6">
+      {/* Phone frame — scales down on narrow screens */}
+      <div className="relative w-full flex justify-center">
+        <div className="w-[260px] sm:w-[280px] rounded-[2.5rem] border-[10px] border-stone-800 bg-stone-900 p-2 shadow-2xl">
           {/* Notch */}
           <div className="h-6 mx-8 mb-1 rounded-b-2xl bg-stone-900" />
 
@@ -334,13 +334,13 @@ export default function InstagramMobileMockup({
               initial={{ opacity: 0, scale: 0.95, y: 8 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-stone-200 overflow-hidden"
+              className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-stone-200 overflow-hidden max-h-[92vh] flex flex-col"
             >
               {/* Modal header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-stone-100 bg-stone-50/60">
-                <div>
-                  <h3 className="text-lg font-bold text-stone-900 flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-emerald-500" />
+              <div className="flex items-start justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-stone-100 bg-stone-50/60 shrink-0 gap-3">
+                <div className="min-w-0">
+                  <h3 className="text-base sm:text-lg font-bold text-stone-900 flex items-center gap-2 flex-wrap">
+                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 shrink-0" />
                     Replace Slide {showReplaceModal + 1}
                     {slideRole && (
                       <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-stone-200 text-stone-600 uppercase tracking-wide">
@@ -356,13 +356,13 @@ export default function InstagramMobileMockup({
                 </div>
                 <button
                   onClick={() => setShowReplaceModal(null)}
-                  className="p-2 text-stone-400 hover:text-stone-600 rounded-full hover:bg-stone-100 transition-colors"
+                  className="p-2 text-stone-400 hover:text-stone-600 rounded-full hover:bg-stone-100 transition-colors shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <div className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
+              <div className="p-4 sm:p-6 space-y-4 sm:space-y-5 overflow-y-auto">
 
                 {/* ── RECAP / APP MOCKUP PICKER ────────────────────────── */}
                 {isModalRecap ? (
@@ -502,7 +502,7 @@ export default function InstagramMobileMockup({
               </div>
 
               {/* Modal footer */}
-              <div className="flex gap-3 px-6 py-4 border-t border-stone-100 bg-stone-50/60">
+              <div className="flex gap-3 px-4 sm:px-6 py-3 sm:py-4 border-t border-stone-100 bg-stone-50/60 shrink-0">
                 <button
                   onClick={() => setShowReplaceModal(null)}
                   className="flex-1 py-2.5 rounded-xl border border-stone-200 text-stone-700 font-medium hover:bg-stone-100 transition-colors"

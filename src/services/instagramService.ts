@@ -6,18 +6,6 @@ type DraftContainerResponse = {
   note?: string;
 };
 
-type InstagramDebugResponse = {
-  ok: boolean;
-  userId: string;
-  hasConnection: boolean;
-  connection: {
-    page_id: string;
-    ig_user_id: string;
-    createdAt: number;
-    tokenPreview: string;
-  } | null;
-};
-
 const API_BASE = (import.meta.env.VITE_IG_API_BASE_URL as string | undefined) ?? "http://localhost:8787";
 const DEV_USER_ID = (import.meta.env.VITE_DEV_USER_ID as string | undefined) ?? "dev-user";
 
@@ -88,19 +76,4 @@ export async function confirmInstagramPublish(creationId: string): Promise<Confi
     throw new Error(payload?.error ?? "Failed to publish to Instagram");
   }
   return payload as ConfirmPublishResponse;
-}
-
-export async function getInstagramConnectionStatus(): Promise<InstagramDebugResponse> {
-  const response = await fetch(`${API_BASE}/auth/instagram/debug`, {
-    method: "GET",
-    headers: {
-      authorization: `Bearer ${DEV_USER_ID}`,
-    },
-  });
-
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(payload?.error ?? "Failed to fetch Instagram connection status");
-  }
-  return payload as InstagramDebugResponse;
 }
