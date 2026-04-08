@@ -336,7 +336,8 @@ const PostCard: FC<{
   onGenerateCaption: (post: CalendarPost) => void;
   onGenerateVideoScript: (title: string) => void;
   onCreateCarouselDraft: (title: string) => void;
-}> = ({ post, onGenerateCaption, onGenerateVideoScript, onCreateCarouselDraft }) => {
+  onGenerateThumbnailPrompt: (title: string) => void;
+}> = ({ post, onGenerateCaption, onGenerateVideoScript, onCreateCarouselDraft, onGenerateThumbnailPrompt }) => {
   const fmt = FORMAT_STYLES[post.format];
   const pillar = PILLAR_STYLES[post.pillar];
 
@@ -372,24 +373,34 @@ const PostCard: FC<{
         )}
       </div>
 
-      {/* Format-specific action button */}
-      {post.format === 'Reel' ? (
+      {/* Action buttons */}
+      <div className="space-y-1.5">
+        {post.format === 'Reel' ? (
+          <button
+            onClick={() => onGenerateVideoScript(post.title)}
+            className="w-full flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg bg-stone-50 hover:bg-violet-50 border border-stone-200 hover:border-violet-300 text-xs font-medium text-stone-600 hover:text-violet-700 transition-colors"
+          >
+            <Film className="w-3 h-3" />
+            Generate Video Script
+          </button>
+        ) : (
+          <button
+            onClick={() => onCreateCarouselDraft(post.title)}
+            className="w-full flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg bg-stone-50 hover:bg-emerald-50 border border-stone-200 hover:border-emerald-300 text-xs font-medium text-stone-600 hover:text-emerald-700 transition-colors"
+          >
+            <LayoutGrid className="w-3 h-3" />
+            Create Carousel Draft
+          </button>
+        )}
+
         <button
-          onClick={() => onGenerateVideoScript(post.title)}
-          className="w-full flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg bg-stone-50 hover:bg-violet-50 border border-stone-200 hover:border-violet-300 text-xs font-medium text-stone-600 hover:text-violet-700 transition-colors"
+          onClick={() => onGenerateThumbnailPrompt(post.title)}
+          className="w-full flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg bg-stone-50 hover:bg-rose-50 border border-stone-200 hover:border-rose-300 text-xs font-medium text-stone-600 hover:text-rose-700 transition-colors"
         >
-          <Film className="w-3 h-3" />
-          Generate Video Script
+          <ImageIcon className="w-3 h-3" />
+          Open Thumbnail Brief
         </button>
-      ) : (
-        <button
-          onClick={() => onCreateCarouselDraft(post.title)}
-          className="w-full flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg bg-stone-50 hover:bg-emerald-50 border border-stone-200 hover:border-emerald-300 text-xs font-medium text-stone-600 hover:text-emerald-700 transition-colors"
-        >
-          <LayoutGrid className="w-3 h-3" />
-          Create Carousel Draft
-        </button>
-      )}
+      </div>
     </div>
   );
 }
@@ -496,7 +507,15 @@ const CaptionModal: FC<{
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export default function ContentCalendarTab({ onGenerateVideoScript, onCreateCarouselDraft }: { onGenerateVideoScript?: (title: string) => void; onCreateCarouselDraft?: (title: string) => void }) {
+export default function ContentCalendarTab({
+  onGenerateVideoScript,
+  onCreateCarouselDraft,
+  onGenerateThumbnailPrompt,
+}: {
+  onGenerateVideoScript?: (title: string) => void;
+  onCreateCarouselDraft?: (title: string) => void;
+  onGenerateThumbnailPrompt?: (title: string) => void;
+}) {
   const [calendar, setCalendar] = useState<WeekCalendar | null>(null);
   const [viewingOffset, setViewingOffset] = useState(0);
   const [refreshSeed, setRefreshSeed] = useState(0);
@@ -672,6 +691,7 @@ export default function ContentCalendarTab({ onGenerateVideoScript, onCreateCaro
                           onGenerateCaption={handleGenerateCaption}
                           onGenerateVideoScript={onGenerateVideoScript ?? (() => {})}
                           onCreateCarouselDraft={onCreateCarouselDraft ?? (() => {})}
+                          onGenerateThumbnailPrompt={onGenerateThumbnailPrompt ?? (() => {})}
                         />
                       ))}
                     </div>

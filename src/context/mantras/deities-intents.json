@@ -1,0 +1,163 @@
+{
+  "canvas": {
+    "width": 1280,
+    "height": 720,
+    "aspect": "16:9"
+  },
+  "background": ["#000000", "#050A1A", "#07062A"],
+  "rules": {
+    "deityPlacement": "left 40-55%",
+    "textPlacement": "right side, text baked into image",
+    "style": "photorealistic cinematic devotional",
+    "aura": "always present behind deity, anchored in the deity reference aura and supported by the selected intent mood",
+    "noText": false,
+    "negativeSpaceLeft": false,
+    "textBakedIntoImage": true
+  },
+  "intents": [
+    {
+      "key": "abundance",
+      "label": "Abundance / Success",
+      "color": "#FFD700",
+      "mood": "sacred prosperity, breakthrough, divine support, success momentum",
+      "hookWords": ["2026 SUCCESS", "INSTANT SUCCESS", "GOLDEN ABUNDANCE", "WEALTH FLOW", "PROSPERITY NOW"]
+    },
+    {
+      "key": "protection",
+      "label": "Protection",
+      "color": "#0066FF",
+      "mood": "shielded, fearless, spiritually guarded, protected from negativity",
+      "hookWords": ["2026 PROTECTION", "DIVINE SHIELD", "SHIELD YOURSELF", "PROTECTED ALWAYS", "NEGATIVE ENERGY OFF"]
+    },
+    {
+      "key": "healing",
+      "label": "Healing",
+      "color": "#00C896",
+      "mood": "restorative, body-mind-soul healing, compassionate renewal",
+      "hookWords": ["ULTIMATE HEALING", "BODY MIND SOUL", "HEAL DEEPLY", "SACRED HEALING", "KARMA HEALING"]
+    },
+    {
+      "key": "love",
+      "label": "Love / Devotion",
+      "color": "#FF69B4",
+      "mood": "heart-opening, devotional, soft, emotionally resonant",
+      "hookWords": ["DIVINE LOVE", "DEEP LOVE", "HEART OPENING", "DEVOTIONAL PEACE", "JOY & LOVE"]
+    },
+    {
+      "key": "power",
+      "label": "Power / Courage",
+      "color": "#FF4500",
+      "mood": "fierce, courageous, powerful, victorious, unstoppable",
+      "hookWords": ["FEARLESSNESS", "CLAIM YOUR POWER", "UNSTOPPABLE POWER", "INNER FIRE", "DIVINE STRENGTH"]
+    },
+    {
+      "key": "peace",
+      "label": "Peace / Meditation",
+      "color": "#87CEEB",
+      "mood": "deep peace, inner stillness, meditative calm, soft devotion",
+      "hookWords": ["DEEP PEACE", "INNER PEACE", "CALM MIND", "MEDITATIVE STILLNESS", "SOUL PEACE"]
+    },
+    {
+      "key": "knowledge",
+      "label": "Knowledge / Clarity",
+      "color": "#FFFACD",
+      "mood": "clarity, sacred wisdom, intelligent insight, creative guidance",
+      "hookWords": ["DIVINE KNOWLEDGE", "HIGHER CLARITY", "WISDOM FLOW", "SACRED LEARNING", "MENTAL CLARITY"]
+    },
+    {
+      "key": "transformation",
+      "label": "Transformation",
+      "color": "#8B0000",
+      "mood": "fierce rebirth, karma release, destruction of obstacles, spiritual transformation",
+      "hookWords": ["TOTAL TRANSFORMATION", "KARMA RELEASE", "REBIRTH NOW", "DESTINY SHIFT", "FIERCE CHANGE"]
+    }
+  ],
+  "deities": [
+    {
+      "name": "Ganesha",
+      "channelName": "Ganesh",
+      "aliases": ["Ganesh"],
+      "visualSignature": "elephant head, large belly, large compassionate eyes, golden ornaments, lotus, modak, blessing hand, monumental sacred presence",
+      "auraColor": "#FF8C00",
+      "auraStyle": "warm amber-orange aura with concentric glow, golden particles, and divine prosperity radiance",
+      "intents": ["abundance", "knowledge", "transformation", "protection"]
+    },
+    {
+      "name": "Shiva",
+      "visualSignature": "third eye, crescent moon, blue throat, trident, cobra, ash-toned skin, meditative powerful gaze",
+      "auraColor": "#0066FF",
+      "auraStyle": "electric blue shield aura with blue haze, divine protection charge, and crisp rim light",
+      "intents": ["protection", "transformation", "power", "peace"]
+    },
+    {
+      "name": "Hanuman",
+      "visualSignature": "orange-red body, muscular build, gada mace, devotional gaze, heroic protective posture, fierce compassionate expression",
+      "auraColor": "#FF4500",
+      "auraStyle": "fiery orange-red aura with fire particles, strength, courage, and devotional power",
+      "intents": ["power", "protection", "healing"]
+    },
+    {
+      "name": "Krishna",
+      "channelName": "Hare Krishna",
+      "aliases": ["Hare Krishna"],
+      "visualSignature": "dark blue skin, yellow dhoti, flute, peacock feather, serene loving expression, luminous devotional beauty",
+      "auraColor": "#00BFFF",
+      "auraStyle": "teal-blue devotional aura with star particles, moonlit softness, and peaceful divine love",
+      "intents": ["love", "peace", "knowledge"]
+    },
+    {
+      "name": "Lakshmi",
+      "visualSignature": "four arms, lotus flowers, gold coins flowing from palm, gold sari, serene abundance, regal divine beauty",
+      "auraColor": "#FFD700",
+      "auraStyle": "golden prosperity aura with lotus shimmer, warm abundance glow, and sacred wealth radiance",
+      "intents": ["abundance", "love", "peace"]
+    },
+    {
+      "name": "Durga",
+      "visualSignature": "8-10 arms with weapons, lion mount, fierce compassionate face, commanding protective goddess energy",
+      "auraColor": "#6A0DAD",
+      "auraStyle": "deep violet protective aura with fierce halo, goddess power, and radiant warrior presence",
+      "intents": ["protection", "power", "transformation"]
+    },
+    {
+      "name": "Saraswati",
+      "visualSignature": "white sari, veena, lotus, swan symbolism, calm radiant expression, luminous sacred wisdom",
+      "auraColor": "#FFFACD",
+      "auraStyle": "warm ivory aura with soft wisdom glow, gentle light, and refined devotional clarity",
+      "intents": ["knowledge", "peace", "love"]
+    },
+    {
+      "name": "Ram",
+      "aliases": ["Rama"],
+      "visualSignature": "bow and arrow, calm regal expression, blue skin, gold crown, righteous warrior presence",
+      "auraColor": "#FFD700",
+      "auraStyle": "golden righteous aura with subtle sunlit halo, dharmic strength, and noble calm",
+      "intents": ["power", "protection", "knowledge"]
+    },
+    {
+      "name": "Kali",
+      "visualSignature": "dark blue-black skin, tongue out, fierce face, dramatic eyes, skull garland, transformational intensity, protective ferocity",
+      "auraColor": "#8B0000",
+      "auraStyle": "deep crimson aura with red-black edge glow, fierce transformation, and negativity-destroying force",
+      "intents": ["transformation", "protection", "power"]
+    },
+    {
+      "name": "Medicine Buddha",
+      "aliases": ["Vishnu"],
+      "visualSignature": "deep blue skin, healing seated posture, nectar bowl, serene compassionate face, luminous restorative energy",
+      "auraColor": "#1E40AF",
+      "auraStyle": "deep blue healing aura with gold highlights, restorative calm, and compassionate divine medicine energy",
+      "intents": ["healing", "peace", "abundance"]
+    }
+  ],
+  "hookWords": {
+    "abundance": ["2026 SUCCESS", "INSTANT SUCCESS", "GOLDEN ABUNDANCE", "WEALTH FLOW", "PROSPERITY NOW"],
+    "protection": ["2026 PROTECTION", "DIVINE SHIELD", "SHIELD YOURSELF", "PROTECTED ALWAYS", "NEGATIVE ENERGY OFF"],
+    "healing": ["ULTIMATE HEALING", "BODY MIND SOUL", "HEAL DEEPLY", "SACRED HEALING", "KARMA HEALING"],
+    "love": ["DIVINE LOVE", "DEEP LOVE", "HEART OPENING", "DEVOTIONAL PEACE", "JOY & LOVE"],
+    "power": ["FEARLESSNESS", "CLAIM YOUR POWER", "UNSTOPPABLE POWER", "INNER FIRE", "DIVINE STRENGTH"],
+    "peace": ["DEEP PEACE", "INNER PEACE", "CALM MIND", "MEDITATIVE STILLNESS", "SOUL PEACE"],
+    "knowledge": ["DIVINE KNOWLEDGE", "HIGHER CLARITY", "WISDOM FLOW", "SACRED LEARNING", "MENTAL CLARITY"],
+    "transformation": ["TOTAL TRANSFORMATION", "KARMA RELEASE", "REBIRTH NOW", "DESTINY SHIFT", "FIERCE CHANGE"]
+  }
+}

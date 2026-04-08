@@ -214,3 +214,91 @@ export interface AppMarketingVideoDraft {
   finalVideoUrl?: string;
   errorMessage?: string;
 }
+
+// ─── YouTube Thumbnails ──────────────────────────────────────────────────────
+
+export type IntentKey =
+  | 'abundance'
+  | 'protection'
+  | 'healing'
+  | 'love'
+  | 'power'
+  | 'peace'
+  | 'knowledge'
+  | 'transformation';
+
+export interface Intent {
+  key: IntentKey;
+  label: string;
+  color: string;
+  mood: string;
+  hookWords: string[];
+}
+
+export interface Deity {
+  name: string;
+  visualSignature: string;
+  intents: IntentKey[];
+  aliases?: string[];
+  auraColor?: string;
+  auraStyle?: string;
+  channelName?: string;
+}
+
+export interface ThumbnailPrompt {
+  title: string;
+  deity: string;
+  intent: IntentKey;
+  special?: string;
+}
+
+export interface ThumbnailCanvaSpec {
+  hookWord: string;
+  secondary: string;
+  badge?: string;
+  schoolLabel?: string;
+  seoTitle?: string;
+  colors: {
+    hook: string;
+    secondary: string;
+    brand: string;
+    badge?: string;
+    aura?: string;
+  };
+}
+
+export type ThumbnailDraftStatus = 'draft' | 'generating' | 'ready' | 'error';
+
+export interface ThumbnailDraft {
+  id: string;
+  status: ThumbnailDraftStatus;
+  prompt: ThumbnailPrompt;
+  baseImages: string[];
+  canvaSpec: ThumbnailCanvaSpec;
+  createdAt: Date;
+  generationPrompts?: string[];
+  templateId?: string;
+  errorMessage?: string;
+  validationSummary?: string[];
+}
+
+export interface MantrasBrandContext {
+  canvas: {
+    width: 1280;
+    height: 720;
+    aspect: '16:9';
+  };
+  background: string[];
+  rules: {
+    deityPlacement: string;
+    textPlacement?: string;
+    style: string;
+    aura: string;
+    noText: boolean;
+    negativeSpaceLeft: boolean;
+    textBakedIntoImage?: boolean;
+  };
+  deities: Deity[];
+  intents: Intent[];
+  hookWords: Record<IntentKey, string[]>;
+}
