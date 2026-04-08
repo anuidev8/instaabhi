@@ -3,14 +3,21 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   Plus, Loader2, Sparkles, Trash2, X, Video, Download,
   ChevronRight, AlertCircle, Clock, Globe, Upload, Film,
-  CheckCircle2, Play, Clapperboard, MessageSquare, Copy,
+  CheckCircle2, Play, Clapperboard, MessageSquare, Copy, Link2,
 } from 'lucide-react';
-import { VideoReelDraft, VideoReelInput, VideoReelMode, BrandContext } from '../types';
+import {
+  VideoReelDraft,
+  VideoReelInput,
+  VideoReelMode,
+  BrandContext,
+  SceneVideoProvider,
+  VideoReferenceKind,
+} from '../types';
 import { generateVideoReelContent } from '../services/videoReelService';
-import { generateReelVideo, FalJobPayload } from '../services/falService';
+import { generateReelVideo, FalJobPayload, uploadLocalReferenceVideo } from '../services/falService';
 import { useWakeLock } from '../lib/useWakeLock';
 
-// ─── Brand Context (used by Fal video pipeline only) ─────────────────────────
+// ─── Brand Context (used by scene video prompt pipeline) ─────────────────────
 // Script + caption generation uses REEL_BRAND_CONTEXT from videoReelService internally.
 const BRAND_CONTEXT: BrandContext = {
   name: 'Meditate with Abhi',
@@ -41,6 +48,11 @@ const LANGUAGES = [
   { code: 'hi', label: 'Hindi' },
 ];
 
+const SCENE_VIDEO_PROVIDERS: Array<{ value: SceneVideoProvider; label: string }> = [
+  { value: 'gemini', label: 'Gemini (Latest Video Model)' },
+  { value: 'openai', label: 'OpenAI (Latest Video Model)' },
+];
+
 // ─── Status badge ─────────────────────────────────────────────────────────────
 function StatusBadge({ status }: { status: VideoReelDraft['status'] }) {
   const map = {
@@ -69,10 +81,22 @@ function SceneCard({ scene, total }: { scene: VideoReelDraft['scenes'][0]; total
           {scene.start}s – {scene.end}s · {scene.duration}s
         </span>
       </div>
+      {Number.isFinite(scene.sourceStart) && Number.isFinite(scene.sourceEnd) && (
+        <p className="text-[11px] text-stone-500">
+          Source clip: {scene.sourceStart}s → {scene.sourceEnd}s
+        </p>
+      )}
       <p className="text-sm text-stone-800 italic">"{scene.narrative}"</p>
       <p className="text-xs text-stone-500 border-t border-stone-200 pt-2 leading-relaxed">
         <span className="font-semibold text-stone-600">Visual: </span>{scene.visualPrompt}
       </p>
+      {(scene.cameraMovement || scene.transitionToNext || scene.overlayText) && (
+        <p className="text-xs text-stone-500 leading-relaxed">
+          {scene.cameraMovement && <><span className="font-semibold text-stone-600">Camera:</span> {scene.cameraMovement}. </>}
+          {scene.transitionToNext && <><span className="font-semibold text-stone-600">Transition:</span> {scene.transitionToNext}. </>}
+          {scene.overlayText && <><span className="font-semibold text-stone-600">Overlay:</span> {scene.overlayText}</>}
+        </p>
+      )}
     </div>
   );
 }
@@ -90,6 +114,7 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts, initialP
   const [generatingVideoId, setGeneratingVideoId] = useState<string | null>(null);
   const [copiedScript, setCopiedScript] = useState<string | null>(null);
   const [copiedCaption, setCopiedCaption] = useState<string | null>(null);
+  const [copiedYoutubeDescription, setCopiedYoutubeDescription] = useState<string | null>(null);
 
   const handleCopyScript = (id: string, script: string) => {
     navigator.clipboard.writeText(script);
@@ -103,17 +128,30 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts, initialP
     setTimeout(() => setCopiedCaption(null), 2000);
   };
 
+  const handleCopyYoutubeDescription = (id: string, description: string) => {
+    navigator.clipboard.writeText(description);
+    setCopiedYoutubeDescription(id);
+    setTimeout(() => setCopiedYoutubeDescription(null), 2000);
+  };
+
   // ── Modal form state ──────────────────────────────────────────────────────
   const [prompt, setPrompt] = useState('');
   const [mode, setMode] = useState<VideoReelMode>('PROMPT_ONLY');
   const [refVideoUrl, setRefVideoUrl] = useState('');
+  const [refVideoKind, setRefVideoKind] = useState<VideoReferenceKind>('YOUTUBE');
+  const [refVideoTitle, setRefVideoTitle] = useState('');
+  const [uploadingRefVideo, setUploadingRefVideo] = useState(false);
+  const [uploadedRefVideoName, setUploadedRefVideoName] = useState('');
   const [refImages, setRefImages] = useState<string[]>([]);
   const [targetDuration, setTargetDuration] = useState(30);
+  const [sceneVideoProvider, setSceneVideoProvider] = useState<SceneVideoProvider>('gemini');
   const [language, setLanguage] = useState('en');
   const [isGeneratingScript, setIsGeneratingScript] = useState(false);
-  useWakeLock(isGeneratingScript);
+  const [modalError, setModalError] = useState<string | null>(null);
+  useWakeLock(isGeneratingScript || !!generatingVideoId);
 
   const refImageInputRef = useRef<HTMLInputElement>(null);
+  const refVideoInputRef = useRef<HTMLInputElement>(null);
 
   // Open modal pre-filled when navigated from Content Calendar
   useEffect(() => {
@@ -128,27 +166,99 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts, initialP
     setPrompt('');
     setMode('PROMPT_ONLY');
     setRefVideoUrl('');
+    setRefVideoKind('YOUTUBE');
+    setRefVideoTitle('');
+    setUploadingRefVideo(false);
+    setUploadedRefVideoName('');
     setRefImages([]);
     setTargetDuration(30);
+    setSceneVideoProvider('gemini');
     setLanguage('en');
+    setModalError(null);
+  };
+
+  const inferReferenceKindFromUrl = (url: string): VideoReferenceKind => {
+    const normalized = url.toLowerCase();
+    if (normalized.includes('youtube.com') || normalized.includes('youtu.be')) return 'YOUTUBE';
+    if (normalized.includes('instagram.com')) return 'INSTAGRAM';
+    return 'DIRECT_URL';
+  };
+
+  const handleRefVideoFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setModalError(null);
+    setUploadingRefVideo(true);
+    try {
+      const uploadedUrl = await uploadLocalReferenceVideo(file);
+      setRefVideoUrl(uploadedUrl);
+      setRefVideoKind('LOCAL_MP4');
+      setUploadedRefVideoName(file.name);
+      if (!refVideoTitle.trim()) {
+        const titleWithoutExt = file.name.replace(/\.[^.]+$/, '');
+        setRefVideoTitle(titleWithoutExt);
+      }
+    } catch (error) {
+      console.error('Failed to upload reference video:', error);
+      setModalError(
+        error instanceof Error
+          ? error.message
+          : 'Failed to upload local MP4 to reference storage.'
+      );
+    } finally {
+      setUploadingRefVideo(false);
+      if (refVideoInputRef.current) refVideoInputRef.current.value = '';
+    }
   };
 
   // ── Step 1: Generate script + caption from Gemini (brand context) ─────────
   const handleGenerateScript = async () => {
-    if (!prompt.trim()) return;
+    if (!prompt.trim()) {
+      setModalError('Topic / angle is required.');
+      return;
+    }
+
+    if (mode === 'FROM_REFERENCE_VIDEO' && !refVideoUrl.trim()) {
+      setModalError('Add a reference source URL or upload a local MP4 first.');
+      return;
+    }
+
+    setModalError(null);
     setIsGeneratingScript(true);
+
+    const normalizedRefUrl = refVideoUrl.trim();
+    const effectiveReferenceKind =
+      mode === 'FROM_REFERENCE_VIDEO'
+        ? (refVideoKind === 'LOCAL_MP4' ? 'LOCAL_MP4' : inferReferenceKindFromUrl(normalizedRefUrl))
+        : undefined;
 
     const videoReelInput: VideoReelInput = {
       prompt: prompt.trim(),
       mode,
-      referenceVideoUrl: mode === 'FROM_REFERENCE_VIDEO' ? refVideoUrl : undefined,
+      referenceVideoUrl: mode === 'FROM_REFERENCE_VIDEO' ? normalizedRefUrl : undefined,
+      referenceVideoKind: effectiveReferenceKind,
+      referenceVideoTitle: mode === 'FROM_REFERENCE_VIDEO' ? refVideoTitle.trim() || prompt.trim() : undefined,
       referenceImages: mode === 'FROM_IMAGES' ? refImages : undefined,
       targetDurationSeconds: targetDuration,
       language,
     };
 
     try {
-      const { headline, body, cta, hashtags, brandScore, script, caption, scenes } = await generateVideoReelContent(videoReelInput);
+      const {
+        headline,
+        body,
+        cta,
+        hashtags,
+        brandScore,
+        script,
+        caption,
+        scenes,
+        instagramCaption,
+        youtubeDescription,
+        sourceAnalysisSummary,
+        normalizedDurationSeconds,
+      } = await generateVideoReelContent(videoReelInput);
 
       const newDraft: VideoReelDraft = {
         id: crypto.randomUUID(),
@@ -160,6 +270,12 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts, initialP
         brandScore,
         script,
         caption,
+        instagramCaption,
+        youtubeDescription,
+        targetPlatforms: ['instagram_reels', 'youtube_shorts'],
+        normalizedDurationSeconds,
+        sourceAnalysisSummary,
+        sceneVideoProvider,
         scenes,
         videoReelInput,
         status: 'draft',
@@ -189,6 +305,8 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts, initialP
       draftId: draft.id,
       script: draft.script,
       scenes: draft.scenes,
+      sceneVideoProvider: draft.sceneVideoProvider || 'gemini',
+      sourceAnalysisSummary: draft.sourceAnalysisSummary,
       videoReelInput: draft.videoReelInput,
       brandContext: BRAND_CONTEXT,
     };
@@ -246,7 +364,7 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts, initialP
         <div>
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-stone-900">Video Reels Draft</h2>
           <p className="text-stone-500 mt-1 text-sm sm:text-base">
-            AI-generated short-form video scripts + automated Reel production via Fal.
+            AI script + scene planning, provider-based scene video generation, Fal concat assembly.
           </p>
         </div>
         <button
@@ -267,7 +385,7 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts, initialP
           </div>
           <h3 className="text-lg font-medium text-stone-900 mb-2">No video reels yet</h3>
           <p className="text-stone-500 max-w-sm mx-auto mb-6">
-            Click "New Reel" to generate a script and caption, then produce your first AI-powered Instagram Reel.
+            Click "New Reel" to generate a script and metadata, then render scene videos with Gemini or OpenAI.
           </p>
           <button
             onClick={() => setIsModalOpen(true)}
@@ -301,11 +419,21 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts, initialP
                     <span className="flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5" />
                       {draft.videoReelInput.targetDurationSeconds}s target
+                      {draft.normalizedDurationSeconds ? ` · ${draft.normalizedDurationSeconds}s final` : ''}
                     </span>
                     <span className="flex items-center gap-1">
                       <Globe className="w-3.5 h-3.5" />
                       {LANGUAGES.find(l => l.code === draft.videoReelInput.language)?.label ?? draft.videoReelInput.language}
                     </span>
+                    <span>
+                      Scene model: <span className="font-medium">{draft.sceneVideoProvider || 'gemini'}</span>
+                    </span>
+                    {draft.videoReelInput.mode === 'FROM_REFERENCE_VIDEO' && (
+                      <span className="flex items-center gap-1">
+                        <Link2 className="w-3.5 h-3.5" />
+                        {draft.videoReelInput.referenceVideoKind ?? 'DIRECT_URL'}
+                      </span>
+                    )}
                   </div>
                 </div>
                 <button
@@ -354,23 +482,54 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts, initialP
 
                 {/* Right: Caption + actions */}
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-semibold text-stone-900 flex items-center gap-2 text-sm">
-                      <MessageSquare className="w-4 h-4 text-stone-400" />
-                      Instagram Caption
-                    </h4>
-                    <button
-                      onClick={() => handleCopyCaption(draft.id, draft.caption ?? '')}
-                      className="flex items-center gap-1 text-xs text-stone-400 hover:text-stone-700 transition-colors"
-                      title="Copy caption"
-                    >
-                      {copiedCaption === draft.id ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-                      {copiedCaption === draft.id ? 'Copied!' : 'Copy'}
-                    </button>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-semibold text-stone-900 flex items-center gap-2 text-sm">
+                        <MessageSquare className="w-4 h-4 text-stone-400" />
+                        Instagram Caption
+                      </h4>
+                      <button
+                        onClick={() => handleCopyCaption(draft.id, draft.caption ?? '')}
+                        className="flex items-center gap-1 text-xs text-stone-400 hover:text-stone-700 transition-colors"
+                        title="Copy caption"
+                      >
+                        {copiedCaption === draft.id ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                        {copiedCaption === draft.id ? 'Copied!' : 'Copy'}
+                      </button>
+                    </div>
+                    <div className="bg-stone-50 rounded-xl border border-stone-200 p-4 text-sm max-h-44 overflow-y-auto custom-scrollbar">
+                      <p className="text-[13px] text-stone-700 leading-relaxed whitespace-pre-wrap">{draft.caption ?? ''}</p>
+                    </div>
                   </div>
-                  <div className="bg-stone-50 rounded-xl border border-stone-200 p-4 text-sm max-h-64 overflow-y-auto custom-scrollbar">
-                    <p className="text-[13px] text-stone-700 leading-relaxed whitespace-pre-wrap">{draft.caption ?? ''}</p>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-semibold text-stone-900 flex items-center gap-2 text-sm">
+                        <Video className="w-4 h-4 text-stone-400" />
+                        YouTube Description
+                      </h4>
+                      <button
+                        onClick={() => handleCopyYoutubeDescription(draft.id, draft.youtubeDescription ?? '')}
+                        className="flex items-center gap-1 text-xs text-stone-400 hover:text-stone-700 transition-colors"
+                        title="Copy YouTube description"
+                      >
+                        {copiedYoutubeDescription === draft.id ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                        {copiedYoutubeDescription === draft.id ? 'Copied!' : 'Copy'}
+                      </button>
+                    </div>
+                    <div className="bg-stone-50 rounded-xl border border-stone-200 p-4 text-sm max-h-36 overflow-y-auto custom-scrollbar">
+                      <p className="text-[13px] text-stone-700 leading-relaxed whitespace-pre-wrap">
+                        {draft.youtubeDescription ?? 'No YouTube description generated yet.'}
+                      </p>
+                    </div>
                   </div>
+
+                  {draft.sourceAnalysisSummary && (
+                    <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
+                      <p className="text-[11px] font-semibold tracking-wide uppercase text-blue-700">Source analysis</p>
+                      <p className="text-xs text-blue-900 mt-1 leading-relaxed">{draft.sourceAnalysisSummary}</p>
+                    </div>
+                  )}
 
                   {/* Scene Breakdown — hidden from UI, data kept for Fal pipeline */}
                   <div className="hidden">
@@ -384,14 +543,43 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts, initialP
                   {/* Action area */}
                   <div className="pt-2">
                     {draft.status === 'draft' && (
-                      <button
-                        disabled
-                        className="w-full py-3 bg-stone-200 text-stone-400 rounded-xl font-medium flex items-center justify-center gap-2 cursor-not-allowed"
-                      >
-                        <Play className="w-5 h-5" />
-                        Generate Reel Video
-                        <ChevronRight className="w-4 h-4" />
-                      </button>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <label className="text-xs text-stone-500 shrink-0">Scene Model</label>
+                          <select
+                            value={draft.sceneVideoProvider || 'gemini'}
+                            onChange={(e) => {
+                              const nextProvider = e.target.value as SceneVideoProvider;
+                              setReelDrafts(prev =>
+                                prev.map(d =>
+                                  d.id === draft.id
+                                    ? { ...d, sceneVideoProvider: nextProvider }
+                                    : d
+                                )
+                              );
+                            }}
+                            disabled={!!generatingVideoId}
+                            className="flex-1 px-2.5 py-2 text-xs bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                          >
+                            {SCENE_VIDEO_PROVIDERS.map(option => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <button
+                          onClick={() => handleGenerateVideo(draft)}
+                          disabled={!!generatingVideoId}
+                          className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          {generatingVideoId === draft.id ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5" />}
+                          {generatingVideoId === draft.id
+                            ? 'Generating scenes + concatenating…'
+                            : 'Generate Reel Video'}
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </div>
                     )}
 
                     {draft.status === 'generating' && (
@@ -484,7 +672,7 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts, initialP
                 <div className="min-w-0">
                   <h3 className="text-lg sm:text-xl font-bold text-stone-900">New Video Reel</h3>
                   <p className="text-stone-500 text-sm mt-1">
-                    AI will write a script + scene plan, then Fal produces the video.
+                    Gemini creates the reel plan from your prompt/source. Then scenes render with your chosen provider.
                   </p>
                 </div>
                 <button
@@ -535,20 +723,26 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts, initialP
                   />
                 </div>
 
-                {/* Mode — hidden for now */}
-                <div className="hidden">
+                {/* Mode */}
+                <div>
                   <label className="block text-sm font-medium text-stone-700 mb-2">Mode</label>
+                  <p className="text-xs text-stone-500 mb-2">
+                    Gemini analyzes reference media when provided. Scene videos are generated with your selected model provider.
+                  </p>
                   <div className="grid grid-cols-3 gap-2">
                     {(
                       [
                         { v: 'PROMPT_ONLY', label: 'Prompt Only', icon: <Sparkles className="w-4 h-4" /> },
-                        { v: 'FROM_REFERENCE_VIDEO', label: 'Ref. Video', icon: <Film className="w-4 h-4" /> },
-                        { v: 'FROM_IMAGES', label: 'From Images', icon: <Upload className="w-4 h-4" /> },
+                        { v: 'FROM_REFERENCE_VIDEO', label: 'Any Video Source', icon: <Film className="w-4 h-4" /> },
+                        { v: 'FROM_IMAGES', label: 'Reference Images', icon: <Upload className="w-4 h-4" /> },
                       ] as const
                     ).map(({ v, label, icon }) => (
                       <button
                         key={v}
-                        onClick={() => setMode(v)}
+                        onClick={() => {
+                          setMode(v);
+                          setModalError(null);
+                        }}
                         className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border text-xs font-medium transition-colors ${
                           mode === v
                             ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
@@ -562,24 +756,87 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts, initialP
                   </div>
                 </div>
 
-                {/* Mode-specific inputs — hidden for now */}
-                {false && mode === 'FROM_REFERENCE_VIDEO' && (
-                  <div>
-                    <label htmlFor="ref-video" className="block text-sm font-medium text-stone-700 mb-1.5">
-                      Reference Video URL
-                    </label>
-                    <input
-                      id="ref-video"
-                      type="url"
-                      value={refVideoUrl}
-                      onChange={e => setRefVideoUrl(e.target.value)}
-                      placeholder="https://..."
-                      className="w-full px-4 py-2 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-stone-900 placeholder:text-stone-400"
-                    />
+                {/* Mode-specific inputs */}
+                {mode === 'FROM_REFERENCE_VIDEO' && (
+                  <div className="space-y-4 rounded-xl border border-stone-200 bg-stone-50/60 p-4">
+                    <div>
+                      <label htmlFor="ref-video" className="block text-sm font-medium text-stone-700 mb-1.5">
+                        Source URL (YouTube / Instagram / MP4)
+                      </label>
+                      <input
+                        id="ref-video"
+                        type="url"
+                        value={refVideoUrl}
+                        onChange={e => {
+                          const nextValue = e.target.value;
+                          setRefVideoUrl(nextValue);
+                          if (refVideoKind !== 'LOCAL_MP4') {
+                            setRefVideoKind(inferReferenceKindFromUrl(nextValue));
+                          }
+                        }}
+                        placeholder="https://youtube.com/... or https://instagram.com/reel/..."
+                        className="w-full px-4 py-2 bg-white border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-stone-900 placeholder:text-stone-400"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label htmlFor="ref-kind" className="block text-sm font-medium text-stone-700 mb-1.5">
+                          Source Type
+                        </label>
+                        <select
+                          id="ref-kind"
+                          value={refVideoKind}
+                          onChange={(e) => setRefVideoKind(e.target.value as VideoReferenceKind)}
+                          className="w-full px-3 py-2 bg-white border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-stone-900"
+                        >
+                          <option value="YOUTUBE">YouTube</option>
+                          <option value="INSTAGRAM">Instagram Reel</option>
+                          <option value="LOCAL_MP4">Local MP4</option>
+                          <option value="DIRECT_URL">Direct URL</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label htmlFor="ref-title" className="block text-sm font-medium text-stone-700 mb-1.5">
+                          Source Title (optional)
+                        </label>
+                        <input
+                          id="ref-title"
+                          type="text"
+                          value={refVideoTitle}
+                          onChange={(e) => setRefVideoTitle(e.target.value)}
+                          placeholder="e.g. Morning Kapalabhati with Abhi"
+                          className="w-full px-4 py-2 bg-white border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-stone-900 placeholder:text-stone-400"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <input
+                        ref={refVideoInputRef}
+                        type="file"
+                        accept="video/mp4,video/*"
+                        className="hidden"
+                        onChange={handleRefVideoFileUpload}
+                      />
+                      <button
+                        onClick={() => refVideoInputRef.current?.click()}
+                        disabled={uploadingRefVideo}
+                        className="w-full py-2.5 border border-dashed border-stone-300 hover:border-emerald-400 hover:bg-emerald-50 text-stone-600 hover:text-emerald-700 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        {uploadingRefVideo ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                        {uploadingRefVideo ? 'Uploading local MP4…' : 'Upload Local MP4 (optional)'}
+                      </button>
+                      {uploadedRefVideoName && (
+                        <p className="text-xs text-stone-600 mt-2">
+                          Uploaded: <span className="font-medium">{uploadedRefVideoName}</span>
+                        </p>
+                      )}
+                    </div>
                   </div>
                 )}
 
-                {false && mode === 'FROM_IMAGES' && (
+                {mode === 'FROM_IMAGES' && (
                   <div>
                     <label className="block text-sm font-medium text-stone-700 mb-1.5">
                       Reference Images (up to 4)
@@ -614,8 +871,8 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts, initialP
                   </div>
                 )}
 
-                {/* Duration + Language — hidden for now */}
-                <div className="hidden grid-cols-2 gap-4">
+                {/* Duration + Language */}
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-stone-700 mb-1.5">
                       Target Duration
@@ -623,7 +880,7 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts, initialP
                     </label>
                     <input
                       type="range"
-                      min={10}
+                      min={15}
                       max={60}
                       step={1}
                       value={targetDuration}
@@ -631,7 +888,7 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts, initialP
                       className="w-full accent-emerald-600"
                     />
                     <div className="flex justify-between text-xs text-stone-400 mt-1">
-                      <span>10s</span>
+                      <span>15s</span>
                       <span>60s</span>
                     </div>
                   </div>
@@ -653,6 +910,30 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts, initialP
                     </select>
                   </div>
                 </div>
+
+                <div>
+                  <label htmlFor="scene-provider" className="block text-sm font-medium text-stone-700 mb-1.5">
+                    Scene Video Provider
+                  </label>
+                  <select
+                    id="scene-provider"
+                    value={sceneVideoProvider}
+                    onChange={(e) => setSceneVideoProvider(e.target.value as SceneVideoProvider)}
+                    className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-stone-900"
+                  >
+                    {SCENE_VIDEO_PROVIDERS.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {modalError && (
+                  <div className="rounded-xl border border-red-200 bg-red-50 p-3">
+                    <p className="text-sm text-red-700">{modalError}</p>
+                  </div>
+                )}
               </div>
 
               {/* Modal footer */}
@@ -666,18 +947,24 @@ export default function VideoReelsDraftTab({ reelDrafts, setReelDrafts, initialP
                 </button>
                 <button
                   onClick={handleGenerateScript}
-                  disabled={!prompt.trim() || isGeneratingScript}
+                  disabled={
+                    !prompt.trim() ||
+                    isGeneratingScript ||
+                    uploadingRefVideo ||
+                    (mode === 'FROM_REFERENCE_VIDEO' && !refVideoUrl.trim()) ||
+                    (mode === 'FROM_IMAGES' && refImages.length === 0)
+                  }
                   className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isGeneratingScript ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      Writing script…
+                      Writing script + scene plan…
                     </>
                   ) : (
                     <>
                       <Sparkles className="w-5 h-5" />
-                      Generate Script
+                      Generate Reel Plan
                     </>
                   )}
                 </button>

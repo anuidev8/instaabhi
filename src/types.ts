@@ -86,6 +86,20 @@ export type VideoReelMode =
   | 'FROM_IMAGES';
 
 export type VideoReelStatus = 'draft' | 'generating' | 'ready' | 'error';
+export type SceneVideoProvider = 'gemini' | 'openai';
+
+export type VideoReferenceKind =
+  | 'YOUTUBE'
+  | 'INSTAGRAM'
+  | 'LOCAL_MP4'
+  | 'DIRECT_URL';
+
+export type ReelTransitionType =
+  | 'zoomwipe'
+  | 'ripple'
+  | 'cosmicwipe'
+  | 'fade'
+  | 'none';
 
 export interface ReelScene {
   index: number;
@@ -94,12 +108,24 @@ export interface ReelScene {
   duration: number;
   narrative: string;
   visualPrompt: string;
+  /** Optional negative prompt terms for scene generation (comma-separated terms). */
+  negativePrompt?: string;
+  /** Source clip timestamps from the reference video (seconds) */
+  sourceStart?: number;
+  sourceEnd?: number;
+  cameraMovement?: string;
+  transitionToNext?: ReelTransitionType;
+  overlayText?: string;
 }
 
 export interface VideoReelInput {
   prompt: string;
   mode: VideoReelMode;
   referenceVideoUrl?: string;
+  referenceVideoKind?: VideoReferenceKind;
+  referenceVideoTitle?: string;
+  /** How uploaded reference images should be interpreted by the scene generator. */
+  referenceImageIntent?: 'general' | 'app_ui_exact';
   referenceImages?: string[]; // base64 data URLs
   targetDurationSeconds: number;
   language: string;
@@ -118,6 +144,13 @@ export interface VideoReelDraft {
   script: string;
   /** Full Instagram caption with hashtags — ready to post */
   caption: string;
+  /** Explicit social metadata for dual-platform publishing */
+  instagramCaption?: string;
+  youtubeDescription?: string;
+  targetPlatforms?: Array<'instagram_reels' | 'youtube_shorts'>;
+  normalizedDurationSeconds?: number;
+  sourceAnalysisSummary?: string;
+  sceneVideoProvider?: SceneVideoProvider;
   scenes: ReelScene[];
   videoReelInput: VideoReelInput;
   status: VideoReelStatus;
@@ -132,4 +165,52 @@ export interface BrandContext {
   voice: string;
   pillars: string;
   voiceId: string;
+  visualDirection?: string;
+  cameraDirection?: string;
+  humanDirection?: string;
+  microInteractionDirection?: string;
+}
+
+// ─── App Marketing Videos ──────────────────────────────────────────────────
+
+export interface AppMarketingVideoInput {
+  appName: string;
+  campaignGoal: string;
+  callToAction: string;
+  realUserStories?: string;
+  targetAudience?: string;
+  appUrl?: string;
+  targetDurationSeconds: number;
+  language: string;
+  referenceImages: string[]; // base64 data URLs
+  referenceVideoUrl?: string;
+  referenceVideoKind?: VideoReferenceKind;
+}
+
+export type AppMarketingVideoStatus = 'draft' | 'generating' | 'ready' | 'error';
+
+export interface AppMarketingVideoDraft {
+  id: string;
+  appName: string;
+  campaignGoal: string;
+  callToAction: string;
+  realUserStories?: string;
+  targetAudience?: string;
+  appUrl?: string;
+  language: string;
+  targetDurationSeconds: number;
+  normalizedDurationSeconds: number;
+  sceneVideoProvider: SceneVideoProvider;
+  referenceImages: string[];
+  referenceVideoUrl?: string;
+  referenceVideoKind?: VideoReferenceKind;
+  headline: string;
+  voiceoverScript: string;
+  caption: string;
+  hashtags: string[];
+  visualAnalysisSummary?: string;
+  scenes: ReelScene[];
+  status: AppMarketingVideoStatus;
+  finalVideoUrl?: string;
+  errorMessage?: string;
 }

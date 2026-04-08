@@ -10,8 +10,15 @@ export default defineConfig(({ mode }) => {
     plugins: [react(), tailwindcss()],
     define: {
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+      'process.env.GEMINI_MODEL_DRAFT': JSON.stringify(env.GEMINI_MODEL_DRAFT),
+      'process.env.GEMINI_MODEL_REELS': JSON.stringify(env.GEMINI_MODEL_REELS),
+      'process.env.GEMINI_MODEL_POST': JSON.stringify(env.GEMINI_MODEL_POST),
       'process.env.GEMINI_IMAGE_MODEL': JSON.stringify(env.GEMINI_IMAGE_MODEL),
+      'process.env.GEMINI_VIDEO_MODEL': JSON.stringify(env.GEMINI_VIDEO_MODEL),
+      'process.env.GEMINI_VIDEO_API_BASE': JSON.stringify(env.GEMINI_VIDEO_API_BASE),
       'process.env.OPENAI_API_KEY': JSON.stringify(env.OPENAI_API_KEY),
+      'process.env.OPENAI_VIDEO_MODEL': JSON.stringify(env.OPENAI_VIDEO_MODEL),
+      'process.env.OPENAI_VIDEO_ENDPOINT': JSON.stringify(env.OPENAI_VIDEO_ENDPOINT),
     },
     resolve: {
       alias: {

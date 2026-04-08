@@ -5,21 +5,23 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { LayoutGrid, PenTool, Loader2, Video, CalendarDays } from 'lucide-react';
+import { LayoutGrid, PenTool, Loader2, Video, CalendarDays, Megaphone } from 'lucide-react';
 import { get, set } from 'idb-keyval';
-import { Draft, ReadyPost, VideoReelDraft } from './types';
+import { AppMarketingVideoDraft, Draft, ReadyPost, VideoReelDraft } from './types';
 import DraftsTab from './components/DraftsTab';
 import ContentVisualsTab from './components/ContentVisualsTab';
 import VideoReelsDraftTab from './components/VideoReelsDraftTab';
 import ContentCalendarTab from './components/ContentCalendarTab';
+import AppMarketingVideoTab from './components/AppMarketingVideoTab';
 
-type Tab = 'drafts' | 'visuals' | 'reels' | 'calendar';
+type Tab = 'drafts' | 'visuals' | 'reels' | 'app-marketing' | 'calendar';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('drafts');
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [readyPosts, setReadyPosts] = useState<ReadyPost[]>([]);
   const [reelDrafts, setReelDrafts] = useState<VideoReelDraft[]>([]);
+  const [marketingDrafts, setMarketingDrafts] = useState<AppMarketingVideoDraft[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [pendingReelPrompt, setPendingReelPrompt] = useState<string | undefined>(undefined);
   const [pendingDraftTopic, setPendingDraftTopic] = useState<string | undefined>(undefined);
@@ -36,6 +38,9 @@ export default function App() {
 
         const savedReels = await get('meditate-reel-drafts');
         if (savedReels) setReelDrafts(savedReels);
+
+        const savedMarketingVideos = await get('meditate-app-marketing-videos');
+        if (savedMarketingVideos) setMarketingDrafts(savedMarketingVideos);
       } catch (e) {
         console.error('Failed to load from IndexedDB', e);
       } finally {
@@ -59,6 +64,12 @@ export default function App() {
     if (!isLoaded) return;
     set('meditate-reel-drafts', reelDrafts).catch(e => console.error('Failed to save reel drafts', e));
   }, [reelDrafts, isLoaded]);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    set('meditate-app-marketing-videos', marketingDrafts)
+      .catch(e => console.error('Failed to save app marketing videos', e));
+  }, [marketingDrafts, isLoaded]);
 
   if (!isLoaded) {
     return (
@@ -115,6 +126,18 @@ export default function App() {
             >
               <Video className="w-4 h-4 shrink-0" />
               Reels
+            </button>
+            <button
+              onClick={() => setActiveTab('app-marketing')}
+              className={`px-2.5 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 min-h-[44px] ${
+                activeTab === 'app-marketing'
+                  ? 'bg-stone-100 text-stone-900'
+                  : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50'
+              }`}
+            >
+              <Megaphone className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline">App Marketing</span>
+              <span className="sm:hidden">Marketing</span>
             </button>
             <button
               onClick={() => setActiveTab('calendar')}
@@ -198,6 +221,21 @@ export default function App() {
                   setPendingDraftTopic(title);
                   setActiveTab('drafts');
                 }}
+              />
+            </motion.div>
+          )}
+
+          {activeTab === 'app-marketing' && (
+            <motion.div
+              key="app-marketing"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <AppMarketingVideoTab
+                marketingDrafts={marketingDrafts}
+                setMarketingDrafts={setMarketingDrafts}
               />
             </motion.div>
           )}
