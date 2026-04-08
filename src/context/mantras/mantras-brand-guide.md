@@ -51,15 +51,47 @@ Top video earns **2.7x more views** than second tier — the gap is large. Repli
 | Rule | Specification |
 |------|--------------|
 | **Canvas size** | 1280 × 720 px, 16:9 horizontal |
-| **Background** | Deep black (#000000) or dark gradient matching deity aura color — always very dark |
-| **Deity placement** | ⚡ LEFT side, occupying 40–55% of frame width. Deity ALWAYS on the LEFT. |
-| **Text placement** | ⚡ RIGHT side — text is BAKED INTO the generated image (not added later in Canva) |
-| **Deity style** | Photorealistic, cinematic, devotional — NOT cartoon, NOT flat art |
-| **Aura / glow** | Always present behind deity on left. Intent color radiating outward. |
-| **Lighting** | Dramatic single light source from above/behind deity. Strong rim lighting. High contrast. |
-| **Atmosphere** | Light particles, soft bokeh, mist at base of deity — adds cinematic depth |
-| **Color palette** | Dark base + intent accent color + white/gold text. Max 3 color families. |
-| **TEXT IS IN THE IMAGE** | ⚡ 3-line text block rendered directly into image: big hook + action promise + small badge |
+| **Style** | **"Cinematic Divine Gold"** — Cinematic Hyperreal Devotional (Golden Aura Style). Modern AI cinematic hybrid. NOT cartoon, NOT illustration, NOT traditional painting, NOT temple sculpture realism. |
+| **Background** | Deep dark gradient (black to warm dark brown/amber) with warm golden energy effects — swirling golden fire, embers, sparks, golden light flares radiating from the aura. NO architecture, NO scenery. Background feels alive with divine energy. |
+| **Deity placement** | ⚡ LEFT SIDE (40–45% width): close-up (face + blessing hand visible), filling vertical space, slightly facing toward the right/text. |
+| **Text placement** | ⚡ RIGHT SIDE (55–60%): clean readable text area. Text BAKED INTO the generated image. |
+| **Aura** | ⚡ Dramatic golden concentric sacred rings or halo behind deity — large glowing circular ring effect radiating outward with warm fire energy. Golden sparks and embers floating around halo. Smooth and powerful, NOT flat. |
+| **Lighting** | Strong golden rim light from behind deity (#FFD700). High contrast: bright deity vs dark background. |
+| **Atmosphere** | Warm golden fire/energy swirls throughout background. Floating golden sparks and embers around deity area. Subtle mist/smoke at base. Soft bokeh. Effects concentrated around deity — text area stays readable but subtle warm ambient glow can bleed in. |
+| **Text** | ⚡ MAX 2–3 words ONLY. Extremely large, bold, condensed font. White (#FFFFFF) or gold (#FFD700). Strong dark drop shadow. Hook word gets a subtle warm golden glow/highlight accent behind it to pop visually. One dominant phrase — readable at mobile size. |
+| **Text area** | Right side should be clean and readable — no props or objects. Subtle warm ambient glow from the aura can bleed slightly into the text area to unify the composition. Text must still be perfectly readable. |
+| **Character fidelity** | Preserve canonical deity attributes exactly. NO mixing iconography from other deities. Each deity must be visually pure to their own tradition. |
+| **Color palette** | Dark base + deity aura accent + white/gold text only. Max 2 color families. |
+
+---
+
+### 1.2.1 The 4 Visual Systems (Style: "Cinematic Divine Gold")
+
+Every thumbnail combines these 4 systems. All must be present:
+
+| System | What It Does | Key Traits | Feeling |
+|--------|-------------|------------|---------|
+| **1. Cinematic Lighting** | Makes it feel "Hollywood" | Strong gold rim light, glow bloom effect, high contrast shadows | Dramatic |
+| **2. Divine Energy** | Makes it feel "spiritual" | Radial aura halo (concentric rings), floating particles, warm gold/orange tones, fire energy swirls | Sacred |
+| **3. Material Realism** | Makes it feel "premium" | Physically reflective gold textures, intricate jewelry detail, depth + shadow realism on ornaments | Luxury |
+| **4. Emotional Face Rendering** | Creates connection → click | Soft compassionate eyes (alive, conscious presence), calm expression, slight smile, slight idealization (perfect symmetry, divine beauty) | Trust |
+
+**Character rendering rules (all deities):**
+- Human-like skin texture — NOT flat color
+- Realistic lighting on skin — like a movie scene
+- Physically accurate gold materials — reflective, not painted
+- Emotion in the eyes — alive, conscious, divine presence
+- Slight idealization — perfect symmetry, divine beauty
+
+**This style sits between: Spiritual + Luxury + Cinematic**
+- Feels sacred (trust) → Feels premium (value) → Feels dramatic (click)
+
+**What this style is NOT:**
+- NOT traditional Indian painting
+- NOT cartoon / animation
+- NOT flat digital illustration
+- NOT temple sculpture realism
+- It IS a modern AI cinematic hybrid
 
 ---
 
@@ -80,30 +112,31 @@ Top video earns **2.7x more views** than second tier — the gap is large. Repli
 
 ---
 
-### 1.4 ⚡ PROVEN LAYOUT TEMPLATE
+### 1.4 ⚡ PROVEN LAYOUT TEMPLATE (v4 — Minimal CTR-Optimized)
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│ SCHOOL OF MANTRAS  (small, top-left, semi-transparent)  │
+│ SCHOOL OF MANTRAS  (tiny, top-left, semi-transparent)   │
 │                                                         │
-│  [ DEITY ]          LINE 1: "2026 SUCCESS"             │
-│  Left 45-50%        White bold, 85-95pt                 │
-│  Glowing aura                                           │
-│  behind deity       LINE 2: "REMOVE OBSTACLES"         │
-│                     Red/Orange/Gold, 55-70pt            │
-│                                                         │
-│  Mist at base       BADGE: "Ganesh Mantra · 108x"      │
-│                     Small white, 20-24pt                │
+│  [ DEITY CLOSE-UP ]                                     │
+│  Left 40-45%             "REMOVE                        │
+│  Face + blessing hand     OBSTACLES"                    │
+│  Glowing aura              2-3 words, HUGE              │
+│  behind deity              White or Gold                 │
+│                            Center-right aligned          │
+│  Mist at base                                           │
+│                            ← EMPTY CLEAN SPACE →        │
 └─────────────────────────────────────────────────────────┘
 ```
 
-**⚡ THE 3-LINE TEXT RULE (proven by #1 video):**
+**⚡ THE 2-3 WORD RULE (v4 — scroll-stopping simplicity):**
 
-| Line | Content | Size | Color | Example |
-|------|---------|------|-------|---------|
-| **Line 1** | Year + Main Benefit OR Power Word | 85–95pt bold condensed | WHITE | "2026 SUCCESS" |
-| **Line 2** | Action Promise / Remove / Shield / Achieve | 55–70pt bold | RED `#FF2222` or ORANGE `#FF6600` or GOLD `#FFD700` | "REMOVE OBSTACLES" |
-| **Badge** | [Deity] Mantra · [108x / 40 Days / Daily] | 20–24pt | White, slightly transparent | "Ganesh Mantra · 108x" |
+| Element | Content | Size | Color | Example |
+|---------|---------|------|-------|---------|
+| **Main phrase** | 2–3 words ONLY — single dominant message | Extremely large, bold, condensed | WHITE `#FFFFFF` or GOLD `#FFD700` | "REMOVE OBSTACLES" |
+| **Top-left label** | "SCHOOL OF MANTRAS" — minimal visibility | Tiny, semi-transparent | White `rgba(255,255,255,0.4)` | "SCHOOL OF MANTRAS" |
+
+**CRITICAL: No badge, no extra text, no logos, no watermarks. The right side is the phrase and silence.**
 
 ---
 
@@ -202,34 +235,36 @@ The #1 video uses this exact structure — replicate it every time:
 
 ---
 
-### 1.8 What Makes a Winning Thumbnail (Data-Proven)
+### 1.8 What Makes a Winning Thumbnail (v4 — Data-Proven + CTR-Optimized)
 
-1. **"2026" + deity + benefit** — the #1 combination. 4.7K vs 1.7K on second place
-2. **"REMOVE OBSTACLES"** — the single most clickable promise for this audience
-3. **Year hook always first** — "2026 SUCCESS" not "SUCCESS 2026"
-4. **Challenge/repetition badge** — "108x" or "40 Days" increases perceived value
-5. **One dominant deity face on LEFT** — viewers connect with eyes and expressions
-6. **High contrast left vs right** — glowing deity vs dark background, white text pops
-7. **3 lines max on right** — big hook + colored action + small badge. Never more.
-8. **Aura scale** — deity feels larger than life, monumental
-9. **Gold always present** — even a sliver of gold reads as "divine" to the audience
-10. **Promise = emotional + practical** — "Shield Yourself" (emotional) + "from Negative Energy" (practical)
+1. **Deity creates emotion** — close-up face with blessing hand, compassionate intelligent eyes, immediate emotional resonance
+2. **Text delivers the message** — MAX 2-3 words, one dominant phrase, instantly readable at mobile size
+3. **Composition drives the click** — left deity vs right clean space, high contrast, scroll-stopping layout
+4. **"REMOVE OBSTACLES"** — the single most clickable promise for this audience
+5. **Year hook still powerful** — "2026 SUCCESS" when used as the sole phrase
+6. **One dominant deity face on LEFT** — viewers connect with eyes and expressions
+7. **High contrast left vs right** — glowing deity vs dark background, white/gold text pops
+8. **Negative space is sacred** — right side emptiness = higher CTR. No distractions behind text.
+9. **Gold always present** — golden rim light, ornaments, particles around deity. Reads as "divine" to the audience.
+10. **Smooth powerful aura** — clean radial glow, NOT noisy. Cinematic not chaotic.
+11. **Mobile-first readability** — text must be legible at thumbnail size on a phone screen
 
 ---
 
-### 1.9 What to Avoid
+### 1.9 What to Avoid (STRICT)
 
-- Deity on the RIGHT side (goes against channel's proven layout)
-- Text-free base images (always include full text in generation)
-- More than 3 lines of text on right side (gets cluttered)
-- Text without the badge line (removes credibility signal)
-- Cartoon or illustrated style (looks cheap)
-- Cluttered backgrounds with recognizable locations
-- White or light backgrounds
-- Symmetrical centered compositions
-- More than 3 color families in one image
-- Vague benefits — say "REMOVE OBSTACLES" not "FEEL BETTER"
-- Titles without the pipe `|` structure — it signals more content value
+- **No clutter** — no multiple props, no busy particles, no coins, no objects behind text
+- **No mixing symbolic meanings** — each deity stays pure to their own iconography
+- **No center composition** — deity NEVER centered, NEVER on the right side
+- **No cartoon or illustration** — only photorealistic cinematic
+- **No complex storytelling elements** — one deity, one phrase, one emotion
+- **No glowing text overload** — text is clean and sharp, not neon
+- **No light or white backgrounds** — always deep dark gradient
+- **No architecture or scenery** — pure atmospheric void only
+- **No badges, logos, watermarks, or channel tags** in the generated image
+- **No more than 2-3 words** on the right side
+- **No text overlap** with particles or glow
+- **Vague benefits** — say "REMOVE OBSTACLES" not "FEEL BETTER"
 
 ---
 
@@ -495,48 +530,53 @@ Photorealistic. Cinematic. Celebratory atmosphere.
 
 ---
 
-## PART 6 — QUICK REFERENCE CARD ⭐ UPDATED
+## PART 6 — QUICK REFERENCE CARD ⭐ v4
 
 ```
 ════════════════════════════════════════════
-  #1 PROVEN WINNER FORMULA
+  DESIGN PHILOSOPHY (v4)
 ════════════════════════════════════════════
-  Title:     [Deity] Mantra for 2026 [Benefit] | Remove [Obstacle] & [Promise]
-  Line 1:    2026 [BENEFIT]        ← white, huge
-  Line 2:    REMOVE [OBSTACLE]     ← orange/red/gold, large
-  Badge:     [Deity] Mantra · 108x ← white small
+  Deity creates emotion.
+  Text delivers the message.
+  Composition drives the click.
 
 ════════════════════════════════════════════
   LAYOUT (NON-NEGOTIABLE)
 ════════════════════════════════════════════
-  LEFT  → DEITY (photorealistic, glowing, left 45%)
-  RIGHT → 3-LINE TEXT (baked into image, no Canva)
+  LEFT 40-45%  → DEITY close-up (face + blessing hand)
+  RIGHT 55-60% → 2-3 word phrase ONLY + empty space
+  NO center composition. NO deity on right.
 
 ════════════════════════════════════════════
-  TOP HOOK WORDS (by view performance)
+  TEXT RULE (CRITICAL)
 ════════════════════════════════════════════
+  MAX 2-3 WORDS on right side.
+  One dominant phrase. Huge bold condensed.
+  White #FFFFFF or Gold #FFD700.
+  Strong dark drop shadow.
+  Mobile-first readability.
+
+════════════════════════════════════════════
+  TOP PHRASES (2-3 words each)
+════════════════════════════════════════════
+  REMOVE OBSTACLES   ← #1 proven phrase
   2026 SUCCESS       ← 4.7K views (#1)
-  INSTANT SUCCESS    ← 1.8K views
-  2026 PROTECTION    ← 1.7K views
+  SHIELD YOURSELF    ← #2 proven phrase
   FEARLESSNESS       ← 1.6K views
   DEEP PEACE         ← 1.2K views
   ULTIMATE HEALING   ← strong
+  ATTRACT ABUNDANCE  ← wealth intent
+  CLAIM POWER        ← courage intent
 
 ════════════════════════════════════════════
-  TOP ACTION PROMISES (Line 2)
+  STYLE (NON-NEGOTIABLE)
 ════════════════════════════════════════════
-  REMOVE OBSTACLES   ← #1 proven phrase
-  SHIELD YOURSELF    ← #2 proven phrase
-  ACHIEVE YOUR GOALS ← proven combo
-  START FRESH        ← seasonal/new year
-  PURIFY YOUR MIND   ← healing
-  ATTRACT ABUNDANCE  ← wealth
-
-════════════════════════════════════════════
-  INTENSITY BOOSTERS (use in badge or title)
-════════════════════════════════════════════
-  108x · Listen Daily · 40-Day Challenge
-  Most Powerful · Complete · Instant · Deep
+  Photorealistic cinematic devotional.
+  Ultra-realistic, 8K, Hollywood lighting.
+  NEVER cartoon. NEVER illustration.
+  Dark gradient background. No scenery.
+  Golden rim light. Smooth clean aura.
+  Mist at base. Gold particles near deity only.
 
 ════════════════════════════════════════════
   INTENT → DEITY → AURA
@@ -547,10 +587,19 @@ Photorealistic. Cinematic. Celebratory atmosphere.
   Peace/Love        → Krishna, Hare K.  → Teal/Blue     ✅
   Healing           → Medicine Buddha   → Green/Teal    ✅
   Knowledge         → Saraswati         → Ivory/White
+
+════════════════════════════════════════════
+  AVOID COMPLETELY
+════════════════════════════════════════════
+  No clutter. No multiple props.
+  No busy particles. No glowing text overload.
+  No badges. No logos. No watermarks.
+  No complex storytelling. No mixed deities.
+  No objects behind text. Empty = CTR.
 ```
 
 ---
 
 *School of Mantras Thumbnail System — Built with Claude + Nano Banana MCP*
-*✅ v3 Updated April 2026 — Real performance data integrated*
-*Top performer: Ganesha + 2026 SUCCESS + REMOVE OBSTACLES = 4.7K views*
+*✅ v4 Updated April 2026 — Minimal CTR-optimized design logic*
+*Focus: Deity emotion + 2-3 word message + clean composition = click*

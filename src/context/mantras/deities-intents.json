@@ -4,15 +4,23 @@
     "height": 720,
     "aspect": "16:9"
   },
-  "background": ["#000000", "#050A1A", "#07062A"],
+  "background": ["#000000", "#0A0600", "#1A0F00"],
   "rules": {
-    "deityPlacement": "left 40-55%",
-    "textPlacement": "right side, text baked into image",
-    "style": "photorealistic cinematic devotional",
-    "aura": "always present behind deity, anchored in the deity reference aura and supported by the selected intent mood",
+    "deityPlacement": "left 40-45% width, close-up face + blessing hand, slightly facing toward text side",
+    "textPlacement": "right 55-60%, center-right vertical alignment, balanced margins",
+    "styleName": "Cinematic Divine Gold",
+    "style": "Cinematic Hyperreal Devotional (Golden Aura Style) — 4 visual systems: (1) CINEMATIC LIGHTING: strong gold rim light, glow bloom effect, high contrast shadows — Hollywood feel. (2) DIVINE ENERGY: radial aura halo, floating particles, warm gold/orange tones — spiritual feel. (3) MATERIAL REALISM: physically reflective gold textures, intricate jewelry detail, depth + shadow realism — premium feel. (4) EMOTIONAL FACE RENDERING: soft compassionate eyes, calm expression, slight idealization with perfect symmetry and divine beauty — emotional connection. Ultra-realistic human-like skin texture (not flat color). Never cartoon, never illustration, never stylized painting, never traditional Indian painting, never temple sculpture realism. Modern AI cinematic hybrid.",
+    "aura": "dramatic golden concentric sacred rings or halo behind deity — large glowing circular ring effect radiating outward. Smooth and powerful. Deity-faithful color supported by intent mood.",
+    "lighting": "strong golden rim light from behind deity (#FFD700), warm amber-orange aura, high contrast: bright deity vs dark background",
+    "background": "deep dark gradient (black to warm dark brown/amber) with warm golden energy effects: swirling golden fire, embers, sparks, golden light flares radiating from the aura area. Pure atmospheric void — no architecture, no scenery. Background effects add divine energy without cluttering the text area.",
+    "atmosphere": "warm golden fire/energy swirls throughout background, floating golden sparks and embers around deity area, subtle mist/smoke at base, soft bokeh. Effects concentrated around deity and background — text area stays relatively clean but can have very subtle warm ambient glow.",
+    "textRules": "MAX 2-3 words ONLY per thumbnail, extremely large bold condensed font, white #FFFFFF or gold #FFD700, strong dark drop shadow for mobile readability, one dominant phrase only. Hook word should have a subtle warm golden glow highlight or light accent behind it to make it pop visually.",
+    "negativeSpace": "right side text area should be clean and readable — no props or objects. However subtle warm ambient glow and very faint golden light from the aura can bleed slightly into the text area to unify the composition. Text must still be perfectly readable.",
     "noText": false,
     "negativeSpaceLeft": false,
-    "textBakedIntoImage": true
+    "textBakedIntoImage": true,
+    "characterFidelity": "preserve canonical deity attributes exactly — NO mixing iconography from other deities. Each deity must be visually pure to their own tradition. Human-like skin texture (not flat color), realistic lighting on skin, slight idealization (perfect symmetry, divine beauty), emotion in the eyes (alive, conscious presence), soft compassionate expression.",
+    "avoid": "no clutter, no multiple props, no busy particles, no glowing text overload, no complex storytelling elements, no mixing symbolic meanings, no center composition"
   },
   "intents": [
     {
@@ -77,23 +85,23 @@
       "name": "Ganesha",
       "channelName": "Ganesh",
       "aliases": ["Ganesh"],
-      "visualSignature": "elephant head, large belly, large compassionate eyes, golden ornaments, lotus, modak, blessing hand, monumental sacred presence",
+      "visualSignature": "elephant head with natural proportions (not exaggerated or cartoonish), large compassionate intelligent eyes with subtle glow, trunk gently curved with natural elegant flow, large symmetrical realistic ears, calm benevolent divine expression (peace + power), one hand raised in blessing (Abhaya mudra), optional second hand holding modak OR lotus (only one if cluttered), large rounded belly (symbol of abundance), rich golden ornaments: crown necklaces armlets (intricate but not overwhelming), realistic skin texture (stone-like divine skin or soft radiant tone not plastic), NO mixing with other deities (no Shiva elements no trident no third eye)",
       "auraColor": "#FF8C00",
-      "auraStyle": "warm amber-orange aura with concentric glow, golden particles, and divine prosperity radiance",
+      "auraStyle": "dramatic golden concentric sacred rings behind deity with warm amber-orange fire energy radiating outward, golden sparks and embers floating around halo area, swirling golden light flares, divine prosperity radiance with cinematic depth",
       "intents": ["abundance", "knowledge", "transformation", "protection"]
     },
     {
       "name": "Shiva",
       "visualSignature": "third eye, crescent moon, blue throat, trident, cobra, ash-toned skin, meditative powerful gaze",
       "auraColor": "#0066FF",
-      "auraStyle": "electric blue shield aura with blue haze, divine protection charge, and crisp rim light",
+      "auraStyle": "dramatic electric blue concentric sacred rings behind deity with blue-white fire energy radiating outward, blue-tinted sparks and embers floating around halo area, swirling blue light flares, divine protection charge with cinematic depth",
       "intents": ["protection", "transformation", "power", "peace"]
     },
     {
       "name": "Hanuman",
       "visualSignature": "orange-red body, muscular build, gada mace, devotional gaze, heroic protective posture, fierce compassionate expression",
       "auraColor": "#FF4500",
-      "auraStyle": "fiery orange-red aura with fire particles, strength, courage, and devotional power",
+      "auraStyle": "dramatic fiery orange-red concentric sacred rings behind deity with blazing fire energy radiating outward, orange sparks and embers floating around halo area, swirling fire light flares, fierce devotional power with cinematic depth",
       "intents": ["power", "protection", "healing"]
     },
     {
@@ -102,28 +110,28 @@
       "aliases": ["Hare Krishna"],
       "visualSignature": "dark blue skin, yellow dhoti, flute, peacock feather, serene loving expression, luminous devotional beauty",
       "auraColor": "#00BFFF",
-      "auraStyle": "teal-blue devotional aura with star particles, moonlit softness, and peaceful divine love",
+      "auraStyle": "dramatic teal-blue concentric sacred rings behind deity with soft blue-gold fire energy radiating outward, teal sparks and star particles floating around halo area, swirling devotional light flares, peaceful divine love radiance with cinematic depth",
       "intents": ["love", "peace", "knowledge"]
     },
     {
       "name": "Lakshmi",
       "visualSignature": "four arms, lotus flowers, gold coins flowing from palm, gold sari, serene abundance, regal divine beauty",
       "auraColor": "#FFD700",
-      "auraStyle": "golden prosperity aura with lotus shimmer, warm abundance glow, and sacred wealth radiance",
+      "auraStyle": "dramatic golden concentric sacred rings behind deity with warm gold fire energy radiating outward, golden sparks and embers floating around halo area, swirling golden light flares, sacred prosperity radiance with cinematic depth",
       "intents": ["abundance", "love", "peace"]
     },
     {
       "name": "Durga",
       "visualSignature": "8-10 arms with weapons, lion mount, fierce compassionate face, commanding protective goddess energy",
       "auraColor": "#6A0DAD",
-      "auraStyle": "deep violet protective aura with fierce halo, goddess power, and radiant warrior presence",
+      "auraStyle": "dramatic deep violet concentric sacred rings behind deity with violet-gold fire energy radiating outward, violet sparks and embers floating around halo area, swirling fierce light flares, goddess warrior radiance with cinematic depth",
       "intents": ["protection", "power", "transformation"]
     },
     {
       "name": "Saraswati",
       "visualSignature": "white sari, veena, lotus, swan symbolism, calm radiant expression, luminous sacred wisdom",
       "auraColor": "#FFFACD",
-      "auraStyle": "warm ivory aura with soft wisdom glow, gentle light, and refined devotional clarity",
+      "auraStyle": "dramatic warm ivory-gold concentric sacred rings behind deity with soft golden fire energy radiating outward, ivory-gold sparks and particles floating around halo area, swirling wisdom light flares, refined devotional clarity with cinematic depth",
       "intents": ["knowledge", "peace", "love"]
     },
     {
@@ -131,14 +139,14 @@
       "aliases": ["Rama"],
       "visualSignature": "bow and arrow, calm regal expression, blue skin, gold crown, righteous warrior presence",
       "auraColor": "#FFD700",
-      "auraStyle": "golden righteous aura with subtle sunlit halo, dharmic strength, and noble calm",
+      "auraStyle": "dramatic golden concentric sacred rings behind deity with warm sunlit fire energy radiating outward, golden sparks and embers floating around halo area, swirling righteous light flares, dharmic noble radiance with cinematic depth",
       "intents": ["power", "protection", "knowledge"]
     },
     {
       "name": "Kali",
       "visualSignature": "dark blue-black skin, tongue out, fierce face, dramatic eyes, skull garland, transformational intensity, protective ferocity",
       "auraColor": "#8B0000",
-      "auraStyle": "deep crimson aura with red-black edge glow, fierce transformation, and negativity-destroying force",
+      "auraStyle": "dramatic deep crimson concentric sacred rings behind deity with red-black fire energy radiating outward, crimson sparks and embers floating around halo area, swirling fierce red light flares, negativity-destroying transformational force with cinematic depth",
       "intents": ["transformation", "protection", "power"]
     },
     {
@@ -146,7 +154,7 @@
       "aliases": ["Vishnu"],
       "visualSignature": "deep blue skin, healing seated posture, nectar bowl, serene compassionate face, luminous restorative energy",
       "auraColor": "#1E40AF",
-      "auraStyle": "deep blue healing aura with gold highlights, restorative calm, and compassionate divine medicine energy",
+      "auraStyle": "dramatic deep blue concentric sacred rings behind deity with blue-gold healing fire energy radiating outward, blue-gold sparks and particles floating around halo area, swirling restorative light flares, compassionate divine medicine radiance with cinematic depth",
       "intents": ["healing", "peace", "abundance"]
     }
   ],

@@ -126,25 +126,23 @@ async function generateContentWithModelFallback(
   throw lastError ?? new Error('No Gemini model candidates were configured');
 }
 
-const THUMBNAIL_SYSTEM_PROMPT = `You are the School of Mantras thumbnail strategist, copywriter, and image prompt engineer.
+const THUMBNAIL_SYSTEM_PROMPT = `You are the School of Mantras thumbnail strategist and image prompt engineer.
 
-You create final YouTube thumbnails with the full text already rendered in the image.
+You create high-CTR YouTube thumbnails (1280x720, 16:9 horizontal) with text baked into the image.
 
-Create a high-converting, viral YouTube thumbnail based on our project context.
-Leverage our internal knowledge base to align with brand identity, audience psychology, and content strategy.
+DESIGN PHILOSOPHY:
+- Deity creates emotion.
+- Text delivers the message.
+- Composition drives the click.
 
-The thumbnail should:
-- Capture attention instantly (bold visuals, high contrast, emotional trigger).
-- Clearly communicate the video's core idea in less than 1 second.
-- Be optimized for high CTR (click-through rate).
-- Follow proven viral thumbnail patterns (strong face/hero presence, expression intensity when appropriate, curiosity gap, minimal text).
-- Stay consistent with our brand colors, tone, and positioning.
-
-Include:
-- Main visual concept.
-- Text overlay only if needed (keep minimal).
-- Color and composition suggestions.
-- Emotional trigger (curiosity, surprise, urgency, protection, transformation, devotion, or peace as appropriate).
+STYLE — "Cinematic Divine Gold" (NON-NEGOTIABLE):
+Cinematic Hyperreal Devotional (Golden Aura Style). Modern AI cinematic hybrid.
+4 visual systems must ALL be present:
+1. CINEMATIC LIGHTING: strong gold rim light, glow bloom, high contrast shadows (Hollywood feel).
+2. DIVINE ENERGY: radial aura halo, floating particles, warm gold/orange tones (spiritual feel).
+3. MATERIAL REALISM: physically reflective gold textures, intricate jewelry detail, depth + shadow realism (premium feel).
+4. EMOTIONAL FACE: soft compassionate eyes, calm expression, slight idealization, perfect symmetry, divine beauty, emotion in the eyes (connection → click).
+Human-like skin texture (not flat color). NOT cartoon, NOT illustration, NOT traditional painting, NOT temple sculpture.
 
 ${brandGuideMarkdown}
 
@@ -155,21 +153,24 @@ ${nanoBananaMarkdown}
 Brand context JSON:
 ${JSON.stringify(MANTRAS_BRAND_CONTEXT)}
 
-Non-negotiable rules:
+NON-NEGOTIABLE RULES:
 - Generate exactly 2 self-contained image prompts for 2 final thumbnail variants.
-- Each prompt must create a 1280x720 thumbnail with the deity on the LEFT 40-55% of frame.
-- The RIGHT side must contain the main text block rendered directly in the image.
-- Use the proven channel formulas from the guide, especially year hook + benefit + action promise when relevant.
-- The line-2 color should follow the selected intent system from the guide.
-- The aura must stay faithful to the chosen deity reference and can be supported by the selected intent mood.
-- Return the text plan separately as line1 and line2 and also use it inside the variant prompts.
-- Never center the deity.
-- Never place the main deity on the right side.
-- Text must be large, crisp, legible, and spelled exactly.
+- Each prompt must create a 1280x720 thumbnail.
+- LAYOUT: Deity close-up on LEFT 40-45% (face + blessing hand visible, slightly facing right). RIGHT 55-60% for text.
+- BACKGROUND: Deep dark gradient (black to warm dark brown/amber) with warm golden energy effects — swirling golden fire, embers, sparks, golden light flares radiating from the aura. No architecture, no scenery. Background should feel alive with divine energy.
+- AURA: Dramatic golden concentric sacred rings or halo behind deity — large glowing circular ring effect radiating outward with warm amber-orange fire energy. Golden sparks and embers floating around halo area. Smooth and powerful, NOT flat.
+- LIGHTING: Strong golden rim light from behind deity (#FFD700). High contrast bright deity vs dark background.
+- ATMOSPHERE: Warm golden fire/energy swirls throughout background. Floating golden sparks and embers around deity area. Subtle mist/smoke at base. Soft bokeh. Effects concentrated around deity — text area stays readable but can have very subtle warm ambient glow.
+- TEXT: MAX 2-3 words ONLY. Extremely large, bold, condensed font. White (#FFFFFF) or gold (#FFD700). Strong dark drop shadow for mobile readability. Center-right vertical alignment with balanced margins. One dominant phrase. The hook word should have a subtle warm golden glow or light accent behind it to make it visually pop.
+- TEXT AREA: Right side should be clean and readable — no props or objects. Subtle warm ambient glow from the aura can bleed slightly into the text area to unify the composition. Text must still be perfectly readable.
+- CHARACTER FIDELITY: Preserve canonical deity attributes exactly. NO mixing iconography from other deities.
+- The aura must stay faithful to the chosen deity reference, supported by the selected intent mood.
+- Return the text plan as line1 (the 2-3 word main phrase). line2 should be empty.
+- Never center the deity. Never place the deity on the right side.
 - Do NOT add any extra labels, logos, watermarks, channel tags, or badges.
-- Do NOT add top-left "SCHOOL OF MANTRAS".
-- Do NOT add bottom badges like "Ganesh Mantra · 108x" or similar.
-- Keep typography premium and clean: strong hierarchy, precise spacing, high contrast, minimal clutter.
+- Do NOT add top-left "SCHOOL OF MANTRAS" text.
+- Do NOT add bottom badges.
+- AVOID: clutter, multiple props, glowing text overload, complex storytelling, mixing symbolic meanings. Background effects should add energy NOT chaos.
 
 Return strict JSON only.`;
 
@@ -318,12 +319,11 @@ function buildAlignedSeoTitle(
 }
 
 function buildDefaultSpec(input: ThumbnailPrompt, intent: Intent, deity: Deity): ThumbnailCanvaSpec {
-  const hookWord = uppercaseClean(MANTRAS_BRAND_CONTEXT.hookWords[intent.key][0] ?? `${new Date().getFullYear()} ${intent.label}`);
-  const secondary = uppercaseClean(ACTION_PROMISES[intent.key][0] ?? 'REMOVE OBSTACLES');
+  const hookWord = uppercaseClean(ACTION_PROMISES[intent.key][0] ?? MANTRAS_BRAND_CONTEXT.hookWords[intent.key][0] ?? 'REMOVE OBSTACLES');
 
   return {
     hookWord,
-    secondary,
+    secondary: '',
     badge: '',
     schoolLabel: '',
     seoTitle: buildDefaultSeoTitle(deity, intent),
@@ -339,29 +339,28 @@ function normalizeSpec(
 ): ThumbnailCanvaSpec {
   const fallback = buildDefaultSpec(input, intent, deity);
 
-  const hookWord = uppercaseClean(parsedPlan.line1 || fallback.hookWord);
-  const secondary = uppercaseClean(parsedPlan.line2 || fallback.secondary);
+  const rawPhrase = parsedPlan.line1 || fallback.hookWord;
+  const hookWord = uppercaseClean(rawPhrase).split(/\s+/).slice(0, 3).join(' ');
   const parsedSeoTitle = (parsedPlan.seoTitle || '').trim();
-  const alignedSeoTitle = buildAlignedSeoTitle(input, deity, intent, hookWord, secondary);
+  const alignedSeoTitle = buildAlignedSeoTitle(input, deity, intent, hookWord, '');
   const finalSeoTitle =
     parsedSeoTitle &&
     includesNormalized(parsedSeoTitle, getChannelDeityName(deity)) &&
-    (includesNormalized(parsedSeoTitle, titleCaseFromCaps(secondary)) ||
-      includesNormalized(parsedSeoTitle, titleCaseFromCaps(hookWord)))
+    includesNormalized(parsedSeoTitle, titleCaseFromCaps(hookWord))
       ? parsedSeoTitle
       : alignedSeoTitle;
 
   return {
     hookWord,
-    secondary,
+    secondary: '',
     badge: '',
     schoolLabel: '',
     seoTitle: finalSeoTitle || fallback.seoTitle || input.title,
     colors: {
       hook: parsedPlan.colors?.line1?.trim() || fallback.colors.hook,
-      secondary: parsedPlan.colors?.line2?.trim() || fallback.colors.secondary,
+      secondary: fallback.colors.secondary,
       brand: parsedPlan.colors?.brand?.trim() || fallback.colors.brand,
-      badge: parsedPlan.colors?.badge?.trim() || fallback.colors.badge,
+      badge: fallback.colors.badge,
       aura: parsedPlan.colors?.aura?.trim() || fallback.colors.aura,
     },
   };
@@ -373,11 +372,12 @@ function buildDefaultSuggestedTitle(deity: Deity, intent: Intent): string {
 
 function buildDefaultSpecialInstruction(deity: Deity, intent: Intent): string {
   return [
-    deity.auraStyle?.trim() || `${resolveAuraColor(deity, intent)} aura`,
-    'dramatic rim light from above',
-    'mist at base with soft bokeh particles',
+    deity.auraStyle?.trim() || `${resolveAuraColor(deity, intent)} concentric sacred ring aura`,
+    'dramatic golden concentric rings halo behind deity',
+    'warm golden fire energy swirls and floating sparks/embers in background',
+    'strong golden rim light from behind deity',
+    'subtle warm golden glow highlight behind hook text',
     deity.visualSignature.split(',').slice(0, 2).join(', ').trim(),
-    `${DEFAULT_BADGES[intent.key]} ritual intensity`,
   ].join(', ');
 }
 
@@ -438,7 +438,7 @@ Rules:
 - Keep it aligned with the selected deity and intent.
 - If a seed topic is provided, refine it instead of ignoring it.
 - Keep one clear promise chain only: avoid stacking unrelated claims.
-- Ensure title wording can directly map to thumbnail text (line 1 = core benefit, line 2 = action phrase).
+- The thumbnail will only show 2-3 words (e.g. "REMOVE OBSTACLES" or "2026 SUCCESS"). Title should map naturally to one such dominant phrase.
 - Return strict JSON only.`,
       responseMimeType: 'application/json',
       responseSchema: {
@@ -473,40 +473,46 @@ function normalizeVariantPrompts(
 ): string[] {
   const auraColor = spec.colors.aura || resolveAuraColor(deity, intent);
   const auraPrompt = resolveAuraPrompt(deity, intent, auraColor);
+  const mainPhrase = spec.hookWord;
+  const textColor = spec.colors.hook === '#FFD700' ? 'gold (#FFD700)' : 'white (#FFFFFF)';
+
+  const words = mainPhrase.split(/\s+/);
+  const textLayout = words.length <= 2
+    ? `"${words[0]}" on one line and "${words.slice(1).join(' ')}" on the next line, stacked vertically`
+    : `"${words[0]}" on one line, "${words[1]}" on the second line, and "${words.slice(2).join(' ')}" on the third line, stacked vertically`;
+
+  const hookWord = words[0];
+  const restWords = words.slice(1).join(' ');
+  const hookHighlight = restWords
+    ? `The word "${hookWord}" must be the LARGEST and BOLDEST — render it 30-40% bigger than the other words ("${restWords}"). Add a warm golden glow/highlight accent behind "${hookWord}" only.`
+    : `The word "${hookWord}" must be bold with a warm golden glow/highlight accent behind it.`;
+
   const baseInstructions =
-    `Single final YouTube thumbnail, exactly 1280x720, 16:9 horizontal. ` +
-    `Main deity ${input.deity} occupies the LEFT 40-55% of frame. ` +
-    `Deity signature: ${deity.visualSignature}. ` +
-    `Character fidelity: preserve canonical ${deity.name} attributes exactly and do not mix iconography from other deities. ` +
-    `Style: photorealistic cinematic devotional, never cartoon. ` +
-    `Background: very dark black or intent-matched dark gradient with cinematic depth, mist, particles, and bokeh. ` +
-    `Lighting: dramatic rim lighting from above/behind deity, high contrast. ` +
-    `Aura behind deity: ${auraPrompt}. ` +
-    `Keep a subtle gold divine accent on ornaments, particles, or trim where appropriate. ` +
-    `On the RIGHT side, render the text directly into the image with exact spelling and strong readability. ` +
-    `RIGHT line 1 large bold condensed in ${spec.colors.hook}: "${spec.hookWord}". ` +
-    `RIGHT line 2 bold in ${spec.colors.secondary}: "${spec.secondary}". ` +
-    `No extra text beyond those 2 lines. ` +
-    `Never add logos, watermarks, channel tags, top-left labels, or bottom badges. ` +
-    `No center composition and no deity on the right.`;
+    `CRITICAL TEXT REQUIREMENT: This image MUST contain the text "${mainPhrase}" rendered in large, bold, condensed ${textColor} letters on the RIGHT side of the image. ${textLayout}, right-aligned or center-right. ${hookHighlight} The text must have a strong dark drop shadow and be clearly readable. Use proportional sizing — large enough to read at small sizes but NOT so large it fills the entire right half. This is the most important element after the deity. ` +
+    `YouTube thumbnail, exactly 1280x720, 16:9 horizontal. Style: "Cinematic Divine Gold" — cinematic hyperreal devotional. ` +
+    `LEFT 40-45%: ${input.deity} close-up, face + blessing hand visible. ${deity.visualSignature.split(',').slice(0, 4).join(',')}. ` +
+    `4 VISUAL SYSTEMS: (1) CINEMATIC LIGHTING: strong gold rim light, glow bloom, high contrast shadows. (2) DIVINE ENERGY: golden concentric ring halo with ${auraPrompt}, floating particles, fire energy swirls, golden sparks. (3) MATERIAL REALISM: physically reflective gold textures on ornaments, jewelry depth, shadow realism. (4) EMOTIONAL FACE: soft compassionate eyes, calm divine expression, human-like skin texture, slight idealization. ` +
+    `BACKGROUND: dark gradient (black to warm brown/amber), golden fire energy, swirling embers, sparks. No architecture. ` +
+    `RIGHT 55-60%: THE TEXT "${mainPhrase}" must be rendered here in bold ${textColor} font with dark drop shadow. "${hookWord}" is the biggest word with golden glow behind it. Subtle warm glow behind rest of text. Clean — no objects, plenty of breathing room around the text. ` +
+    `No extra text, no logos, no watermarks, no badges. No center composition.`;
 
   const variantDirectives = [
-    'Variant 1: closest to the proven winner layout and safest CTR composition.',
-    'Variant 2: stronger aura, stronger contrast, slightly more cinematic drama.',
+    `Variant 1: balanced layout. Text "${mainPhrase}" in large ${textColor} bold condensed font on right side — "${hookWord}" 30-40% bigger with golden glow accent. Dark drop shadow. Golden sacred ring halo behind deity, warm fire energy. Clean and readable with breathing room.`,
+    `Variant 2: intensified drama. Text "${mainPhrase}" in large ${textColor} bold condensed font on right side — "${hookWord}" 30-40% bigger with stronger golden glow accent. Dark drop shadow. Bigger golden rings, more sparks, bolder cinematic energy.`,
   ];
 
   const normalized = prompts
     .slice(0, 2)
     .map((prompt, index) =>
-      `${baseInstructions} ${variantDirectives[index] ?? ''} ${prompt}`.replace(/\s+/g, ' ').trim().slice(0, 1800)
+      `${baseInstructions} ${variantDirectives[index] ?? ''} ${prompt}`.replace(/\s+/g, ' ').trim().slice(0, 2200)
     );
 
   while (normalized.length < 2) {
     normalized.push(
-      `${baseInstructions} ${variantDirectives[normalized.length]} Use the proven channel formula and make the typography perfectly legible.`
+      `${baseInstructions} ${variantDirectives[normalized.length]}`
         .replace(/\s+/g, ' ')
         .trim()
-        .slice(0, 1800)
+        .slice(0, 2200)
     );
   }
 
@@ -670,7 +676,8 @@ async function validateAndNormalizeThumbnail(
 
   const isDarkEnough = averageLuminance <= 135;
   const hasLeftHero = leftHeroSignal >= 0.08;
-  const hasRightTextBlock = rightTypographySignal >= 0.12;
+  const hasRightTextBlock = rightTypographySignal >= 0.03;
+  const rightSideIsClean = rightTypographySignal <= 0.85;
   const avoidsCenteredComposition = centerBusySignal <= leftHeroSignal * 1.15;
 
   const notes = [
@@ -681,8 +688,11 @@ async function validateAndNormalizeThumbnail(
       ? 'Left-side deity/focal-energy heuristic passed.'
       : 'Left-side deity emphasis looks weaker than the guide target.',
     hasRightTextBlock
-      ? 'Right-side baked-text heuristic passed.'
-      : 'Right-side text block may be too weak, missing, or unreadable.',
+      ? 'Right-side text heuristic passed (2-3 word phrase detected).'
+      : 'Right-side text may be too weak or missing.',
+    rightSideIsClean
+      ? 'Right-side composition looks clean.'
+      : 'Right side has strong visual signal (bold text + glow). Informational only.',
     avoidsCenteredComposition
       ? 'Center-composition heuristic passed.'
       : 'Image may be drifting toward a centered composition.',
@@ -708,7 +718,7 @@ export function getDefaultDeityForIntent(intentKey: IntentKey): string {
   return getQuickPicks(intentKey).deities[0] ?? DEITIES[0]?.name ?? '';
 }
 
-export async function generateThumbnailDraft(prompt: ThumbnailPrompt): Promise<ThumbnailDraft> {
+export async function generateThumbnailPlan(prompt: ThumbnailPrompt): Promise<ThumbnailDraft> {
   if (!GEMINI_API_KEY) {
     throw new Error('Gemini API key not configured. Add GEMINI_API_KEY or VITE_GEMINI_API_KEY.');
   }
@@ -773,8 +783,31 @@ export async function generateThumbnailDraft(prompt: ThumbnailPrompt): Promise<T
     textSpec
   );
 
+  return {
+    id: crypto.randomUUID(),
+    status: 'draft',
+    prompt: normalizedPrompt,
+    baseImages: [],
+    canvaSpec: textSpec,
+    createdAt: new Date(),
+    generationPrompts,
+    templateId: parsedPlan.templateId,
+  };
+}
+
+export async function generateThumbnailImages(plan: ThumbnailDraft): Promise<ThumbnailDraft> {
+  if (!GEMINI_API_KEY) {
+    throw new Error('Gemini API key not configured. Add GEMINI_API_KEY or VITE_GEMINI_API_KEY.');
+  }
+
+  const prompts = plan.generationPrompts ?? [];
+  if (prompts.length === 0) throw new Error('No generation prompts in the plan. Generate a plan first.');
+
+  const intent = getIntent(plan.prompt.intent);
+  const deity = getDeity(plan.prompt.deity);
+
   const rawImages = await Promise.all(
-    generationPrompts.map(async (variantPrompt) => {
+    prompts.map(async (variantPrompt) => {
       const imageResponse = await ai.models.generateContent({
         model: IMAGE_MODEL,
         contents: variantPrompt,
@@ -797,18 +830,18 @@ export async function generateThumbnailDraft(prompt: ThumbnailPrompt): Promise<T
   );
 
   return {
-    id: crypto.randomUUID(),
+    ...plan,
     status: validImages.length > 0 ? 'ready' : 'error',
-    prompt: normalizedPrompt,
     baseImages: validImages.length > 0 ? validImages : fallbackImages,
-    canvaSpec: textSpec,
-    createdAt: new Date(),
-    generationPrompts,
-    templateId: parsedPlan.templateId,
+    validationSummary,
     errorMessage:
       validImages.length > 0
         ? undefined
         : 'Generated variants did not pass the guide-aligned layout heuristics. Review the previews or regenerate.',
-    validationSummary,
   };
+}
+
+export async function generateThumbnailDraft(prompt: ThumbnailPrompt): Promise<ThumbnailDraft> {
+  const plan = await generateThumbnailPlan(prompt);
+  return generateThumbnailImages(plan);
 }

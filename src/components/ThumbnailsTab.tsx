@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   AlertCircle,
+  ArrowLeft,
   CheckCircle2,
   Copy,
   Download,
+  Eye,
   Image as ImageIcon,
   Loader2,
   Plus,
@@ -18,6 +20,8 @@ import {
   DEITIES,
   MANTRAS_INTENTS,
   generateThumbnailDraft,
+  generateThumbnailImages,
+  generateThumbnailPlan,
   getDefaultDeityForIntent,
   getQuickPicks,
   suggestThumbnailInput,
@@ -98,6 +102,9 @@ export default function ThumbnailsTab({
   onInitialPromptConsumed,
 }: ThumbnailsTabProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalStep, setModalStep] = useState<'form' | 'preview'>('form');
+  const [previewPlan, setPreviewPlan] = useState<ThumbnailDraft | null>(null);
+  const [isPlanning, setIsPlanning] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSuggestingInput, setIsSuggestingInput] = useState(false);
   const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
@@ -112,7 +119,7 @@ export default function ThumbnailsTab({
     special: '',
   });
 
-  useWakeLock(isGenerating || isSuggestingInput || !!regeneratingId);
+  useWakeLock(isPlanning || isGenerating || isSuggestingInput || !!regeneratingId);
 
   const compatibleDeities = DEITIES.filter((deity) => deity.intents.includes(input.intent));
   const allDeities = DEITIES;
@@ -189,9 +196,11 @@ export default function ThumbnailsTab({
     });
     setModalError(null);
     setSuggestionRefreshKey(0);
+    setModalStep('form');
+    setPreviewPlan(null);
   };
 
-  const handleGenerate = async () => {
+  const handleGeneratePlan = async () => {
     if (!input.title.trim()) {
       setModalError('Video title is required.');
       return;
@@ -209,38 +218,42 @@ export default function ThumbnailsTab({
       special: input.special?.trim() || undefined,
     };
 
-    const placeholderId = crypto.randomUUID();
-    const placeholderDraft: ThumbnailDraft = {
-      id: placeholderId,
-      status: 'generating',
-      prompt: draftInput,
-      baseImages: [],
-      canvaSpec: EMPTY_CANVA_SPEC,
-      createdAt: new Date(),
-    };
+    setModalError(null);
+    setIsPlanning(true);
+
+    try {
+      const plan = await generateThumbnailPlan(draftInput);
+      setPreviewPlan(plan);
+      setModalStep('preview');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to generate prompt plan.';
+      setModalError(message);
+    } finally {
+      setIsPlanning(false);
+    }
+  };
+
+  const handleGenerateImages = async () => {
+    if (!previewPlan) return;
 
     setModalError(null);
     setIsGenerating(true);
-    setThumbnailDrafts((prev) => [placeholderDraft, ...prev]);
+    setThumbnailDrafts((prev) => [{ ...previewPlan, status: 'generating' }, ...prev]);
 
     try {
-      const generatedDraft = await generateThumbnailDraft(draftInput);
+      const completed = await generateThumbnailImages(previewPlan);
       setThumbnailDrafts((prev) =>
-        prev.map((draft) => (draft.id === placeholderId ? { ...generatedDraft, id: placeholderId } : draft))
+        prev.map((draft) => (draft.id === previewPlan.id ? completed : draft))
       );
       setIsModalOpen(false);
       resetModal();
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to generate thumbnail.';
+      const message = error instanceof Error ? error.message : 'Failed to generate thumbnail images.';
       setModalError(message);
       setThumbnailDrafts((prev) =>
         prev.map((draft) =>
-          draft.id === placeholderId
-            ? {
-                ...draft,
-                status: 'error',
-                errorMessage: message,
-              }
+          draft.id === previewPlan.id
+            ? { ...draft, status: 'error', errorMessage: message }
             : draft
         )
       );
@@ -514,7 +527,7 @@ export default function ThumbnailsTab({
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-sm"
             onClick={() => {
-              if (isGenerating) return;
+              if (isGenerating || isPlanning) return;
               setIsModalOpen(false);
             }}
           >
@@ -527,158 +540,282 @@ export default function ThumbnailsTab({
               onClick={(event) => event.stopPropagation()}
             >
               <div className="px-5 py-4 border-b border-stone-100 flex items-start justify-between gap-4">
-                <div>
-                  <h3 className="text-lg sm:text-xl font-bold text-stone-900">New YouTube Thumbnail</h3>
-                  <p className="text-sm text-stone-500 mt-1">
-                    School of Mantras full-thumbnail generation using the left-deity/right-text composition guide.
-                  </p>
+                <div className="flex items-center gap-3">
+                  {modalStep === 'preview' && (
+                    <button
+                      onClick={() => {
+                        if (isGenerating) return;
+                        setModalStep('form');
+                        setModalError(null);
+                      }}
+                      className="p-2 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-600 transition-colors"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                    </button>
+                  )}
+                  <div>
+                    <h3 className="text-lg sm:text-xl font-bold text-stone-900">
+                      {modalStep === 'form' ? 'New YouTube Thumbnail' : 'Review Prompt'}
+                    </h3>
+                    <p className="text-sm text-stone-500 mt-1">
+                      {modalStep === 'form'
+                        ? 'Step 1 — Configure deity, intent, and title. Then preview the full prompt.'
+                        : 'Step 2 — Review the generated prompt and text plan. Approve to generate images.'}
+                    </p>
+                  </div>
                 </div>
                 <button
                   onClick={() => {
                     if (isGenerating) return;
                     setIsModalOpen(false);
                   }}
-                  className="p-2 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-600 transition-colors"
+                  className="p-2 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-600 transition-colors shrink-0"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <div className="p-5 space-y-4">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-3">
-                    <label className="text-sm font-medium text-stone-800">Video Title</label>
-                    <button
-                      onClick={() => setSuggestionRefreshKey((value) => value + 1)}
-                      disabled={isSuggestingInput}
-                      className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 disabled:opacity-60"
-                    >
-                      {isSuggestingInput ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                      Refresh AI Suggestion
-                    </button>
-                  </div>
-                  <input
-                    value={input.title}
-                    onChange={(event) => setInput((prev) => ({ ...prev, title: event.target.value }))}
-                    placeholder="AI suggests the YouTube title based on deity, intent, and channel knowledge"
-                    className="w-full px-4 py-3 rounded-xl border border-stone-200 bg-white text-stone-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-stone-800">Intent</label>
-                    <select
-                      value={input.intent}
-                      onChange={(event) =>
-                        setInput((prev) => ({ ...prev, intent: event.target.value as IntentKey }))
-                      }
-                      className="w-full px-4 py-3 rounded-xl border border-stone-200 bg-white text-stone-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400"
-                    >
-                      {MANTRAS_INTENTS.map((intent) => (
-                        <option key={intent.key} value={intent.key}>
-                          {intent.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-stone-800">Deity</label>
-                    <select
-                      value={input.deity}
-                      onChange={(event) => setInput((prev) => ({ ...prev, deity: event.target.value }))}
-                      className="w-full px-4 py-3 rounded-xl border border-stone-200 bg-white text-stone-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400"
-                    >
-                      {allDeities.map((deity) => (
-                        <option key={deity.name} value={deity.name}>
-                          {deity.name}
-                          {compatibleDeities.some((item) => item.name === deity.name) ? ' (Recommended)' : ''}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-stone-200 bg-emerald-50/60 p-4 text-sm text-stone-600">
-                  <div className="flex items-center gap-2 text-emerald-700 font-medium">
-                    {isSuggestingInput ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                    AI Suggestion Engine
-                  </div>
-                  <p className="mt-2">
-                    The app suggests only the video title from the School of Mantras guide, selected deity, intent, and any calendar seed topic.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="rounded-2xl border border-stone-200 bg-stone-50 p-4">
-                    <p className="text-xs font-semibold tracking-wider uppercase text-stone-500">Recommended Deities</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {recommendedDeities.map((deity) => (
+              {modalStep === 'form' ? (
+                <>
+                  <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between gap-3">
+                        <label className="text-sm font-medium text-stone-800">Video Title</label>
                         <button
-                          key={deity}
-                          onClick={() => setInput((prev) => ({ ...prev, deity }))}
-                          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                            input.deity === deity
-                              ? 'bg-emerald-600 text-white'
-                              : 'bg-white border border-stone-200 text-stone-600 hover:border-emerald-300 hover:text-emerald-700'
-                          }`}
+                          onClick={() => setSuggestionRefreshKey((value) => value + 1)}
+                          disabled={isSuggestingInput}
+                          className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 disabled:opacity-60"
                         >
-                          {deity}
+                          {isSuggestingInput ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                          Refresh AI Suggestion
                         </button>
-                      ))}
+                      </div>
+                      <input
+                        value={input.title}
+                        onChange={(event) => setInput((prev) => ({ ...prev, title: event.target.value }))}
+                        placeholder="AI suggests the YouTube title based on deity, intent, and channel knowledge"
+                        className="w-full px-4 py-3 rounded-xl border border-stone-200 bg-white text-stone-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400"
+                      />
                     </div>
-                  </div>
 
-                  <div className="rounded-2xl border border-stone-200 bg-stone-50 p-4">
-                    <p className="text-xs font-semibold tracking-wider uppercase text-stone-500">Line 1 Quick Picks</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {quickPicks.hooks.map((hook) => (
-                        <span
-                          key={hook}
-                          className="px-3 py-1.5 rounded-full bg-white border border-stone-200 text-xs font-medium text-stone-600"
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-stone-800">Intent</label>
+                        <select
+                          value={input.intent}
+                          onChange={(event) =>
+                            setInput((prev) => ({ ...prev, intent: event.target.value as IntentKey }))
+                          }
+                          className="w-full px-4 py-3 rounded-xl border border-stone-200 bg-white text-stone-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400"
                         >
-                          {hook}
-                        </span>
-                      ))}
+                          {MANTRAS_INTENTS.map((intent) => (
+                            <option key={intent.key} value={intent.key}>
+                              {intent.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-stone-800">Deity</label>
+                        <select
+                          value={input.deity}
+                          onChange={(event) => setInput((prev) => ({ ...prev, deity: event.target.value }))}
+                          className="w-full px-4 py-3 rounded-xl border border-stone-200 bg-white text-stone-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400"
+                        >
+                          {allDeities.map((deity) => (
+                            <option key={deity.name} value={deity.name}>
+                              {deity.name}
+                              {compatibleDeities.some((item) => item.name === deity.name) ? ' (Recommended)' : ''}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-stone-200 bg-emerald-50/60 p-4 text-sm text-stone-600">
+                      <div className="flex items-center gap-2 text-emerald-700 font-medium">
+                        {isSuggestingInput ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                        AI Suggestion Engine
+                      </div>
+                      <p className="mt-2">
+                        The app suggests only the video title from the School of Mantras guide, selected deity, intent, and any calendar seed topic.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="rounded-2xl border border-stone-200 bg-stone-50 p-4">
+                        <p className="text-xs font-semibold tracking-wider uppercase text-stone-500">Recommended Deities</p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {recommendedDeities.map((deity) => (
+                            <button
+                              key={deity}
+                              onClick={() => setInput((prev) => ({ ...prev, deity }))}
+                              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                                input.deity === deity
+                                  ? 'bg-emerald-600 text-white'
+                                  : 'bg-white border border-stone-200 text-stone-600 hover:border-emerald-300 hover:text-emerald-700'
+                              }`}
+                            >
+                              {deity}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl border border-stone-200 bg-stone-50 p-4">
+                        <p className="text-xs font-semibold tracking-wider uppercase text-stone-500">Line 1 Quick Picks</p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {quickPicks.hooks.map((hook) => (
+                            <span
+                              key={hook}
+                              className="px-3 py-1.5 rounded-full bg-white border border-stone-200 text-xs font-medium text-stone-600"
+                            >
+                              {hook}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {modalError && (
+                      <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                        <div className="flex items-start gap-2">
+                          <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                          <p>{modalError}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="px-5 py-4 border-t border-stone-100 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <p className="text-xs text-stone-400">
+                      Step 1: Generate the full prompt and text plan for review before creating images.
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          if (isPlanning) return;
+                          setIsModalOpen(false);
+                        }}
+                        className="px-4 py-2 rounded-lg border border-stone-200 hover:bg-stone-50 text-sm font-medium text-stone-700 transition-colors min-h-[44px]"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleGeneratePlan}
+                        disabled={isPlanning || isSuggestingInput}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium transition-colors disabled:opacity-60 min-h-[44px]"
+                      >
+                        {isPlanning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
+                        {isPlanning ? 'Generating Prompt…' : 'Generate & Preview Prompt'}
+                      </button>
                     </div>
                   </div>
-                </div>
+                </>
+              ) : (
+                <>
+                  <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto">
+                    {previewPlan && (
+                      <>
+                        <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4 space-y-3">
+                          <div className="flex items-center gap-2 text-emerald-700 font-medium text-sm">
+                            <CheckCircle2 className="w-4 h-4" />
+                            Text Plan Ready
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                            <div>
+                              <p className="text-stone-500 text-xs font-semibold uppercase tracking-wider">Hook Phrase</p>
+                              <p className="mt-1 text-lg font-bold text-stone-900">{previewPlan.canvaSpec.hookWord || '—'}</p>
+                            </div>
+                            <div>
+                              <p className="text-stone-500 text-xs font-semibold uppercase tracking-wider">SEO Title</p>
+                              <p className="mt-1 text-sm font-medium text-stone-700">{previewPlan.canvaSpec.seoTitle || '—'}</p>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                            <div>
+                              <p className="text-stone-500 text-xs font-semibold uppercase tracking-wider">Deity</p>
+                              <p className="mt-1 font-medium text-stone-800">{previewPlan.prompt.deity}</p>
+                            </div>
+                            <div>
+                              <p className="text-stone-500 text-xs font-semibold uppercase tracking-wider">Intent</p>
+                              <p className="mt-1 font-medium text-stone-800">{previewPlan.prompt.intent}</p>
+                            </div>
+                            <div>
+                              <p className="text-stone-500 text-xs font-semibold uppercase tracking-wider">Hook Color</p>
+                              <div className="mt-1 flex items-center gap-2">
+                                <span className="w-4 h-4 rounded-full border border-stone-300" style={{ backgroundColor: previewPlan.canvaSpec.colors.hook }} />
+                                <span className="text-xs font-mono text-stone-600">{previewPlan.canvaSpec.colors.hook}</span>
+                              </div>
+                            </div>
+                            <div>
+                              <p className="text-stone-500 text-xs font-semibold uppercase tracking-wider">Aura Color</p>
+                              <div className="mt-1 flex items-center gap-2">
+                                <span className="w-4 h-4 rounded-full border border-stone-300" style={{ backgroundColor: previewPlan.canvaSpec.colors.aura || previewPlan.canvaSpec.colors.brand }} />
+                                <span className="text-xs font-mono text-stone-600">{previewPlan.canvaSpec.colors.aura || previewPlan.canvaSpec.colors.brand}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
 
-                {modalError && (
-                  <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                    <div className="flex items-start gap-2">
-                      <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                      <p>{modalError}</p>
+                        {previewPlan.generationPrompts?.map((prompt, index) => (
+                          <div key={index} className="rounded-2xl border border-stone-200 bg-stone-50 p-4 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <p className="text-sm font-semibold text-stone-900">Variant {index + 1} Prompt</p>
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(prompt);
+                                }}
+                                className="inline-flex items-center gap-1.5 text-xs font-medium text-stone-500 hover:text-stone-700 transition-colors"
+                              >
+                                <Copy className="w-3.5 h-3.5" />
+                                Copy
+                              </button>
+                            </div>
+                            <p className="text-xs leading-relaxed text-stone-600 whitespace-pre-wrap break-words">{prompt}</p>
+                          </div>
+                        ))}
+                      </>
+                    )}
+
+                    {modalError && (
+                      <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                        <div className="flex items-start gap-2">
+                          <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                          <p>{modalError}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="px-5 py-4 border-t border-stone-100 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <p className="text-xs text-stone-400">
+                      Step 2: Review the prompts above. Click Generate to create the final thumbnail images.
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          if (isGenerating) return;
+                          setModalStep('form');
+                          setModalError(null);
+                        }}
+                        className="px-4 py-2 rounded-lg border border-stone-200 hover:bg-stone-50 text-sm font-medium text-stone-700 transition-colors min-h-[44px]"
+                      >
+                        Back to Form
+                      </button>
+                      <button
+                        onClick={handleGenerateImages}
+                        disabled={isGenerating}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium transition-colors disabled:opacity-60 min-h-[44px]"
+                      >
+                        {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                        {isGenerating ? 'Generating Images…' : 'Generate Thumbnails'}
+                      </button>
                     </div>
                   </div>
-                )}
-              </div>
-
-              <div className="px-5 py-4 border-t border-stone-100 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
-                <p className="text-xs text-stone-400">
-                  Generates 2 variants, renders the planned text into the image, validates the left-right composition heuristics, and exports a ZIP pack.
-                </p>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => {
-                      if (isGenerating) return;
-                      setIsModalOpen(false);
-                    }}
-                    className="px-4 py-2 rounded-lg border border-stone-200 hover:bg-stone-50 text-sm font-medium text-stone-700 transition-colors min-h-[44px]"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleGenerate}
-                    disabled={isGenerating || isSuggestingInput}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium transition-colors disabled:opacity-60 min-h-[44px]"
-                  >
-                    {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                    {isGenerating ? 'Generating…' : 'Generate Full Thumbnails'}
-                  </button>
-                </div>
-              </div>
+                </>
+              )}
             </motion.div>
           </motion.div>
         )}
