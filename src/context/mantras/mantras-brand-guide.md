@@ -1,6 +1,6 @@
 # School of Mantras — Complete Thumbnail Generation System
 ### Style Guide · Nano Banana MCP Setup · Daily Workflow · Prompt Templates
-### ✅ v3 — Real Channel Performance Data Integrated (April 2026)
+### ✅ v6 — Text Hierarchy, Color Contrast & Problem-Solution Pattern (April 2026)
 
 ---
 
@@ -51,47 +51,51 @@ Top video earns **2.7x more views** than second tier — the gap is large. Repli
 | Rule | Specification |
 |------|--------------|
 | **Canvas size** | 1280 × 720 px, 16:9 horizontal |
-| **Style** | **"Cinematic Divine Gold"** — Cinematic Hyperreal Devotional (Golden Aura Style). Modern AI cinematic hybrid. NOT cartoon, NOT illustration, NOT traditional painting, NOT temple sculpture realism. |
-| **Background** | Deep dark gradient (black to warm dark brown/amber) with warm golden energy effects — swirling golden fire, embers, sparks, golden light flares radiating from the aura. NO architecture, NO scenery. Background feels alive with divine energy. |
-| **Deity placement** | ⚡ LEFT SIDE (40–45% width): close-up (face + blessing hand visible), filling vertical space, slightly facing toward the right/text. |
-| **Text placement** | ⚡ RIGHT SIDE (55–60%): clean readable text area. Text BAKED INTO the generated image. |
-| **Aura** | ⚡ Dramatic golden concentric sacred rings or halo behind deity — large glowing circular ring effect radiating outward with warm fire energy. Golden sparks and embers floating around halo. Smooth and powerful, NOT flat. |
-| **Lighting** | Strong golden rim light from behind deity (#FFD700). High contrast: bright deity vs dark background. |
-| **Atmosphere** | Warm golden fire/energy swirls throughout background. Floating golden sparks and embers around deity area. Subtle mist/smoke at base. Soft bokeh. Effects concentrated around deity — text area stays readable but subtle warm ambient glow can bleed in. |
-| **Text** | ⚡ MAX 2–3 words ONLY. Extremely large, bold, condensed font. White (#FFFFFF) or gold (#FFD700). Strong dark drop shadow. Hook word gets a subtle warm golden glow/highlight accent behind it to pop visually. One dominant phrase — readable at mobile size. |
-| **Text area** | Right side should be clean and readable — no props or objects. Subtle warm ambient glow from the aura can bleed slightly into the text area to unify the composition. Text must still be perfectly readable. |
-| **Character fidelity** | Preserve canonical deity attributes exactly. NO mixing iconography from other deities. Each deity must be visually pure to their own tradition. |
-| **Color palette** | Dark base + deity aura accent + white/gold text only. Max 2 color families. |
+| **Style** | **"Cinematic Divine Aura"** — Cinematic Hyperreal Devotional with DEITY-FAITHFUL color palette (NOT always gold). Modern AI cinematic hybrid. NOT cartoon, NOT illustration, NOT painting, NOT temple sculpture. |
+| **Background** | Deep dark gradient (black to dark warm tone matching deity's aura). Energy effects in DEITY'S OWN AURA COLOR — swirling fire/energy, embers, sparks, light flares. NO architecture, NO scenery. |
+| **Deity placement** | ⚡ LEFT SIDE (40–45% width): EXTREME close-up — face + ONE blessing hand ONLY. NO lower body, NO full figure. Face fills **75-80%+** of left zone height (zoom 10-15% tighter). Eyes DOMINANT, BRIGHT, and luminous at mobile size. |
+| **Text placement** | ⚡ RIGHT SIDE (55–60%): DARK EMPTY SPACE (visual silence). Text BAKED INTO the generated image. |
+| **Aura** | ⚡ Concentric sacred rings/halo in DEITY'S OWN AURA COLOR (blue for Shiva, orange for Hanuman, violet for Durga, etc.). NOT always gold. Gold only for Ganesha/Lakshmi/Ram. |
+| **Lighting** | Strong rim light from behind deity in DEITY'S AURA COLOR. High contrast: bright deity vs dark background. Eyes slightly brighter/luminous for instant connection. |
+| **Atmosphere** | Deity-colored energy swirls around deity area. Matching sparks and embers. Subtle mist at base. Text area must be ULTRA-DARK and ULTRA-CLEAN — NO glow bleed, NO light interference into text area. |
+| **Text hierarchy** | ⚡ **2-LINE SPLIT (critical):** LINE 1 = command word (BIG, WHITE `#FFFFFF`, DOMINANT — 40-50% bigger). LINE 2 = emotion word (smaller, COLORED — intent accent color e.g. RED `#FF3B3B` for healing). Creates visual hierarchy → faster reading → stronger impact. Both lines have STRONG drop shadow. |
+| **Text area** | Right side = ULTRA-DARK EMPTY SPACE. NO props, NO particles, NO glow, NO light interference behind text. Text sits in PURE darkness. Make it DARKER than seems necessary. The extreme contrast is the click trigger. |
+| **Visual trigger** | ONE subtle story element per thumbnail: energy from hand, glowing heart, light beam, subtle third-eye glow, or faint energy pulse. Only ONE — never combine. Just a HINT of energy. |
+| **Character fidelity** | Preserve canonical deity attributes exactly. NO mixing iconography. EXTREME close-up: eyes must be large AND BRIGHT, expression must match intent (fierce/loving/serene). Tighter crop = more emotional pull = higher CTR. |
+| **Color palette** | Dark base + DEITY'S AURA COLOR accent. LINE 1 = white. LINE 2 = intent accent color. Each deity has their own palette — NOT always gold. |
 
 ---
 
-### 1.2.1 The 4 Visual Systems (Style: "Cinematic Divine Gold")
+### 1.2.1 The 4 Visual Systems (Style: "Cinematic Divine Aura")
 
 Every thumbnail combines these 4 systems. All must be present:
 
 | System | What It Does | Key Traits | Feeling |
 |--------|-------------|------------|---------|
-| **1. Cinematic Lighting** | Makes it feel "Hollywood" | Strong gold rim light, glow bloom effect, high contrast shadows | Dramatic |
-| **2. Divine Energy** | Makes it feel "spiritual" | Radial aura halo (concentric rings), floating particles, warm gold/orange tones, fire energy swirls | Sacred |
-| **3. Material Realism** | Makes it feel "premium" | Physically reflective gold textures, intricate jewelry detail, depth + shadow realism on ornaments | Luxury |
-| **4. Emotional Face Rendering** | Creates connection → click | Soft compassionate eyes (alive, conscious presence), calm expression, slight smile, slight idealization (perfect symmetry, divine beauty) | Trust |
+| **1. Cinematic Lighting** | Makes it feel "Hollywood" | Strong rim light in DEITY'S AURA COLOR, glow bloom, extreme contrast, slightly brighter eyes | Dramatic |
+| **2. Divine Energy** | Makes it feel "spiritual" | Concentric ring halo in deity's color, deity-colored energy swirls, matching sparks/embers | Sacred |
+| **3. Material Realism** | Makes it feel "premium" | Reflective metal textures, intricate jewelry detail, depth + shadow realism on ornaments | Luxury |
+| **4. Emotional Face (MOST CRITICAL)** | Creates the CLICK | EXTREME close-up (75-80%+). Eyes BIG, BRIGHT, luminous at mobile size. Expression matches intent. Face DOMINATES. | Instant connection |
 
 **Character rendering rules (all deities):**
+- EXTREME close-up — face fills **75-80%+** of left zone (10-15% tighter crop than default), NO lower body
+- Eyes MUST be large, BRIGHT, and clearly visible even at mobile thumbnail size — slightly increase luminosity
+- Expression matches intent: fierce (power), loving (love), serene (peace), protective (protection)
 - Human-like skin texture — NOT flat color
-- Realistic lighting on skin — like a movie scene
-- Physically accurate gold materials — reflective, not painted
-- Emotion in the eyes — alive, conscious, divine presence
-- Slight idealization — perfect symmetry, divine beauty
+- ONE visual trigger element: energy from hand, glowing heart, light beam, subtle third-eye glow, or faint energy pulse
 
-**This style sits between: Spiritual + Luxury + Cinematic**
-- Feels sacred (trust) → Feels premium (value) → Feels dramatic (click)
+**CRITICAL COLOR RULE:**
+- Each deity has their OWN aura color — NOT always gold
+- Shiva = electric blue | Hanuman = fiery orange-red | Durga = deep violet
+- Krishna = teal-blue | Kali = deep crimson | Saraswati = warm ivory
+- Gold ONLY for: Ganesha, Lakshmi, Ram
 
-**What this style is NOT:**
-- NOT traditional Indian painting
-- NOT cartoon / animation
-- NOT flat digital illustration
-- NOT temple sculpture realism
-- It IS a modern AI cinematic hybrid
+**Viral psychology shift:**
+- Old: "This is spiritual content" → New: "This will change how I feel RIGHT NOW"
+- Old: generic calm text → New: curiosity/urgency trigger words
+- Old: full body shot → New: EXTREME face close-up for emotional pull
+- Old: both lines same weight + white → New: LINE 1 dominant WHITE + LINE 2 smaller COLORED
+- Old: moderate zoom → New: 10-15% tighter face crop for max emotional pull
 
 ---
 
@@ -112,92 +116,117 @@ Every thumbnail combines these 4 systems. All must be present:
 
 ---
 
-### 1.4 ⚡ PROVEN LAYOUT TEMPLATE (v4 — Minimal CTR-Optimized)
+### 1.4 ⚡ VIRAL LAYOUT TEMPLATE (v6 — Hierarchy + Color Contrast)
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│ SCHOOL OF MANTRAS  (tiny, top-left, semi-transparent)   │
 │                                                         │
-│  [ DEITY CLOSE-UP ]                                     │
-│  Left 40-45%             "REMOVE                        │
-│  Face + blessing hand     OBSTACLES"                    │
-│  Glowing aura              2-3 words, HUGE              │
-│  behind deity              White or Gold                 │
-│                            Center-right aligned          │
-│  Mist at base                                           │
-│                            ← EMPTY CLEAN SPACE →        │
+│  [ DEITY EXTREME                                        │
+│    CLOSE-UP ]            "STOP"    ← LINE 1: BIG,      │
+│  Left 40-45%                          WHITE, DOMINANT   │
+│  FACE fills 75-80%+      "PAIN"    ← LINE 2: smaller,  │
+│  Eyes BRIGHT + DOMINANT                COLORED (#FF3B3B)│
+│  ONE blessing hand                                      │
+│  Deity-colored aura      ← ULTRA-DARK EMPTY SPACE →    │
+│  ONE micro-hook trigger    NO glow, NO particles,       │
+│  (hand energy/third eye    NO light interference.       │
+│   glow/heart glow)         PURE DARKNESS behind text.   │
 └─────────────────────────────────────────────────────────┘
 ```
 
-**⚡ THE 2-3 WORD RULE (v4 — scroll-stopping simplicity):**
+**⚡ THE 2-LINE HIERARCHY RULE (v6 — MOST IMPORTANT TEXT CHANGE):**
 
 | Element | Content | Size | Color | Example |
 |---------|---------|------|-------|---------|
-| **Main phrase** | 2–3 words ONLY — single dominant message | Extremely large, bold, condensed | WHITE `#FFFFFF` or GOLD `#FFD700` | "REMOVE OBSTACLES" |
-| **Top-left label** | "SCHOOL OF MANTRAS" — minimal visibility | Tiny, semi-transparent | White `rgba(255,255,255,0.4)` | "SCHOOL OF MANTRAS" |
+| **LINE 1 (command)** | First word — BIGGEST, triggers attention/action | 40-50% bigger than LINE 2 | WHITE `#FFFFFF` with STRONG drop shadow | "STOP" |
+| **LINE 2 (emotion)** | Second word — emotional payload, hooks the viewer | Smaller than LINE 1, still bold | COLORED — intent accent (e.g. RED `#FF3B3B`, GOLD `#FFD700`) | "PAIN" |
 
-**CRITICAL: No badge, no extra text, no logos, no watermarks. The right side is the phrase and silence.**
+**WHY 2-LINE HIERARCHY WORKS:**
+- "STOP" = command (grabs attention)
+- "PAIN" = emotion (hooks the viewer)
+- Brain reads it in 2 steps = stronger impact than same-weight text
+- Color contrast (WHITE vs RED) = emotional trigger = higher CTR
+- ❌ Both lines same weight + same color = visually weaker, less dramatic
+- ❌ One line only = works ONLY when phrase is VERY strong ("HEAL NOW")
+
+**LINE 2 COLOR BY INTENT:**
+```
+HEALING:        RED #FF3B3B     (pain = red = emotional trigger)
+POWER:          ORANGE #FF6600  (fire = urgency)
+ABUNDANCE:      GOLD #FFD700    (prosperity = warmth)
+LOVE:           PINK #FF69B4    (heart = devotion)
+PROTECTION:     BLUE #4D9FFF    (shield = safety)
+TRANSFORMATION: RED #FF3B3B     (intensity = change)
+PEACE:          SOFT BLUE #B0D4F1 (calm = serenity)
+KNOWLEDGE:      GOLD #FFD700    (wisdom = light)
+```
+
+**PROBLEM-SOLUTION PATTERN (high-performing):**
+- These thumbnails show a clear PAIN POINT + INSTANT PROMISE
+- "STOP PAIN" — viewer sees THEIR problem + the solution
+- This performs VERY well because: instant recognition → "I need this RIGHT NOW"
+
+**VIRAL TEXT PSYCHOLOGY:**
+- Must trigger: curiosity ("WHY EMPTY"), urgency ("HEAL NOW"), outcome ("FEEL LOVE")
+- NEVER generic: ❌ "DIVINE LOVE" "SACRED HEALING" "GOLDEN ABUNDANCE"
+- ALWAYS specific: ✅ "OPEN HEART" "STOP PAIN" "RISE NOW" "BREAK FREE"
+- NEVER both lines same color: ❌ both white → boring, no hierarchy
+- ALWAYS color contrast: ✅ LINE 1 white + LINE 2 colored = click trigger
+
+**CRITICAL: No badge, no extra text, no logos. Right side = text in PURE darkness. Maximum contrast.**
 
 ---
 
-### 1.5 Intent Color System
+### 1.5 Intent Color System (v6 — 2-Line Hierarchy Colors)
 
-| Intent | Accent Color | Hex | Aura | Line 2 Color |
-|--------|-------------|-----|------|--------------|
-| **Abundance / Success** | Gold | `#FFD700` | Warm amber glow | Gold `#FFD700` or Orange `#FF8C00` |
-| **Protection** | Electric blue | `#0066FF` | Blue haze | White or Electric Blue |
-| **Healing** | Soft green / teal | `#00C896` | Green mist | Red `#FF2222` (contrast) |
-| **Love / Devotion** | Rose pink / teal | `#FF69B4` / `#00BFFF` | Pink/blue warmth | Gold `#FFD700` |
-| **Power / Courage** | Fiery orange-red | `#FF4500` | Fire particles | Orange `#FF6600` |
-| **Peace / Meditation** | Soft blue / silver | `#87CEEB` | Blue starlight | White/silver |
-| **Knowledge / Clarity** | Ivory / warm white | `#FFFACD` | Warm white | Gold |
-| **Transformation** | Deep crimson | `#8B0000` | Red/black | Red `#FF2222` |
+| Intent | Accent Color | Hex | Aura | LINE 1 Color | LINE 2 Color |
+|--------|-------------|-----|------|-------------|--------------|
+| **Abundance / Success** | Gold | `#FFD700` | Warm amber glow | WHITE `#FFFFFF` | GOLD `#FFD700` |
+| **Protection** | Electric blue | `#0066FF` | Blue haze | WHITE `#FFFFFF` | BLUE `#4D9FFF` |
+| **Healing** | Soft green / teal | `#00C896` | Green mist | WHITE `#FFFFFF` | RED `#FF3B3B` (emotional trigger) |
+| **Love / Devotion** | Rose pink / teal | `#FF69B4` / `#00BFFF` | Pink/blue warmth | WHITE `#FFFFFF` | PINK `#FF69B4` |
+| **Power / Courage** | Fiery orange-red | `#FF4500` | Fire particles | WHITE `#FFFFFF` | ORANGE `#FF6600` |
+| **Peace / Meditation** | Soft blue / silver | `#87CEEB` | Blue starlight | WHITE `#FFFFFF` | SOFT BLUE `#B0D4F1` |
+| **Knowledge / Clarity** | Ivory / warm white | `#FFFACD` | Warm white | WHITE `#FFFFFF` | GOLD `#FFD700` |
+| **Transformation** | Deep crimson | `#8B0000` | Red/black | WHITE `#FFFFFF` | RED `#FF3B3B` |
+
+**RULE:** LINE 1 = ALWAYS WHITE. LINE 2 = ALWAYS COLORED (use intent accent). NEVER both lines white — kills hierarchy and CTR.
 
 ---
 
-### 1.6 ⭐ PROVEN VIRAL TEXT FORMULAS (From Real Data)
+### 1.6 ⭐ VIRAL HOOK FORMULAS (v5 — Curiosity/Urgency/Outcome)
 
-**Line 1 — Big Hook (WHITE):**
-```
-2026 SUCCESS          ← #1 proven winner
-2026 PROTECTION       ← #2 proven winner
-INSTANT SUCCESS       ← 1.8K views
-DEEP PEACE            ← 1.2K views
-ULTIMATE HEALING      ← strong performer
-KARMA HEALING         ← strong performer
-FEARLESSNESS          ← 1.6K views
-```
+**VIRAL TEXT = what makes viewers think "I NEED this RIGHT NOW"**
 
-**Line 2 — Action Promise (RED / ORANGE / GOLD):**
+**By Intent — 2-3 word viral hooks:**
 ```
-REMOVE OBSTACLES      ← #1 proven phrase
-REMOVE ALL OBSTACLES  ← top performer exact phrase
-SHIELD YOURSELF       ← #2 proven phrase
-ACHIEVE YOUR GOALS    ← combines well with SUCCESS
-START FRESH           ← combines with New Year/protection
-PURIFY YOUR MIND      ← healing intent
-ATTRACT ABUNDANCE     ← wealth intent
-CLAIM YOUR POWER      ← courage intent
+ABUNDANCE:      ATTRACT WEALTH  |  STOP STRUGGLING  |  UNLOCK SUCCESS  |  MONEY FLOWS
+PROTECTION:     SHIELD NOW      |  STOP ATTACKS      |  FEEL SAFE       |  BLOCK EVIL
+HEALING:        HEAL NOW        |  STOP PAIN         |  FEEL WHOLE      |  RESET YOURSELF
+LOVE:           OPEN HEART      |  FEEL LOVE         |  RECEIVE LOVE    |  WHY EMPTY
+POWER:          RISE NOW        |  FEAR DIES         |  CLAIM POWER     |  STOP FEAR
+PEACE:          FIND PEACE      |  STOP ANXIETY      |  CALM NOW        |  QUIET MIND
+KNOWLEDGE:      SEE CLEARLY     |  UNLOCK MIND       |  GAIN CLARITY    |  FOCUS NOW
+TRANSFORMATION: REBIRTH NOW     |  BREAK FREE        |  DESTROY KARMA   |  NEW YOU
 ```
 
-**Badge — Bottom (small white):**
+**What makes a hook VIRAL vs GENERIC:**
 ```
-Ganesh Mantra · 108x
-Shiva Mantra · 108x
-Hanuman Mantra · 40 Days
-Hare Krishna · Daily Practice
-[Deity] Mantra · Listen Daily
+❌ GENERIC (no click):     ✅ VIRAL (instant click):
+DIVINE LOVE               → FEEL LOVE / OPEN HEART
+SACRED HEALING             → HEAL NOW / STOP PAIN
+GOLDEN ABUNDANCE           → ATTRACT WEALTH / MONEY FLOWS
+DEEP PEACE                 → STOP ANXIETY / CALM NOW
+FEARLESSNESS               → RISE NOW / FEAR DIES
 ```
 
-**Intensity qualifiers that boost performance:**
+**Viral trigger patterns:**
 ```
-INSTANT — ("INSTANT SUCCESS" = 1.8K)
-MOST POWERFUL — authority signal
-COMPLETE — ("Complete Sadhana" = 1.1K)
-DAILY / LISTEN DAILY — habit/challenge format
-40-DAY CHALLENGE — commitment signal
-108x — sacred number, perceived power
-DEEP — curiosity trigger
+"STOP [pain]"    — urgency (STOP PAIN, STOP FEAR, STOP ANXIETY)
+"[verb] NOW"     — immediate (HEAL NOW, RISE NOW, CALM NOW)
+"FEEL [state]"   — outcome (FEEL LOVE, FEEL SAFE, FEEL WHOLE)
+"WHY [question]" — curiosity (WHY EMPTY, WHY STUCK)
+"BREAK [thing]"  — transformation (BREAK FREE, BREAK KARMA)
 ```
 
 ---
@@ -235,36 +264,39 @@ The #1 video uses this exact structure — replicate it every time:
 
 ---
 
-### 1.8 What Makes a Winning Thumbnail (v4 — Data-Proven + CTR-Optimized)
+### 1.8 What Makes a VIRAL Thumbnail (v6 — 5-10%+ CTR Target)
 
-1. **Deity creates emotion** — close-up face with blessing hand, compassionate intelligent eyes, immediate emotional resonance
-2. **Text delivers the message** — MAX 2-3 words, one dominant phrase, instantly readable at mobile size
-3. **Composition drives the click** — left deity vs right clean space, high contrast, scroll-stopping layout
-4. **"REMOVE OBSTACLES"** — the single most clickable promise for this audience
-5. **Year hook still powerful** — "2026 SUCCESS" when used as the sole phrase
-6. **One dominant deity face on LEFT** — viewers connect with eyes and expressions
-7. **High contrast left vs right** — glowing deity vs dark background, white/gold text pops
-8. **Negative space is sacred** — right side emptiness = higher CTR. No distractions behind text.
-9. **Gold always present** — golden rim light, ornaments, particles around deity. Reads as "divine" to the audience.
-10. **Smooth powerful aura** — clean radial glow, NOT noisy. Cinematic not chaotic.
-11. **Mobile-first readability** — text must be legible at thumbnail size on a phone screen
+1. **EXTREME close-up face (tighter)** — face fills 75-80%+ of left zone. Eyes BIG + BRIGHT (slightly luminous). Expression DOMINANT. At mobile size, instant emotional connection. NO full body shots.
+2. **2-LINE TEXT HIERARCHY** — LINE 1 = command word (BIG, WHITE, DOMINANT). LINE 2 = emotion word (smaller, COLORED). "STOP" (white) / "PAIN" (red). Brain reads in 2 steps = stronger impact. NEVER both lines same weight or same color.
+3. **ULTRA-DARK text area** — right side = PURE visual silence. Text sits in PITCH DARKNESS. NO glow, NO particles, NO light interference behind text. Make it DARKER than seems necessary.
+4. **COLOR CONTRAST between lines** — LINE 1 always WHITE. LINE 2 always COLORED (intent accent: red, gold, orange, pink, blue). This creates emotional trigger = higher CTR. Both lines white = boring.
+5. **ONE micro-hook visual trigger** — subtle energy from hand, glowing heart, light beam, third-eye glow, or faint energy pulse. Just a HINT — not overwhelming. Adds life to static composition.
+6. **DEITY-COLORED aura** — Shiva=blue, Hanuman=orange, Durga=violet. NOT always gold. Each deity feels unique.
+7. **High contrast composition** — bright deity with deity-colored energy LEFT vs ultra-dark empty silence RIGHT.
+8. **Two DIFFERENT variants** — not just intensity variations. Different visual triggers, expressions, compositions.
+9. **STRONG drop shadow on ALL text** — both lines must POP on mobile. Slight glow on text edges for readability.
+10. **Problem-Solution pattern** — thumbnails showing a clear pain point + instant promise perform VERY well (e.g. "STOP PAIN"). Instant recognition → "I need this."
+11. **Mobile-first psychology** — viewers scroll fast. You have 0.3 seconds. Bright face + hierarchy text + dark space = click.
 
 ---
 
 ### 1.9 What to Avoid (STRICT)
 
-- **No clutter** — no multiple props, no busy particles, no coins, no objects behind text
+- **No generic/calm text** — ❌ "DIVINE LOVE", "SACRED HEALING", "GOLDEN ABUNDANCE". Must be viral trigger words.
+- **No full body shots** — EXTREME close-up only. Face + ONE hand. NO lower body visible.
+- **No always-gold** — each deity uses THEIR aura color. Gold only for Ganesha/Lakshmi/Ram.
+- **No glow/particles behind text** — right side = ULTRA-DARK EMPTY SPACE. Text sits in PURE darkness. No light interference.
+- **No same-weight text lines** — ❌ both lines same size = visually weak. LINE 1 must be 40-50% bigger than LINE 2.
+- **No both-lines-white** — ❌ both lines white = boring, no hierarchy. LINE 1 = white, LINE 2 = colored (intent accent).
+- **No similar-looking variants** — two variants must be meaningfully different (expression, trigger, composition).
+- **No clutter** — no multiple props, no busy particles, no objects
 - **No mixing symbolic meanings** — each deity stays pure to their own iconography
 - **No center composition** — deity NEVER centered, NEVER on the right side
 - **No cartoon or illustration** — only photorealistic cinematic
-- **No complex storytelling elements** — one deity, one phrase, one emotion
-- **No glowing text overload** — text is clean and sharp, not neon
-- **No light or white backgrounds** — always deep dark gradient
-- **No architecture or scenery** — pure atmospheric void only
-- **No badges, logos, watermarks, or channel tags** in the generated image
+- **No badges, logos, watermarks, or channel tags**
 - **No more than 2-3 words** on the right side
-- **No text overlap** with particles or glow
-- **Vague benefits** — say "REMOVE OBSTACLES" not "FEEL BETTER"
+- **No calm/static compositions** — must have one visual trigger element (micro-hook) for story
+- **No wide face zoom** — must be 10-15% tighter than default. Tighter = more emotional pull.
 
 ---
 
@@ -530,76 +562,102 @@ Photorealistic. Cinematic. Celebratory atmosphere.
 
 ---
 
-## PART 6 — QUICK REFERENCE CARD ⭐ v4
+## PART 6 — QUICK REFERENCE CARD ⭐ v6
 
 ```
 ════════════════════════════════════════════
-  DESIGN PHILOSOPHY (v4)
+  VIRAL DESIGN PHILOSOPHY (v6)
 ════════════════════════════════════════════
-  Deity creates emotion.
-  Text delivers the message.
-  Composition drives the click.
+  Face creates INSTANT emotion (zoom tighter).
+  Text HIERARCHY triggers the CLICK.
+  ULTRA-DARK space = maximum contrast.
+  "This will change how I feel RIGHT NOW"
 
 ════════════════════════════════════════════
   LAYOUT (NON-NEGOTIABLE)
 ════════════════════════════════════════════
-  LEFT 40-45%  → DEITY close-up (face + blessing hand)
-  RIGHT 55-60% → 2-3 word phrase ONLY + empty space
-  NO center composition. NO deity on right.
+  LEFT 40-45%  → EXTREME close-up face (75-80%+)
+                  Eyes BRIGHT + luminous
+                  + 1 hand. Zoom 10-15% tighter.
+  RIGHT 55-60% → ULTRA-DARK EMPTY SPACE
+                  + 2-line hierarchy text
+  NO lower body. NO full figure. NO center.
 
 ════════════════════════════════════════════
-  TEXT RULE (CRITICAL)
+  TEXT HIERARCHY RULE (MOST CRITICAL)
 ════════════════════════════════════════════
-  MAX 2-3 WORDS on right side.
-  One dominant phrase. Huge bold condensed.
-  White #FFFFFF or Gold #FFD700.
-  Strong dark drop shadow.
-  Mobile-first readability.
+  2-LINE SPLIT:
+  LINE 1 = command word (BIG, WHITE, DOMINANT)
+            40-50% bigger than LINE 2
+  LINE 2 = emotion word (smaller, COLORED)
+            intent accent color
+
+  Example: "STOP" (white) / "PAIN" (red #FF3B3B)
+  Brain reads 2 steps = stronger impact.
+  ❌ Both lines same weight = weak
+  ❌ Both lines white = no hierarchy
+  ❌ "DIVINE LOVE" → ✅ "FEEL LOVE"
 
 ════════════════════════════════════════════
-  TOP PHRASES (2-3 words each)
+  LINE 2 COLORS (by intent)
 ════════════════════════════════════════════
-  REMOVE OBSTACLES   ← #1 proven phrase
-  2026 SUCCESS       ← 4.7K views (#1)
-  SHIELD YOURSELF    ← #2 proven phrase
-  FEARLESSNESS       ← 1.6K views
-  DEEP PEACE         ← 1.2K views
-  ULTIMATE HEALING   ← strong
-  ATTRACT ABUNDANCE  ← wealth intent
-  CLAIM POWER        ← courage intent
+  Healing       → RED #FF3B3B
+  Power         → ORANGE #FF6600
+  Abundance     → GOLD #FFD700
+  Love          → PINK #FF69B4
+  Protection    → BLUE #4D9FFF
+  Transformation→ RED #FF3B3B
+  Peace         → SOFT BLUE #B0D4F1
+  Knowledge     → GOLD #FFD700
 
 ════════════════════════════════════════════
-  STYLE (NON-NEGOTIABLE)
+  TOP VIRAL HOOKS (by intent)
 ════════════════════════════════════════════
-  Photorealistic cinematic devotional.
-  Ultra-realistic, 8K, Hollywood lighting.
-  NEVER cartoon. NEVER illustration.
-  Dark gradient background. No scenery.
-  Golden rim light. Smooth clean aura.
-  Mist at base. Gold particles near deity only.
+  ATTRACT / WEALTH   ← abundance
+  SHIELD / NOW       ← protection
+  STOP / PAIN        ← healing
+  OPEN / HEART       ← love
+  RISE / NOW         ← power
+  FIND / PEACE       ← peace
+  SEE / CLEARLY      ← knowledge
+  BREAK / FREE       ← transformation
 
 ════════════════════════════════════════════
-  INTENT → DEITY → AURA
+  DEITY AURA COLOR (NOT ALWAYS GOLD)
 ════════════════════════════════════════════
-  Success/Abundance → Ganesha, Lakshmi  → Orange/Gold  ⭐
-  Protection        → Shiva, Durga      → Electric Blue ✅
-  Power/Strength    → Hanuman, Kali     → Fiery Orange  ✅
-  Peace/Love        → Krishna, Hare K.  → Teal/Blue     ✅
-  Healing           → Medicine Buddha   → Green/Teal    ✅
-  Knowledge         → Saraswati         → Ivory/White
+  Ganesha, Lakshmi, Ram  → Gold/Orange
+  Shiva                  → Electric Blue
+  Hanuman                → Fiery Orange-Red
+  Krishna                → Teal-Blue
+  Durga                  → Deep Violet
+  Kali                   → Deep Crimson
+  Saraswati              → Warm Ivory
+  Medicine Buddha        → Deep Blue
+
+════════════════════════════════════════════
+  MICRO-HOOK TRIGGERS (ONE per thumbnail)
+════════════════════════════════════════════
+  A: Energy from blessing hand → viewer
+  B: Glowing heart/chest element
+  C: Light beam deity → text
+  D: Subtle third-eye glow
+  E: Faint energy pulse around head
+  ONLY ONE. Never combine. Just a HINT.
 
 ════════════════════════════════════════════
   AVOID COMPLETELY
 ════════════════════════════════════════════
-  No clutter. No multiple props.
-  No busy particles. No glowing text overload.
+  No generic text. No full body shots.
+  No always-gold. No glow behind text.
+  No light interference in text zone.
+  No same-weight lines. No both-white lines.
+  No similar variants. No calm/static feel.
   No badges. No logos. No watermarks.
-  No complex storytelling. No mixed deities.
-  No objects behind text. Empty = CTR.
+  No wide face zoom. Tighter = better CTR.
 ```
 
 ---
 
 *School of Mantras Thumbnail System — Built with Claude + Nano Banana MCP*
-*✅ v4 Updated April 2026 — Minimal CTR-optimized design logic*
-*Focus: Deity emotion + 2-3 word message + clean composition = click*
+*✅ v6 Updated April 2026 — Text hierarchy + color contrast + problem-solution pattern*
+*Focus: EXTREME face zoom + 2-line hierarchy (WHITE/COLORED) + ultra-dark space = CLICK*

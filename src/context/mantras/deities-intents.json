@@ -6,21 +6,22 @@
   },
   "background": ["#000000", "#0A0600", "#1A0F00"],
   "rules": {
-    "deityPlacement": "left 40-45% width, close-up face + blessing hand, slightly facing toward text side",
-    "textPlacement": "right 55-60%, center-right vertical alignment, balanced margins",
-    "styleName": "Cinematic Divine Gold",
-    "style": "Cinematic Hyperreal Devotional (Golden Aura Style) — 4 visual systems: (1) CINEMATIC LIGHTING: strong gold rim light, glow bloom effect, high contrast shadows — Hollywood feel. (2) DIVINE ENERGY: radial aura halo, floating particles, warm gold/orange tones — spiritual feel. (3) MATERIAL REALISM: physically reflective gold textures, intricate jewelry detail, depth + shadow realism — premium feel. (4) EMOTIONAL FACE RENDERING: soft compassionate eyes, calm expression, slight idealization with perfect symmetry and divine beauty — emotional connection. Ultra-realistic human-like skin texture (not flat color). Never cartoon, never illustration, never stylized painting, never traditional Indian painting, never temple sculpture realism. Modern AI cinematic hybrid.",
-    "aura": "dramatic golden concentric sacred rings or halo behind deity — large glowing circular ring effect radiating outward. Smooth and powerful. Deity-faithful color supported by intent mood.",
-    "lighting": "strong golden rim light from behind deity (#FFD700), warm amber-orange aura, high contrast: bright deity vs dark background",
-    "background": "deep dark gradient (black to warm dark brown/amber) with warm golden energy effects: swirling golden fire, embers, sparks, golden light flares radiating from the aura area. Pure atmospheric void — no architecture, no scenery. Background effects add divine energy without cluttering the text area.",
-    "atmosphere": "warm golden fire/energy swirls throughout background, floating golden sparks and embers around deity area, subtle mist/smoke at base, soft bokeh. Effects concentrated around deity and background — text area stays relatively clean but can have very subtle warm ambient glow.",
-    "textRules": "MAX 2-3 words ONLY per thumbnail, extremely large bold condensed font, white #FFFFFF or gold #FFD700, strong dark drop shadow for mobile readability, one dominant phrase only. Hook word should have a subtle warm golden glow highlight or light accent behind it to make it pop visually.",
-    "negativeSpace": "right side text area should be clean and readable — no props or objects. However subtle warm ambient glow and very faint golden light from the aura can bleed slightly into the text area to unify the composition. Text must still be perfectly readable.",
+    "deityPlacement": "left 40-45% width, EXTREME close-up face + ONE blessing hand ONLY, slightly facing toward text side. Crop TIGHT — face fills most of the left half. NO lower body, NO full figure, NO wide shots.",
+    "textPlacement": "right 55-60%, center-right vertical alignment, balanced margins, plenty of breathing room around text",
+    "styleName": "Cinematic Divine Aura",
+    "style": "Cinematic Hyperreal Devotional — deity-faithful aura color palette (NOT always gold). 4 visual systems: (1) CINEMATIC LIGHTING: strong deity-colored rim light + glow bloom + high contrast shadows — Hollywood feel. (2) DIVINE ENERGY: concentric sacred ring halo in the deity's own aura color, deity-colored energy swirls, floating sparks in matching tones. (3) MATERIAL REALISM: reflective metal textures on ornaments, jewelry depth, shadow realism — premium feel. (4) EMOTIONAL FACE: EXTREME close-up, soft compassionate eyes with visible emotion, divine expression that creates instant emotional pull — the face must be DOMINANT on mobile. Ultra-realistic skin texture. Never cartoon, never illustration, never painting, never temple sculpture. Modern AI cinematic hybrid.",
+    "aura": "dramatic concentric sacred rings or halo behind deity in the DEITY'S OWN AURA COLOR (blue for Shiva, orange-red for Hanuman, violet for Durga, etc.). NOT always gold. Color must match the deity's auraColor field.",
+    "lighting": "strong rim light from behind deity in deity's aura color, warm accent glow, high contrast: bright deity vs dark background. Rim light color should MATCH the deity's aura, not default to gold.",
+    "background": "deep dark gradient (black to dark warm tone matching deity's aura color palette). Deity-colored energy effects: swirling fire/energy in matching hues, embers, sparks, light flares radiating from the aura area. Pure atmospheric void — no architecture, no scenery. Background effects add divine energy without cluttering the text area.",
+    "atmosphere": "deity-colored energy swirls throughout background, floating sparks and embers in matching tones around deity area, subtle mist/smoke at base, soft bokeh. Effects concentrated around deity — text area must be DARK and CLEAN (visual silence for text). ONE optional visual trigger element allowed (see visualTriggers).",
+    "textRules": "MAX 2-3 VIRAL words ONLY. Text must trigger CURIOSITY or URGENCY — not be descriptive or generic. Bold condensed font. STRONG dark drop shadow + slight glow on text edges for mobile readability. TWO-LINE HIERARCHY (critical): When hook is 2 words, split across 2 lines — LINE 1 (command word) = DOMINANT, 40-50% bigger than LINE 2, WHITE #FFFFFF. LINE 2 (emotion word) = smaller, COLORED using intent accent color (e.g. RED #FF3B3B for pain/healing, ORANGE #FF6600 for power, GOLD #FFD700 for abundance). This creates visual hierarchy = faster reading = stronger impact. Single-line only when phrase is extremely strong and short (e.g. 'HEAL NOW'). Problem-solution pattern: LINE 1 = command/action that grabs attention ('STOP', 'BREAK', 'RISE'), LINE 2 = emotional payload that hooks ('PAIN', 'FREE', 'NOW'). Brain reads in 2 steps = stronger impact.",
+    "negativeSpace": "right side text area must be ULTRA-DARK EMPTY SPACE (visual silence). No props, no particles behind text, no glow bleed, no light interference, no energy leak from deity side. Text sits in PURE DARKNESS with only its own drop shadow. Make it DARKER and CLEANER than seems necessary — the extreme contrast between bright deity (left) and pitch-dark text area (right) creates the click trigger. Any stray particles, light streaks, or glow bleeding into the text zone kills readability and CTR.",
+    "visualTriggers": "ONE subtle visual trigger element per thumbnail to create story: (A) energy/light emanating from deity's hand toward viewer, (B) glowing element in deity's chest/heart area, (C) light beam connecting deity to text, (D) subtle glow near third eye area (for deities with third eye like Shiva), (E) faint light pulse or energy ripple effect around deity's head. Only ONE — never combine. Must feel natural and subtle — just a HINT of energy, not overwhelming. The micro-hook adds life to an otherwise static composition without cluttering.",
     "noText": false,
     "negativeSpaceLeft": false,
     "textBakedIntoImage": true,
-    "characterFidelity": "preserve canonical deity attributes exactly — NO mixing iconography from other deities. Each deity must be visually pure to their own tradition. Human-like skin texture (not flat color), realistic lighting on skin, slight idealization (perfect symmetry, divine beauty), emotion in the eyes (alive, conscious presence), soft compassionate expression.",
-    "avoid": "no clutter, no multiple props, no busy particles, no glowing text overload, no complex storytelling elements, no mixing symbolic meanings, no center composition"
+    "characterFidelity": "preserve canonical deity attributes exactly — NO mixing iconography. EXTREME close-up: face must fill at least 75-80% of the left zone height (zoom 10-15% tighter than default). Eyes MUST be large, bright, and clearly visible even at mobile thumbnail size — slightly increase eye brightness/luminosity for instant emotional connection. Expression should convey emotion that matches the intent (fierce for power, loving for love, serene for peace). Human-like skin texture, realistic lighting on skin, slight idealization. Face zoom is critical: tighter crop = more emotional pull = higher CTR.",
+    "avoid": "no clutter, no lower body, no full figure shots, no multiple props, no particles behind text, no glow behind text area, no light interference in text zone, no generic/calm/descriptive text (must be viral), no center composition, no same-looking variants, no always-gold (use deity colors), no same-weight text lines (must have hierarchy: line 1 dominant, line 2 smaller + colored), no both-lines-white (use color contrast between lines)"
   },
   "intents": [
     {
@@ -28,56 +29,56 @@
       "label": "Abundance / Success",
       "color": "#FFD700",
       "mood": "sacred prosperity, breakthrough, divine support, success momentum",
-      "hookWords": ["2026 SUCCESS", "INSTANT SUCCESS", "GOLDEN ABUNDANCE", "WEALTH FLOW", "PROSPERITY NOW"]
+      "hookWords": ["ATTRACT WEALTH", "STOP STRUGGLING", "UNLOCK SUCCESS", "MONEY FLOWS", "WHY YOU'RE STUCK"]
     },
     {
       "key": "protection",
       "label": "Protection",
       "color": "#0066FF",
       "mood": "shielded, fearless, spiritually guarded, protected from negativity",
-      "hookWords": ["2026 PROTECTION", "DIVINE SHIELD", "SHIELD YOURSELF", "PROTECTED ALWAYS", "NEGATIVE ENERGY OFF"]
+      "hookWords": ["SHIELD NOW", "STOP ATTACKS", "FEEL SAFE", "BLOCK EVIL", "PROTECT YOURSELF"]
     },
     {
       "key": "healing",
       "label": "Healing",
       "color": "#00C896",
       "mood": "restorative, body-mind-soul healing, compassionate renewal",
-      "hookWords": ["ULTIMATE HEALING", "BODY MIND SOUL", "HEAL DEEPLY", "SACRED HEALING", "KARMA HEALING"]
+      "hookWords": ["HEAL NOW", "STOP PAIN", "FEEL WHOLE", "RESET YOURSELF", "BODY HEALS"]
     },
     {
       "key": "love",
       "label": "Love / Devotion",
       "color": "#FF69B4",
       "mood": "heart-opening, devotional, soft, emotionally resonant",
-      "hookWords": ["DIVINE LOVE", "DEEP LOVE", "HEART OPENING", "DEVOTIONAL PEACE", "JOY & LOVE"]
+      "hookWords": ["OPEN HEART", "FEEL LOVE", "RECEIVE LOVE", "LOVE RETURNS", "WHY EMPTY"]
     },
     {
       "key": "power",
       "label": "Power / Courage",
       "color": "#FF4500",
       "mood": "fierce, courageous, powerful, victorious, unstoppable",
-      "hookWords": ["FEARLESSNESS", "CLAIM YOUR POWER", "UNSTOPPABLE POWER", "INNER FIRE", "DIVINE STRENGTH"]
+      "hookWords": ["RISE NOW", "FEAR DIES", "CLAIM POWER", "STOP FEAR", "UNSTOPPABLE"]
     },
     {
       "key": "peace",
       "label": "Peace / Meditation",
       "color": "#87CEEB",
       "mood": "deep peace, inner stillness, meditative calm, soft devotion",
-      "hookWords": ["DEEP PEACE", "INNER PEACE", "CALM MIND", "MEDITATIVE STILLNESS", "SOUL PEACE"]
+      "hookWords": ["FIND PEACE", "STOP ANXIETY", "CALM NOW", "REST DEEPLY", "QUIET MIND"]
     },
     {
       "key": "knowledge",
       "label": "Knowledge / Clarity",
       "color": "#FFFACD",
       "mood": "clarity, sacred wisdom, intelligent insight, creative guidance",
-      "hookWords": ["DIVINE KNOWLEDGE", "HIGHER CLARITY", "WISDOM FLOW", "SACRED LEARNING", "MENTAL CLARITY"]
+      "hookWords": ["SEE CLEARLY", "UNLOCK MIND", "GAIN CLARITY", "THINK SHARP", "FOCUS NOW"]
     },
     {
       "key": "transformation",
       "label": "Transformation",
       "color": "#8B0000",
       "mood": "fierce rebirth, karma release, destruction of obstacles, spiritual transformation",
-      "hookWords": ["TOTAL TRANSFORMATION", "KARMA RELEASE", "REBIRTH NOW", "DESTINY SHIFT", "FIERCE CHANGE"]
+      "hookWords": ["REBIRTH NOW", "BREAK FREE", "DESTROY KARMA", "NEW YOU", "CHANGE TODAY"]
     }
   ],
   "deities": [
@@ -158,14 +159,37 @@
       "intents": ["healing", "peace", "abundance"]
     }
   ],
+  "textHierarchy": {
+    "rule": "2-line split: LINE 1 = command word (BIG, WHITE, dominant). LINE 2 = emotion word (smaller, COLORED). Creates visual hierarchy for faster reading and stronger emotional impact.",
+    "line1Style": "WHITE #FFFFFF, 40-50% bigger than line 2, STRONG drop shadow, dominant position",
+    "line2Colors": {
+      "abundance": "#FFD700",
+      "protection": "#4D9FFF",
+      "healing": "#FF3B3B",
+      "love": "#FF69B4",
+      "power": "#FF6600",
+      "peace": "#B0D4F1",
+      "knowledge": "#FFD700",
+      "transformation": "#FF3B3B"
+    },
+    "line2Style": "colored accent, smaller than line 1, STRONG drop shadow, emotional payload",
+    "examples": {
+      "healing": { "line1": "STOP", "line2": "PAIN", "line2Color": "#FF3B3B" },
+      "love": { "line1": "OPEN", "line2": "HEART", "line2Color": "#FF69B4" },
+      "power": { "line1": "RISE", "line2": "NOW", "line2Color": "#FF6600" },
+      "abundance": { "line1": "ATTRACT", "line2": "WEALTH", "line2Color": "#FFD700" },
+      "protection": { "line1": "SHIELD", "line2": "NOW", "line2Color": "#4D9FFF" },
+      "transformation": { "line1": "BREAK", "line2": "FREE", "line2Color": "#FF3B3B" }
+    }
+  },
   "hookWords": {
-    "abundance": ["2026 SUCCESS", "INSTANT SUCCESS", "GOLDEN ABUNDANCE", "WEALTH FLOW", "PROSPERITY NOW"],
-    "protection": ["2026 PROTECTION", "DIVINE SHIELD", "SHIELD YOURSELF", "PROTECTED ALWAYS", "NEGATIVE ENERGY OFF"],
-    "healing": ["ULTIMATE HEALING", "BODY MIND SOUL", "HEAL DEEPLY", "SACRED HEALING", "KARMA HEALING"],
-    "love": ["DIVINE LOVE", "DEEP LOVE", "HEART OPENING", "DEVOTIONAL PEACE", "JOY & LOVE"],
-    "power": ["FEARLESSNESS", "CLAIM YOUR POWER", "UNSTOPPABLE POWER", "INNER FIRE", "DIVINE STRENGTH"],
-    "peace": ["DEEP PEACE", "INNER PEACE", "CALM MIND", "MEDITATIVE STILLNESS", "SOUL PEACE"],
-    "knowledge": ["DIVINE KNOWLEDGE", "HIGHER CLARITY", "WISDOM FLOW", "SACRED LEARNING", "MENTAL CLARITY"],
-    "transformation": ["TOTAL TRANSFORMATION", "KARMA RELEASE", "REBIRTH NOW", "DESTINY SHIFT", "FIERCE CHANGE"]
+    "abundance": ["ATTRACT WEALTH", "STOP STRUGGLING", "UNLOCK SUCCESS", "MONEY FLOWS", "WHY YOU'RE STUCK"],
+    "protection": ["SHIELD NOW", "STOP ATTACKS", "FEEL SAFE", "BLOCK EVIL", "PROTECT YOURSELF"],
+    "healing": ["HEAL NOW", "STOP PAIN", "FEEL WHOLE", "RESET YOURSELF", "BODY HEALS"],
+    "love": ["OPEN HEART", "FEEL LOVE", "RECEIVE LOVE", "LOVE RETURNS", "WHY EMPTY"],
+    "power": ["RISE NOW", "FEAR DIES", "CLAIM POWER", "STOP FEAR", "UNSTOPPABLE"],
+    "peace": ["FIND PEACE", "STOP ANXIETY", "CALM NOW", "REST DEEPLY", "QUIET MIND"],
+    "knowledge": ["SEE CLEARLY", "UNLOCK MIND", "GAIN CLARITY", "THINK SHARP", "FOCUS NOW"],
+    "transformation": ["REBIRTH NOW", "BREAK FREE", "DESTROY KARMA", "NEW YOU", "CHANGE TODAY"]
   }
 }

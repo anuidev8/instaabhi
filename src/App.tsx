@@ -18,7 +18,7 @@ import ThumbnailsTab from './components/ThumbnailsTab';
 type Tab = 'drafts' | 'visuals' | 'reels' | 'thumbnails' | 'app-marketing' | 'calendar';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<Tab>('drafts');
+  const [activeTab, setActiveTab] = useState<Tab>('thumbnails');
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [readyPosts, setReadyPosts] = useState<ReadyPost[]>([]);
   const [reelDrafts, setReelDrafts] = useState<VideoReelDraft[]>([]);
@@ -104,6 +104,18 @@ export default function App() {
           {/* Tab nav — scrollable on mobile, full labels on desktop */}
           <nav className="flex gap-0.5 sm:gap-1 overflow-x-auto scrollbar-none -mr-4 pr-4 sm:mr-0 sm:pr-0">
             <button
+              onClick={() => setActiveTab('thumbnails')}
+              className={`px-2.5 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 min-h-[44px] ${
+                activeTab === 'thumbnails'
+                  ? 'bg-stone-100 text-stone-900'
+                  : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50'
+              }`}
+            >
+              <ImageIcon className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline">YouTube Thumbnails</span>
+              <span className="sm:hidden">Thumbs</span>
+            </button>
+            <button
               onClick={() => setActiveTab('drafts')}
               className={`px-2.5 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 min-h-[44px] ${
                 activeTab === 'drafts'
@@ -149,18 +161,6 @@ export default function App() {
               <Megaphone className="w-4 h-4 shrink-0" />
               <span className="hidden sm:inline">App Marketing</span>
               <span className="sm:hidden">Marketing</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('thumbnails')}
-              className={`px-2.5 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 min-h-[44px] ${
-                activeTab === 'thumbnails'
-                  ? 'bg-stone-100 text-stone-900'
-                  : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50'
-              }`}
-            >
-              <ImageIcon className="w-4 h-4 shrink-0" />
-              <span className="hidden sm:inline">YouTube Thumbnails</span>
-              <span className="sm:hidden">Thumbs</span>
             </button>
             <button
               onClick={() => setActiveTab('calendar')}

@@ -68,14 +68,14 @@ export const MANTRAS_INTENTS: Intent[] = MANTRAS_CONTEXT.intents;
 export const DEITIES: Deity[] = MANTRAS_CONTEXT.deities;
 
 const ACTION_PROMISES: Record<IntentKey, string[]> = {
-  abundance: ['REMOVE OBSTACLES', 'ACHIEVE YOUR GOALS', 'ATTRACT ABUNDANCE', 'OPEN SUCCESS'],
-  protection: ['SHIELD YOURSELF', 'REMOVE NEGATIVE ENERGY', 'STAY PROTECTED', 'START FRESH'],
-  healing: ['HEAL BODY & SOUL', 'PURIFY YOUR MIND', 'RESTORE YOUR ENERGY', 'RESET DEEPLY'],
-  love: ['OPEN YOUR HEART', 'ATTRACT DIVINE LOVE', 'RETURN TO JOY', 'FEEL DEVOTION'],
-  power: ['CLAIM YOUR POWER', 'ACTIVATE COURAGE', 'RISE FEARLESS', 'AWAKEN STRENGTH'],
-  peace: ['CALM YOUR MIND', 'ENTER STILLNESS', 'REST IN PEACE', 'SOOTHE YOUR SOUL'],
-  knowledge: ['GAIN CLARITY', 'UNLOCK WISDOM', 'SEE THE TRUTH', 'ACHIEVE FOCUS'],
-  transformation: ['RELEASE KARMA', 'DESTROY OBSTACLES', 'TRANSFORM FAST', 'REBIRTH NOW'],
+  abundance: ['ATTRACT WEALTH', 'STOP STRUGGLING', 'UNLOCK SUCCESS', 'MONEY FLOWS'],
+  protection: ['SHIELD NOW', 'STOP ATTACKS', 'FEEL SAFE', 'BLOCK EVIL'],
+  healing: ['HEAL NOW', 'STOP PAIN', 'FEEL WHOLE', 'RESET YOURSELF'],
+  love: ['OPEN HEART', 'FEEL LOVE', 'RECEIVE LOVE', 'WHY EMPTY'],
+  power: ['RISE NOW', 'FEAR DIES', 'CLAIM POWER', 'STOP FEAR'],
+  peace: ['FIND PEACE', 'STOP ANXIETY', 'CALM NOW', 'QUIET MIND'],
+  knowledge: ['SEE CLEARLY', 'UNLOCK MIND', 'GAIN CLARITY', 'FOCUS NOW'],
+  transformation: ['REBIRTH NOW', 'BREAK FREE', 'DESTROY KARMA', 'NEW YOU'],
 };
 
 const DEFAULT_BADGES: Record<IntentKey, string> = {
@@ -90,14 +90,14 @@ const DEFAULT_BADGES: Record<IntentKey, string> = {
 };
 
 const LINE2_COLOR_BY_INTENT: Record<IntentKey, string> = {
-  abundance: '#FF8C00',
-  protection: '#0066FF',
-  healing: '#FF2222',
-  love: '#FFD700',
+  abundance: '#FFD700',
+  protection: '#4D9FFF',
+  healing: '#FF3B3B',
+  love: '#FF69B4',
   power: '#FF6600',
-  peace: '#F3F6FA',
+  peace: '#B0D4F1',
   knowledge: '#FFD700',
-  transformation: '#FF2222',
+  transformation: '#FF3B3B',
 };
 
 function isModelNotFoundError(error: unknown): boolean {
@@ -126,23 +126,34 @@ async function generateContentWithModelFallback(
   throw lastError ?? new Error('No Gemini model candidates were configured');
 }
 
-const THUMBNAIL_SYSTEM_PROMPT = `You are the School of Mantras thumbnail strategist and image prompt engineer.
+const THUMBNAIL_SYSTEM_PROMPT = `You are a viral YouTube thumbnail strategist for School of Mantras.
 
-You create high-CTR YouTube thumbnails (1280x720, 16:9 horizontal) with text baked into the image.
+Your goal: create thumbnails that get 5-10%+ CTR. Not beautiful — INSTANTLY CLICKABLE.
 
-DESIGN PHILOSOPHY:
-- Deity creates emotion.
-- Text delivers the message.
-- Composition drives the click.
+VIRAL PSYCHOLOGY (MOST IMPORTANT):
+- The thumbnail must make viewers feel: "This will change how I feel RIGHT NOW"
+- NOT: "This is spiritual content"
+- Text must trigger CURIOSITY, URGENCY, or a SPECIFIC OUTCOME
+- Never generic (no "DIVINE LOVE", "SACRED HEALING" — too calm, no click trigger)
+- Good examples: "OPEN HEART", "STOP PAIN", "FEEL LOVE", "RISE NOW", "BREAK FREE"
+- PROBLEM-SOLUTION pattern performs VERY well: pain point + instant promise ("STOP PAIN")
 
-STYLE — "Cinematic Divine Gold" (NON-NEGOTIABLE):
-Cinematic Hyperreal Devotional (Golden Aura Style). Modern AI cinematic hybrid.
+STYLE — "Cinematic Divine Aura" (DEITY-COLORED, NOT ALWAYS GOLD):
+Cinematic Hyperreal Devotional with deity-faithful color palette.
 4 visual systems must ALL be present:
-1. CINEMATIC LIGHTING: strong gold rim light, glow bloom, high contrast shadows (Hollywood feel).
-2. DIVINE ENERGY: radial aura halo, floating particles, warm gold/orange tones (spiritual feel).
-3. MATERIAL REALISM: physically reflective gold textures, intricate jewelry detail, depth + shadow realism (premium feel).
-4. EMOTIONAL FACE: soft compassionate eyes, calm expression, slight idealization, perfect symmetry, divine beauty, emotion in the eyes (connection → click).
-Human-like skin texture (not flat color). NOT cartoon, NOT illustration, NOT traditional painting, NOT temple sculpture.
+1. CINEMATIC LIGHTING: strong rim light in DEITY'S OWN AURA COLOR (blue for Shiva, orange for Hanuman, violet for Durga, etc.), glow bloom, extreme contrast. Eyes slightly brighter/luminous.
+2. DIVINE ENERGY: concentric sacred ring halo in deity's aura color, deity-colored energy swirls, matching sparks. NOT ALWAYS GOLD.
+3. MATERIAL REALISM: reflective metal textures, jewelry depth, shadow realism.
+4. EMOTIONAL FACE (MOST CRITICAL): EXTREME close-up. Face fills 75-80%+ of left zone (10-15% tighter zoom). Eyes must be BIG, BRIGHT, and luminous at mobile size. Expression must match intent emotion.
+
+CRITICAL COLOR RULE: Each deity has their own aura color. Shiva = electric blue. Hanuman = fiery orange-red. Durga = deep violet. Krishna = teal-blue. Kali = deep crimson. Saraswati = warm ivory. Use THEIR color for rim light, aura rings, energy, sparks — NOT gold for every deity. Gold is for Ganesha, Lakshmi, and Ram only.
+
+TEXT HIERARCHY RULE (v6 — MOST IMPORTANT TEXT CHANGE):
+- 2-LINE SPLIT: LINE 1 = command word (BIG, WHITE #FFFFFF, DOMINANT — 40-50% bigger than LINE 2). LINE 2 = emotion word (smaller, COLORED with intent accent).
+- LINE 2 COLORS: healing=RED #FF3B3B, power=ORANGE #FF6600, abundance=GOLD #FFD700, love=PINK #FF69B4, protection=BLUE #4D9FFF, transformation=RED #FF3B3B, peace=SOFT BLUE #B0D4F1, knowledge=GOLD #FFD700.
+- NEVER both lines same weight or same color. LINE 1 must visually DOMINATE.
+- Both lines need STRONG dark drop shadow.
+- Brain reads 2 steps = stronger impact than flat same-weight text.
 
 ${brandGuideMarkdown}
 
@@ -154,23 +165,19 @@ Brand context JSON:
 ${JSON.stringify(MANTRAS_BRAND_CONTEXT)}
 
 NON-NEGOTIABLE RULES:
-- Generate exactly 2 self-contained image prompts for 2 final thumbnail variants.
+- Generate exactly 2 MEANINGFULLY DIFFERENT image prompts (not just intensity variations).
 - Each prompt must create a 1280x720 thumbnail.
-- LAYOUT: Deity close-up on LEFT 40-45% (face + blessing hand visible, slightly facing right). RIGHT 55-60% for text.
-- BACKGROUND: Deep dark gradient (black to warm dark brown/amber) with warm golden energy effects — swirling golden fire, embers, sparks, golden light flares radiating from the aura. No architecture, no scenery. Background should feel alive with divine energy.
-- AURA: Dramatic golden concentric sacred rings or halo behind deity — large glowing circular ring effect radiating outward with warm amber-orange fire energy. Golden sparks and embers floating around halo area. Smooth and powerful, NOT flat.
-- LIGHTING: Strong golden rim light from behind deity (#FFD700). High contrast bright deity vs dark background.
-- ATMOSPHERE: Warm golden fire/energy swirls throughout background. Floating golden sparks and embers around deity area. Subtle mist/smoke at base. Soft bokeh. Effects concentrated around deity — text area stays readable but can have very subtle warm ambient glow.
-- TEXT: MAX 2-3 words ONLY. Extremely large, bold, condensed font. White (#FFFFFF) or gold (#FFD700). Strong dark drop shadow for mobile readability. Center-right vertical alignment with balanced margins. One dominant phrase. The hook word should have a subtle warm golden glow or light accent behind it to make it visually pop.
-- TEXT AREA: Right side should be clean and readable — no props or objects. Subtle warm ambient glow from the aura can bleed slightly into the text area to unify the composition. Text must still be perfectly readable.
-- CHARACTER FIDELITY: Preserve canonical deity attributes exactly. NO mixing iconography from other deities.
-- The aura must stay faithful to the chosen deity reference, supported by the selected intent mood.
-- Return the text plan as line1 (the 2-3 word main phrase). line2 should be empty.
-- Never center the deity. Never place the deity on the right side.
-- Do NOT add any extra labels, logos, watermarks, channel tags, or badges.
-- Do NOT add top-left "SCHOOL OF MANTRAS" text.
-- Do NOT add bottom badges.
-- AVOID: clutter, multiple props, glowing text overload, complex storytelling, mixing symbolic meanings. Background effects should add energy NOT chaos.
+- LAYOUT: EXTREME close-up deity on LEFT 40-45% — face fills 75-80%+ of left zone (10-15% tighter zoom) + ONE blessing hand ONLY. NO lower body. Face must DOMINATE. RIGHT 55-60% for text.
+- FACE: Crop TIGHT (tighter than default). Eyes must be large, BRIGHT, and luminous at mobile size. Expression must match intent emotion (fierce for power, loving for love, serene for peace).
+- BACKGROUND: Deep dark gradient. Energy effects in DEITY'S AURA COLOR (not always gold). Swirling fire/energy, embers, sparks in matching deity hues. No architecture.
+- AURA: Concentric sacred rings in DEITY'S OWN AURA COLOR. NOT always gold.
+- LIGHTING: Rim light in DEITY'S AURA COLOR from behind. High contrast. Eyes slightly brighter.
+- TEXT AREA: RIGHT side must be ULTRA-DARK EMPTY SPACE (pure visual silence). NO particles, NO glow, NO light interference behind text. Text sits in PITCH DARKNESS. Make darker than seems necessary.
+- TEXT HIERARCHY: 2-LINE SPLIT. LINE 1 = command word (BIG, WHITE, 40-50% bigger). LINE 2 = emotion word (smaller, COLORED with intent accent). BOTH lines have STRONG dark drop shadow. NEVER both lines same weight or same color.
+- MICRO-HOOK: Include ONE subtle visual trigger per variant: (A) energy from deity's hand, (B) glowing heart/chest, (C) light beam, (D) subtle third-eye glow, (E) faint energy pulse. Only ONE — just a HINT of energy.
+- CHARACTER FIDELITY: Preserve canonical attributes. NO mixing deities.
+- line1 = the 2-3 word viral phrase (will be split into 2-line hierarchy in the image). line2 = empty.
+- AVOID: generic/calm text, full body shots, gold for non-gold deities, particles behind text, glow in text area, light interference in text zone, center composition, similar-looking variants, same-weight text lines, both-lines-white.
 
 Return strict JSON only.`;
 
@@ -371,12 +378,16 @@ function buildDefaultSuggestedTitle(deity: Deity, intent: Intent): string {
 }
 
 function buildDefaultSpecialInstruction(deity: Deity, intent: Intent): string {
+  const auraColor = resolveAuraColor(deity, intent);
   return [
-    deity.auraStyle?.trim() || `${resolveAuraColor(deity, intent)} concentric sacred ring aura`,
-    'dramatic golden concentric rings halo behind deity',
-    'warm golden fire energy swirls and floating sparks/embers in background',
-    'strong golden rim light from behind deity',
-    'subtle warm golden glow highlight behind hook text',
+    deity.auraStyle?.trim() || `${auraColor} concentric sacred ring aura`,
+    `concentric rings halo in deity's aura color (${auraColor})`,
+    `energy swirls, sparks and embers in matching ${auraColor} hues`,
+    `strong rim light from behind deity in ${auraColor}`,
+    'EXTREME close-up face (75-80%+ fill, 10-15% tighter zoom) — eyes BRIGHT and dominant at mobile size',
+    'ONE micro-hook trigger: energy from hand, glowing heart, third-eye glow, or faint energy pulse',
+    `2-LINE HIERARCHY: LINE 1 = BIG WHITE command, LINE 2 = smaller ${LINE2_COLOR_BY_INTENT[intent.key]} emotion`,
+    'ULTRA-DARK text area — NO light interference',
     deity.visualSignature.split(',').slice(0, 2).join(', ').trim(),
   ].join(', ');
 }
@@ -474,37 +485,35 @@ function normalizeVariantPrompts(
   const auraColor = spec.colors.aura || resolveAuraColor(deity, intent);
   const auraPrompt = resolveAuraPrompt(deity, intent, auraColor);
   const mainPhrase = spec.hookWord;
-  const textColor = spec.colors.hook === '#FFD700' ? 'gold (#FFD700)' : 'white (#FFFFFF)';
 
   const words = mainPhrase.split(/\s+/);
-  const textLayout = words.length <= 2
-    ? `"${words[0]}" on one line and "${words.slice(1).join(' ')}" on the next line, stacked vertically`
-    : `"${words[0]}" on one line, "${words[1]}" on the second line, and "${words.slice(2).join(' ')}" on the third line, stacked vertically`;
-
   const hookWord = words[0];
   const restWords = words.slice(1).join(' ');
-  const hookHighlight = restWords
-    ? `The word "${hookWord}" must be the LARGEST and BOLDEST — render it 30-40% bigger than the other words ("${restWords}"). Add a warm golden glow/highlight accent behind "${hookWord}" only.`
-    : `The word "${hookWord}" must be bold with a warm golden glow/highlight accent behind it.`;
+  const line2Color = LINE2_COLOR_BY_INTENT[intent.key] || '#FF3B3B';
+  const deityAuraColorName = deity.auraStyle?.match(/^dramatic\s+([\w\s-]+)\s+concentric/i)?.[1]?.trim() || 'deity-colored';
+
+  const textHierarchy = restWords
+    ? `2-LINE TEXT HIERARCHY: LINE 1 "${hookWord}" = DOMINANT, WHITE #FFFFFF, 40-50% BIGGER than LINE 2, bold condensed, STRONG dark drop shadow. LINE 2 "${restWords}" = smaller, COLORED ${line2Color}, bold condensed, STRONG dark drop shadow. "${hookWord}" on one line, "${restWords}" on the next line, stacked vertically, right-aligned or center-right. NEVER render both lines the same size or same color — LINE 1 must visually DOMINATE. This creates reading hierarchy: brain reads command first, then emotional hook = stronger impact.`
+    : `Single-line text: "${hookWord}" in large WHITE #FFFFFF bold condensed with STRONG dark drop shadow, right-aligned or center-right.`;
 
   const baseInstructions =
-    `CRITICAL TEXT REQUIREMENT: This image MUST contain the text "${mainPhrase}" rendered in large, bold, condensed ${textColor} letters on the RIGHT side of the image. ${textLayout}, right-aligned or center-right. ${hookHighlight} The text must have a strong dark drop shadow and be clearly readable. Use proportional sizing — large enough to read at small sizes but NOT so large it fills the entire right half. This is the most important element after the deity. ` +
-    `YouTube thumbnail, exactly 1280x720, 16:9 horizontal. Style: "Cinematic Divine Gold" — cinematic hyperreal devotional. ` +
-    `LEFT 40-45%: ${input.deity} close-up, face + blessing hand visible. ${deity.visualSignature.split(',').slice(0, 4).join(',')}. ` +
-    `4 VISUAL SYSTEMS: (1) CINEMATIC LIGHTING: strong gold rim light, glow bloom, high contrast shadows. (2) DIVINE ENERGY: golden concentric ring halo with ${auraPrompt}, floating particles, fire energy swirls, golden sparks. (3) MATERIAL REALISM: physically reflective gold textures on ornaments, jewelry depth, shadow realism. (4) EMOTIONAL FACE: soft compassionate eyes, calm divine expression, human-like skin texture, slight idealization. ` +
-    `BACKGROUND: dark gradient (black to warm brown/amber), golden fire energy, swirling embers, sparks. No architecture. ` +
-    `RIGHT 55-60%: THE TEXT "${mainPhrase}" must be rendered here in bold ${textColor} font with dark drop shadow. "${hookWord}" is the biggest word with golden glow behind it. Subtle warm glow behind rest of text. Clean — no objects, plenty of breathing room around the text. ` +
+    `CRITICAL TEXT REQUIREMENT: This image MUST contain the text "${mainPhrase}" on the RIGHT side of the image using this layout: ${textHierarchy} Use proportional sizing — large enough to read at small sizes but NOT so large it fills the entire right half. This is the most important element after the deity. ` +
+    `YouTube thumbnail, exactly 1280x720, 16:9 horizontal. Style: "Cinematic Divine Aura" — cinematic hyperreal devotional with DEITY-FAITHFUL color palette. ` +
+    `LEFT 40-45%: ${input.deity} EXTREME close-up (10-15% TIGHTER than default), face + ONE blessing hand ONLY. NO lower body. Face fills 75-80%+ of left zone. Eyes LARGE, BRIGHT, and LUMINOUS at mobile size. ${deity.visualSignature.split(',').slice(0, 4).join(',')}. ` +
+    `4 VISUAL SYSTEMS: (1) CINEMATIC LIGHTING: strong ${deityAuraColorName} rim light (${auraColor}), glow bloom, extreme contrast, eyes slightly brighter/luminous. (2) DIVINE ENERGY: ${deityAuraColorName} concentric ring halo with ${auraPrompt}, ${deityAuraColorName} sparks and energy. (3) MATERIAL REALISM: reflective metal textures on ornaments, jewelry depth, shadow realism. (4) EMOTIONAL FACE: EXTREME close-up (75-80%+ fill), eyes DOMINANT and BRIGHT, expression matching intent mood, human-like skin texture. ` +
+    `BACKGROUND: deep dark gradient, ${deityAuraColorName} energy effects — swirling fire/embers/sparks in ${auraColor} hues. No architecture. ` +
+    `RIGHT 55-60%: ULTRA-DARK EMPTY SPACE (pure visual silence). ${textHierarchy} NO particles behind text. NO glow bleed. NO light interference. Text sits in PITCH DARKNESS — make it DARKER than seems necessary. ` +
     `No extra text, no logos, no watermarks, no badges. No center composition.`;
 
   const variantDirectives = [
-    `Variant 1: balanced layout. Text "${mainPhrase}" in large ${textColor} bold condensed font on right side — "${hookWord}" 30-40% bigger with golden glow accent. Dark drop shadow. Golden sacred ring halo behind deity, warm fire energy. Clean and readable with breathing room.`,
-    `Variant 2: intensified drama. Text "${mainPhrase}" in large ${textColor} bold condensed font on right side — "${hookWord}" 30-40% bigger with stronger golden glow accent. Dark drop shadow. Bigger golden rings, more sparks, bolder cinematic energy.`,
+    `Variant 1 — EMOTIONAL: ${textHierarchy} ${deityAuraColorName} sacred ring halo. Micro-hook visual trigger: subtle light/energy emanating from deity's blessing hand toward viewer, OR a faint third-eye glow. Face expressive, eyes bright and dominant. ULTRA-DARK text area.`,
+    `Variant 2 — INTENSE: ${textHierarchy} Bigger ${deityAuraColorName} rings, more sparks. Micro-hook visual trigger: subtle glowing element in deity's chest/heart area, OR faint energy pulse around head. More dramatic lighting, fiercer expression, higher contrast. Eyes intense and luminous. ULTRA-DARK text area.`,
   ];
 
   const normalized = prompts
     .slice(0, 2)
     .map((prompt, index) =>
-      `${baseInstructions} ${variantDirectives[index] ?? ''} ${prompt}`.replace(/\s+/g, ' ').trim().slice(0, 2200)
+      `${baseInstructions} ${variantDirectives[index] ?? ''} ${prompt}`.replace(/\s+/g, ' ').trim().slice(0, 2800)
     );
 
   while (normalized.length < 2) {
@@ -512,7 +521,7 @@ function normalizeVariantPrompts(
       `${baseInstructions} ${variantDirectives[normalized.length]}`
         .replace(/\s+/g, ' ')
         .trim()
-        .slice(0, 2200)
+        .slice(0, 2800)
     );
   }
 

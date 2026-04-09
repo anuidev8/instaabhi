@@ -1,109 +1,116 @@
-# School of Mantras Prompt Templates (v4.2 — Cinematic Divine Gold)
+# School of Mantras Prompt Templates (v6 — Hierarchy + Color Contrast)
 
-Style: **"Cinematic Divine Gold"** — Cinematic Hyperreal Devotional (Golden Aura Style)
+Style: **"Cinematic Divine Aura"** — Cinematic Hyperreal Devotional with DEITY-FAITHFUL color palette
 
-## Design Philosophy
-- **Deity creates emotion** — close-up on left 40-45%, face + blessing hand
-- **Text delivers the message** — MAX 2-3 words ONLY on the right, one dominant phrase
-- **Composition drives the click** — divine energy effects, high contrast, scroll-stopping layout
+## Viral Design Philosophy
+- **Face creates INSTANT emotion** — EXTREME close-up (75-80%+ of left zone), eyes BRIGHT + DOMINANT, expression matches intent
+- **2-LINE TEXT HIERARCHY triggers the CLICK** — LINE 1 = command word (BIG, WHITE, DOMINANT). LINE 2 = emotion word (smaller, COLORED). Brain reads 2 steps = stronger impact.
+- **ULTRA-DARK space creates maximum contrast** — right side = PURE visual silence, PITCH darkness, NO light interference
+- **Color contrast between lines** — LINE 1 always WHITE. LINE 2 always COLORED (intent accent: red, gold, orange, pink, blue). Never both white.
+- **Problem-Solution pattern** — thumbnails showing pain point + promise ("STOP PAIN") perform VERY well
+- **Target psychology:** "This will change how I feel RIGHT NOW"
 
 ## The 4 Visual Systems (ALL must be present)
-1. **CINEMATIC LIGHTING** — strong gold rim light, glow bloom, high contrast shadows → Hollywood feel
-2. **DIVINE ENERGY** — radial aura halo (concentric rings), floating particles, warm gold/orange tones, fire energy → spiritual feel
-3. **MATERIAL REALISM** — physically reflective gold textures, intricate jewelry detail, depth + shadow realism → premium feel
-4. **EMOTIONAL FACE** — soft compassionate eyes, calm expression, human-like skin texture, slight idealization (perfect symmetry, divine beauty) → connection → click
+1. **CINEMATIC LIGHTING** — strong rim light in DEITY'S AURA COLOR, glow bloom, extreme contrast, eyes slightly brighter/luminous → Hollywood feel
+2. **DIVINE ENERGY** — concentric ring halo in deity's color, deity-colored energy swirls, matching sparks → spiritual feel
+3. **MATERIAL REALISM** — reflective metal textures, jewelry detail, depth + shadow realism → premium feel
+4. **EMOTIONAL FACE (MOST CRITICAL)** — EXTREME close-up (75-80%+ of left zone, zoom 10-15% tighter), eyes BIG + BRIGHT at mobile size, expression matching intent → instant click
 
-## Universal Character Rules
-- Human-like skin texture (not flat color), realistic lighting on skin
-- Physically accurate gold materials (reflective, not painted)
-- Emotion in the eyes (alive, conscious, divine presence)
-- Slight idealization (perfect symmetry, divine beauty)
-- NOT cartoon, NOT illustration, NOT traditional painting, NOT temple sculpture
-- Character fidelity: NO mixing iconography from other deities
+## CRITICAL COLOR RULE
+- Each deity uses THEIR OWN aura color for rim light, aura rings, energy, sparks
+- Gold ONLY for Ganesha, Lakshmi, Ram
+- Shiva=blue, Hanuman=orange, Durga=violet, Krishna=teal, Kali=crimson, Saraswati=ivory
+
+## Character Rules
+- EXTREME close-up — face fills **75-80%+** of left zone (10-15% tighter zoom), NO lower body
+- Eyes MUST be large, BRIGHT (slightly luminous), and visible at mobile thumbnail size
+- Expression matches intent: fierce (power), loving (love), serene (peace)
+- Human-like skin texture, realistic lighting
+- ONE micro-hook visual trigger: energy from hand, glowing heart, light beam, subtle third-eye glow, or faint energy pulse — just a HINT
+- NOT cartoon, NOT illustration, NOT painting
+- NO mixing iconography from other deities
 
 ## Environment Rules
-- Background: deep dark gradient with warm golden energy effects — swirling fire, embers, sparks, light flares
-- Aura: dramatic golden concentric sacred rings/halo behind deity, smooth and powerful
-- Lighting: strong golden rim light, golden sparks and embers floating around halo
-- Atmosphere: warm golden fire/energy swirls, floating sparks, subtle mist at base, soft bokeh
-- Hook text: subtle warm golden glow/highlight accent behind the hook word
+- Background: deep dark gradient with deity-colored energy effects — swirling fire, embers, sparks in deity's hue
+- Aura: concentric rings in DEITY'S OWN AURA COLOR (not always gold)
+- Lighting: rim light in deity's aura color, matching sparks, eyes slightly brighter
+- Text area: ULTRA-DARK EMPTY SPACE — NO particles, NO glow, NO light interference behind text. PURE darkness. Make it DARKER than seems necessary.
+
+## Text Hierarchy Rules (v6 — CRITICAL)
+- **2-LINE SPLIT:** LINE 1 = command word (BIG, WHITE #FFFFFF, 40-50% bigger). LINE 2 = emotion word (smaller, COLORED with intent accent).
+- **Color by intent:** Healing = RED #FF3B3B, Power = ORANGE #FF6600, Abundance = GOLD #FFD700, Love = PINK #FF69B4, Protection = BLUE #4D9FFF, Transformation = RED #FF3B3B, Peace = SOFT BLUE #B0D4F1, Knowledge = GOLD #FFD700
+- **STRONG drop shadow** on BOTH lines for mobile readability
+- **NEVER** both lines same color or same weight — kills hierarchy and CTR
+- **Problem-solution pattern:** LINE 1 = command ("STOP", "BREAK", "RISE"), LINE 2 = emotional payload ("PAIN", "FREE", "NOW")
 
 ## Template A — Abundance / Success (Ganesha, Lakshmi)
 
-Use for: `Ganesha`, `Lakshmi`, abundance-led videos
-
 Formula:
-`deity close-up left 40-45% + dramatic golden concentric sacred ring halo + warm amber fire/energy swirls + golden sparks and embers + deep dark gradient background + ONE dominant 2-3 word phrase right side with golden glow highlight (white or gold text) + clean readable text area`
+`EXTREME close-up face (75-80%+ fill) left 40-45% + golden concentric ring halo + amber/gold fire energy + dark gradient + ULTRA-DARK empty right side + 2-LINE HIERARCHY: LINE 1 BIG WHITE command + LINE 2 smaller GOLD #FFD700 emotion + STRONG drop shadow both lines + ONE micro-hook trigger`
 
-Phrase examples: `REMOVE OBSTACLES`, `2026 SUCCESS`, `ATTRACT ABUNDANCE`, `GOLDEN ABUNDANCE`
+Viral hooks (split as LINE 1 / LINE 2): `ATTRACT / WEALTH`, `STOP / STRUGGLING`, `UNLOCK / SUCCESS`, `MONEY / FLOWS`
 
 ## Template B — Shield & Protection (Shiva, Hanuman, Durga, Kali)
 
-Use for: `Shiva`, `Hanuman`, `Durga`, `Kali`, protection-led videos
-
 Formula:
-`protective deity close-up left + dramatic concentric ring halo in deity-faithful color (Shiva electric blue, Hanuman fiery orange, Durga deep violet, Kali crimson) + golden fire/energy swirls + sparks and embers + dark gradient background + ONE 2-3 word phrase right side with warm glow highlight`
+`EXTREME close-up fierce face (75-80%+ fill, eyes bright) left + concentric ring halo in DEITY'S COLOR + deity-colored energy swirls + ULTRA-DARK empty right side + 2-LINE HIERARCHY: LINE 1 BIG WHITE + LINE 2 smaller BLUE #4D9FFF + STRONG drop shadow + ONE micro-hook trigger`
 
-Phrase examples: `SHIELD YOURSELF`, `2026 PROTECTION`, `DIVINE SHIELD`
+Viral hooks (split): `SHIELD / NOW`, `STOP / ATTACKS`, `FEEL / SAFE`, `BLOCK / EVIL`
 
 ## Template C — Healing (Medicine Buddha, Hanuman)
 
-Use for: `Medicine Buddha`, `Hanuman`, healing-led videos
-
 Formula:
-`compassionate deity close-up left + concentric ring halo in deity-faithful healing color + warm energy swirls + golden embers + dark gradient + ONE 2-3 word healing phrase right side with glow highlight`
+`EXTREME close-up compassionate face (75-80%+ fill, eyes bright) left + concentric ring halo in deity's color + deity-colored energy + ULTRA-DARK empty right side + 2-LINE HIERARCHY: LINE 1 BIG WHITE + LINE 2 smaller RED #FF3B3B (emotional trigger) + STRONG drop shadow + ONE micro-hook trigger`
 
-Phrase examples: `ULTIMATE HEALING`, `HEAL DEEPLY`, `SACRED HEALING`
+Viral hooks (split): `HEAL / NOW`, `STOP / PAIN`, `FEEL / WHOLE`, `RESET / YOURSELF`
 
 ## Template D — Love & Peace (Krishna, Lakshmi)
 
-Use for: `Krishna`, `Lakshmi`, love/peace videos
-
 Formula:
-`emotionally resonant deity close-up left + concentric ring halo in devotional color + soft golden fire/energy + sparks + dark gradient + ONE 2-3 word phrase right side with warm glow highlight`
+`EXTREME close-up emotionally resonant face (75-80%+ fill, eyes bright) left + concentric ring halo in devotional color + soft deity-colored energy + ULTRA-DARK empty right side + 2-LINE HIERARCHY: LINE 1 BIG WHITE + LINE 2 smaller PINK #FF69B4 + STRONG drop shadow + ONE micro-hook trigger (heart glow)`
 
-Phrase examples: `DEEP PEACE`, `DIVINE LOVE`, `HEART OPENING`
+Viral hooks (split): `OPEN / HEART`, `FEEL / LOVE`, `RECEIVE / LOVE`, `WHY / EMPTY`
 
 ## Template E — Fierce Transformation (Shiva, Kali, Durga)
 
-Use for: `Shiva`, `Kali`, `Durga`, transformation videos
-
 Formula:
-`fierce divine close-up left + dramatic concentric rings in deep crimson or fiery color + intense fire/energy swirls + embers and sparks + dark gradient + ONE 2-3 word transformation phrase right side with warm glow highlight`
+`EXTREME close-up fierce face (75-80%+ fill, eyes bright + intense) left + dramatic concentric rings in deep deity color + intense deity-colored fire energy + ULTRA-DARK empty right side + 2-LINE HIERARCHY: LINE 1 BIG WHITE + LINE 2 smaller RED #FF3B3B + STRONG drop shadow + ONE micro-hook trigger (energy burst)`
 
-Phrase examples: `KARMA RELEASE`, `REBIRTH NOW`, `FIERCE CHANGE`
+Viral hooks (split): `REBIRTH / NOW`, `BREAK / FREE`, `DESTROY / KARMA`, `NEW / YOU`
 
 ## Template F — Wisdom & Clarity (Saraswati, Ganesha, Ram)
 
-Use for: `Saraswati`, `Ganesha`, `Ram`, knowledge videos
+Formula:
+`EXTREME close-up wise face (75-80%+ fill, eyes bright + serene) left + concentric ring halo in ivory/gold + warm deity-colored energy + ULTRA-DARK empty right side + 2-LINE HIERARCHY: LINE 1 BIG WHITE + LINE 2 smaller GOLD #FFD700 + STRONG drop shadow + ONE micro-hook trigger (light beam)`
+
+Viral hooks (split): `SEE / CLEARLY`, `UNLOCK / MIND`, `GAIN / CLARITY`, `FOCUS / NOW`
+
+## Template G — Power & Courage (Hanuman, Durga, Kali)
 
 Formula:
-`wise regal deity close-up left + concentric ring halo in ivory or gold + warm golden energy + sparks + dark gradient + ONE 2-3 word knowledge phrase right side with glow highlight`
+`EXTREME close-up fierce face (75-80%+ fill, eyes bright + fierce) left + dramatic concentric rings in fiery deity color + intense energy + ULTRA-DARK empty right side + 2-LINE HIERARCHY: LINE 1 BIG WHITE + LINE 2 smaller ORANGE #FF6600 + STRONG drop shadow + ONE micro-hook trigger (energy from raised hand)`
 
-Phrase examples: `DIVINE KNOWLEDGE`, `HIGHER CLARITY`, `WISDOM FLOW`
+Viral hooks (split): `RISE / NOW`, `FEAR / DIES`, `CLAIM / POWER`, `STOP / FEAR`
 
-## Template G — Close-Crop Face Dominance
+## Variant Directives (MUST be MEANINGFULLY DIFFERENT)
 
-Use for: any deity when expression is the strongest click driver
+Create 2 variants per request — NOT just intensity variations:
 
-Formula:
-`tight left-side face crop with intense eyes + oversized dramatic concentric ring halo + golden fire/energy swirls + sparks and embers + dark gradient + ONE 2-3 word phrase right side with golden glow highlight`
-
-## Variant Directives
-
-Create 2 variants per request:
-
-1. Proven winner layout with dramatic golden sacred ring halo, warm golden fire energy in background, hook text glowing with subtle warm highlight. Clean and balanced but visually alive.
-2. Intensified aura — bigger concentric golden rings, more golden sparks and embers, stronger fire energy swirls, bolder cinematic drama. Hook text has stronger golden glow accent. Maximum divine energy.
+1. **EMOTIONAL variant**: Softer expression, subtle energy from blessing hand or faint third-eye glow, warm deity-colored halo. 2-LINE HIERARCHY text in ULTRA-DARK silence (LINE 1 = BIG WHITE command, LINE 2 = smaller COLORED emotion). Focus on face-to-viewer connection. Eyes bright + luminous.
+2. **INTENSE variant**: Fiercer expression, glowing heart/chest element or energy pulse, bigger concentric rings, more dramatic lighting. Higher contrast, bolder energy. Same 2-LINE HIERARCHY but with stronger drop shadow. Different micro-hook trigger than variant 1. Eyes intense + luminous.
 
 ## What to Avoid in Every Prompt
 
-- No clutter, no multiple props — background effects should add energy NOT chaos
-- No glowing text overload — text has subtle warm highlight, not neon
-- No complex storytelling elements
-- No mixing symbolic meanings across deities
-- No badges, logos, watermarks, or channel tags
-- No props or objects in the text area (subtle warm glow bleed is OK)
-- No center composition, no deity on right
-- No more than 2-3 words of text
-- No flat/plain backgrounds — always include golden energy effects
+- No generic/calm text — ❌ "DIVINE LOVE" → ✅ "FEEL LOVE"
+- No full body shots — EXTREME close-up only (75-80%+ face fill, 10-15% tighter)
+- No always-gold — use deity's OWN aura color
+- No glow/particles/light interference behind text — right side = ULTRA-DARK EMPTY SPACE
+- No same-weight text lines — LINE 1 must be 40-50% bigger than LINE 2
+- No both-lines-white — LINE 1 = white, LINE 2 = colored (intent accent)
+- No similar-looking variants — must be meaningfully different
+- No clutter, no multiple props
+- No mixing deities' iconography
+- No badges, logos, watermarks
+- No center composition
+- No calm/static feel — must have micro-hook visual trigger for story
+- No wide face zoom — tighter crop = more emotional pull = higher CTR
