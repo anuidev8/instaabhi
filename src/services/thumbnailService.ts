@@ -176,8 +176,8 @@ NON-NEGOTIABLE RULES:
 - TEXT HIERARCHY: 2-LINE SPLIT. LINE 1 = command word (BIG, WHITE, 40-50% bigger). LINE 2 = emotion word (smaller, COLORED with intent accent). BOTH lines have STRONG dark drop shadow. NEVER both lines same weight or same color.
 - MICRO-HOOK: Include ONE subtle visual trigger per variant: (A) energy from deity's hand, (B) glowing heart/chest, (C) light beam, (D) subtle third-eye glow, (E) faint energy pulse. Only ONE — just a HINT of energy.
 - CHARACTER FIDELITY: Preserve canonical attributes. NO mixing deities.
-- line1 = the 2-3 word viral phrase (will be split into 2-line hierarchy in the image). line2 = empty.
-- AVOID: generic/calm text, full body shots, gold for non-gold deities, particles behind text, glow in text area, light interference in text zone, center composition, similar-looking variants, same-weight text lines, both-lines-white.
+- line1 AND line2 together form the 2-word hook. You MUST populate BOTH: line1 = command word (e.g. "STOP", "BREAK", "RISE", "OPEN", "HEAL"), line2 = emotion word (e.g. "PAIN", "FREE", "NOW", "HEART", "FEAR"). NEVER leave line2 empty — the 2-line hierarchy requires BOTH words. If the phrase is 3 words, put the first word in line1 and the remaining words in line2 (e.g. line1="ATTRACT", line2="WEALTH"). NEVER put the full phrase in line1 alone.
+- AVOID: generic/calm text, full body shots, gold for non-gold deities, particles behind text, glow in text area, light interference in text zone, center composition, similar-looking variants, same-weight text lines, both-lines-white, single-word hooks (always use 2-word split).
 
 Return strict JSON only.`;
 
@@ -346,8 +346,15 @@ function normalizeSpec(
 ): ThumbnailCanvaSpec {
   const fallback = buildDefaultSpec(input, intent, deity);
 
-  const rawPhrase = parsedPlan.line1 || fallback.hookWord;
-  const hookWord = uppercaseClean(rawPhrase).split(/\s+/).slice(0, 3).join(' ');
+  const rawLine1 = (parsedPlan.line1 || '').trim();
+  const rawLine2 = (parsedPlan.line2 || '').trim();
+  const combinedPhrase = rawLine2 ? `${rawLine1} ${rawLine2}` : rawLine1;
+  const rawPhrase = combinedPhrase || fallback.hookWord;
+  let hookWord = uppercaseClean(rawPhrase).split(/\s+/).slice(0, 3).join(' ');
+
+  if (hookWord.split(/\s+/).length < 2) {
+    hookWord = fallback.hookWord;
+  }
   const parsedSeoTitle = (parsedPlan.seoTitle || '').trim();
   const alignedSeoTitle = buildAlignedSeoTitle(input, deity, intent, hookWord, '');
   const finalSeoTitle =
@@ -486,18 +493,22 @@ function normalizeVariantPrompts(
   const auraPrompt = resolveAuraPrompt(deity, intent, auraColor);
   const mainPhrase = spec.hookWord;
 
-  const words = mainPhrase.split(/\s+/);
+  let finalPhrase = mainPhrase;
+  if (mainPhrase.split(/\s+/).length < 2) {
+    const fallbackPhrase = ACTION_PROMISES[intent.key]?.[0] || 'STOP PAIN';
+    finalPhrase = fallbackPhrase;
+  }
+
+  const words = finalPhrase.split(/\s+/);
   const hookWord = words[0];
   const restWords = words.slice(1).join(' ');
   const line2Color = LINE2_COLOR_BY_INTENT[intent.key] || '#FF3B3B';
   const deityAuraColorName = deity.auraStyle?.match(/^dramatic\s+([\w\s-]+)\s+concentric/i)?.[1]?.trim() || 'deity-colored';
 
-  const textHierarchy = restWords
-    ? `2-LINE TEXT HIERARCHY: LINE 1 "${hookWord}" = DOMINANT, WHITE #FFFFFF, 40-50% BIGGER than LINE 2, bold condensed, STRONG dark drop shadow. LINE 2 "${restWords}" = smaller, COLORED ${line2Color}, bold condensed, STRONG dark drop shadow. "${hookWord}" on one line, "${restWords}" on the next line, stacked vertically, right-aligned or center-right. NEVER render both lines the same size or same color — LINE 1 must visually DOMINATE. This creates reading hierarchy: brain reads command first, then emotional hook = stronger impact.`
-    : `Single-line text: "${hookWord}" in large WHITE #FFFFFF bold condensed with STRONG dark drop shadow, right-aligned or center-right.`;
+  const textHierarchy = `2-LINE TEXT HIERARCHY: LINE 1 "${hookWord}" = DOMINANT, WHITE #FFFFFF, 40-50% BIGGER than LINE 2, bold condensed, STRONG dark drop shadow. LINE 2 "${restWords}" = smaller, COLORED ${line2Color}, bold condensed, STRONG dark drop shadow. "${hookWord}" on one line, "${restWords}" on the next line, stacked vertically, right-aligned or center-right. NEVER render both lines the same size or same color — LINE 1 must visually DOMINATE. This creates reading hierarchy: brain reads command first, then emotional hook = stronger impact.`;
 
   const baseInstructions =
-    `CRITICAL TEXT REQUIREMENT: This image MUST contain the text "${mainPhrase}" on the RIGHT side of the image using this layout: ${textHierarchy} Use proportional sizing — large enough to read at small sizes but NOT so large it fills the entire right half. This is the most important element after the deity. ` +
+    `CRITICAL TEXT REQUIREMENT: This image MUST contain the text "${finalPhrase}" as a 2-LINE HIERARCHY on the RIGHT side of the image using this layout: ${textHierarchy} Use proportional sizing — large enough to read at small sizes but NOT so large it fills the entire right half. This is the most important element after the deity. ` +
     `YouTube thumbnail, exactly 1280x720, 16:9 horizontal. Style: "Cinematic Divine Aura" — cinematic hyperreal devotional with DEITY-FAITHFUL color palette. ` +
     `LEFT 40-45%: ${input.deity} EXTREME close-up (10-15% TIGHTER than default), face + ONE blessing hand ONLY. NO lower body. Face fills 75-80%+ of left zone. Eyes LARGE, BRIGHT, and LUMINOUS at mobile size. ${deity.visualSignature.split(',').slice(0, 4).join(',')}. ` +
     `4 VISUAL SYSTEMS: (1) CINEMATIC LIGHTING: strong ${deityAuraColorName} rim light (${auraColor}), glow bloom, extreme contrast, eyes slightly brighter/luminous. (2) DIVINE ENERGY: ${deityAuraColorName} concentric ring halo with ${auraPrompt}, ${deityAuraColorName} sparks and energy. (3) MATERIAL REALISM: reflective metal textures on ornaments, jewelry depth, shadow realism. (4) EMOTIONAL FACE: EXTREME close-up (75-80%+ fill), eyes DOMINANT and BRIGHT, expression matching intent mood, human-like skin texture. ` +
