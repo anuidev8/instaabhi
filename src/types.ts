@@ -217,6 +217,42 @@ export interface AppMarketingVideoDraft {
 
 // ─── YouTube Thumbnails ──────────────────────────────────────────────────────
 
+export type ThumbnailBrand = 'school_of_mantras' | 'school_of_breath';
+
+export type SchoolOfBreathMode = 'with_character' | 'without_character';
+
+export type SchoolOfBreathCategory =
+  | 'technique'
+  | 'routine'
+  | 'healing'
+  | 'energy'
+  | 'biohack'
+  | 'gut'
+  | 'sleep'
+  | 'focus'
+  | 'immunity'
+  | 'beginner'
+  | 'advanced'
+  | 'mudra';
+
+export type SchoolOfBreathHookFamily =
+  | 'big_promise'
+  | 'instruction'
+  | 'curiosity'
+  | 'biohack'
+  | 'healing';
+
+export interface SchoolOfBreathSettings {
+  mode: SchoolOfBreathMode;
+  category: SchoolOfBreathCategory;
+  hookFamily: SchoolOfBreathHookFamily;
+  topLine?: string;
+  bottomStrip?: string;
+  supportVisual?: string;
+  colorEmphasis?: string;
+  backgroundStyle?: string;
+}
+
 export type IntentKey =
   | 'abundance'
   | 'protection'
@@ -249,10 +285,12 @@ export interface ThumbnailPrompt {
   title: string;
   deity: string;
   intent: IntentKey;
+  brand?: ThumbnailBrand;
   line1?: string;
   line2?: string;
   badge?: string;
   special?: string;
+  schoolOfBreath?: SchoolOfBreathSettings;
 }
 
 export interface ThumbnailCanvaSpec {

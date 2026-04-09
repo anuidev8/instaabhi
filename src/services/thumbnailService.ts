@@ -729,6 +729,7 @@ export async function generateThumbnailPlan(prompt: ThumbnailPrompt): Promise<Th
     title: prompt.title.trim(),
     deity: prompt.deity.trim(),
     intent: prompt.intent,
+    brand: 'school_of_mantras',
     line1: prompt.line1?.trim() || undefined,
     line2: prompt.line2?.trim() || undefined,
     badge: prompt.badge?.trim() || undefined,

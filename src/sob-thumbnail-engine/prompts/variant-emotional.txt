@@ -1,0 +1,5 @@
+Variant tone: CLEAN / TRUSTED
+- Keep composition minimal and readable.
+- Warm expression and calm confidence.
+- Keep clutter low; prioritize text clarity.
+- Ensure hook is readable at tiny mobile preview.

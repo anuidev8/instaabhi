@@ -1,0 +1,110 @@
+{
+  "technique": {
+    "label": "Technique",
+    "defaultMode": "with_character",
+    "hookFamilies": ["instruction", "big_promise"],
+    "supportVisuals": ["hand gesture", "breath flow arrows"],
+    "colorEmphasis": ["dark_yellow", "yellow_black"],
+    "topLines": ["PRANAYAMA SEQUENCE", "TECHNIQUE BREAKDOWN"],
+    "bottomStrips": ["TRY THIS TODAY", "WATCH NOW"]
+  },
+  "routine": {
+    "label": "Routine",
+    "defaultMode": "with_character",
+    "hookFamilies": ["instruction", "healing"],
+    "supportVisuals": ["sun glow", "body energy overlay"],
+    "colorEmphasis": ["dark_yellow", "yellow_black"],
+    "topLines": ["DAILY ROUTINE", "MORNING RESET"],
+    "bottomStrips": ["DO THIS DAILY", "START TONIGHT"]
+  },
+  "healing": {
+    "label": "Healing",
+    "defaultMode": "with_character",
+    "hookFamilies": ["healing", "big_promise"],
+    "supportVisuals": ["chest glow", "calm waveform"],
+    "colorEmphasis": ["dark_yellow", "urgency_red"],
+    "topLines": ["HEALING BREATH", "NERVOUS RESET"],
+    "bottomStrips": ["HEALTH NOW", "NO PILLS NEEDED"]
+  },
+  "energy": {
+    "label": "Energy",
+    "defaultMode": "without_character",
+    "hookFamilies": ["big_promise", "biohack"],
+    "supportVisuals": ["sun burst", "body-energy overlay"],
+    "colorEmphasis": ["yellow_black", "fire_orange"],
+    "topLines": ["ENERGY ACTIVATION", "MORNING POWER"],
+    "bottomStrips": ["BOOST NOW", "MUST TRY"]
+  },
+  "biohack": {
+    "label": "Biohack",
+    "defaultMode": "without_character",
+    "hookFamilies": ["biohack", "curiosity"],
+    "supportVisuals": ["lungs overlay", "nitric oxide particles"],
+    "colorEmphasis": ["science_blue", "yellow_black"],
+    "topLines": ["15X NITRIC OXIDE", "SCIENCE BREATH"],
+    "bottomStrips": ["MOST PEOPLE MISS THIS", "NO ONE TALKS ABOUT THIS"]
+  },
+  "gut": {
+    "label": "Gut",
+    "defaultMode": "with_character",
+    "hookFamilies": ["healing", "instruction"],
+    "supportVisuals": ["gut glow", "body silhouette"],
+    "colorEmphasis": ["urgency_red", "dark_yellow"],
+    "topLines": ["GUT RESET", "DIGESTION BREATH"],
+    "bottomStrips": ["HEAL FAST", "DO THIS DAILY"]
+  },
+  "sleep": {
+    "label": "Sleep",
+    "defaultMode": "with_character",
+    "hookFamilies": ["healing", "big_promise"],
+    "supportVisuals": ["moon glow", "calm aura"],
+    "colorEmphasis": ["dark_yellow", "science_blue"],
+    "topLines": ["SLEEP RESET", "NIGHT ROUTINE"],
+    "bottomStrips": ["TRY TONIGHT", "SLEEP DEEP"]
+  },
+  "focus": {
+    "label": "Focus",
+    "defaultMode": "without_character",
+    "hookFamilies": ["biohack", "instruction"],
+    "supportVisuals": ["third-eye point", "brain focus glow"],
+    "colorEmphasis": ["science_blue", "yellow_black"],
+    "topLines": ["FOCUS PROTOCOL", "MIND SHARPENING"],
+    "bottomStrips": ["WORK FASTER", "ZERO DISTRACTIONS"]
+  },
+  "immunity": {
+    "label": "Immunity",
+    "defaultMode": "with_character",
+    "hookFamilies": ["big_promise", "healing"],
+    "supportVisuals": ["body shield glow", "chest heat"],
+    "colorEmphasis": ["fire_orange", "urgency_red"],
+    "topLines": ["IMMUNITY BREATH", "DEFENSE PROTOCOL"],
+    "bottomStrips": ["START TODAY", "NEVER SKIP THIS"]
+  },
+  "beginner": {
+    "label": "Beginner",
+    "defaultMode": "with_character",
+    "hookFamilies": ["instruction", "curiosity"],
+    "supportVisuals": ["simple breath arrows", "hands demo"],
+    "colorEmphasis": ["dark_yellow", "yellow_black"],
+    "topLines": ["BEGINNER START", "EASY BREATH"],
+    "bottomStrips": ["START HERE", "DO THIS FIRST"]
+  },
+  "advanced": {
+    "label": "Advanced",
+    "defaultMode": "with_character",
+    "hookFamilies": ["biohack", "curiosity"],
+    "supportVisuals": ["heat effect", "vibration pattern"],
+    "colorEmphasis": ["fire_orange", "science_blue"],
+    "topLines": ["ADVANCED BREATH", "HIGH PERFORMANCE"],
+    "bottomStrips": ["PRO LEVEL", "NOT FOR BEGINNERS"]
+  },
+  "mudra": {
+    "label": "Mudra",
+    "defaultMode": "with_character",
+    "hookFamilies": ["instruction", "curiosity"],
+    "supportVisuals": ["mudra close-up", "energy rings"],
+    "colorEmphasis": ["yellow_black", "dark_yellow"],
+    "topLines": ["MUDRA TECHNIQUE", "HAND BREATH LINK"],
+    "bottomStrips": ["TRY THIS NOW", "MOST PEOPLE MISS THIS"]
+  }
+}

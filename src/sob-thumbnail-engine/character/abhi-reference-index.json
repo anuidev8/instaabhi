@@ -1,0 +1,50 @@
+{
+  "abhi_01": {
+    "sourcePath": "docs/resources/images/Screenshot 2026-04-09 at 3.44.58 PM.png",
+    "pose": "seated calm",
+    "angle": "front",
+    "usage": ["routine", "sleep", "beginner"]
+  },
+  "abhi_02": {
+    "sourcePath": "docs/resources/images/Screenshot 2026-04-09 at 3.45.20 PM.png",
+    "pose": "chest-up teacher",
+    "angle": "front",
+    "usage": ["technique", "healing", "instruction"]
+  },
+  "abhi_03": {
+    "sourcePath": "docs/resources/images/Screenshot 2026-04-09 at 3.45.43 PM.png",
+    "pose": "breath demonstration",
+    "angle": "three-quarter",
+    "usage": ["technique", "mudra", "advanced"]
+  },
+  "abhi_04": {
+    "sourcePath": "docs/resources/images/Screenshot 2026-04-09 at 3.46.07 PM.png",
+    "pose": "guided instruction",
+    "angle": "front",
+    "usage": ["beginner", "routine", "healing"]
+  },
+  "abhi_05": {
+    "sourcePath": "docs/resources/images/Screenshot 2026-04-09 at 3.46.27 PM.png",
+    "pose": "energy-focused",
+    "angle": "three-quarter",
+    "usage": ["energy", "immunity", "advanced"]
+  },
+  "abhi_06": {
+    "sourcePath": "docs/resources/images/Screenshot 2026-04-09 at 3.46.42 PM.png",
+    "pose": "calm authority",
+    "angle": "front",
+    "usage": ["sleep", "focus", "routine"]
+  },
+  "abhi_07": {
+    "sourcePath": "docs/resources/images/Screenshot 2026-04-09 at 3.47.43 PM.png",
+    "pose": "intense coaching",
+    "angle": "front",
+    "usage": ["energy", "biohack", "immunity"]
+  },
+  "abhi_08": {
+    "sourcePath": "docs/resources/images/Screenshot 2026-04-09 at 3.48.04 PM.png",
+    "pose": "mudra detail",
+    "angle": "close-up",
+    "usage": ["mudra", "technique", "focus"]
+  }
+}

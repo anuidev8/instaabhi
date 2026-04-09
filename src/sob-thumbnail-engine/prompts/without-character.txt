@@ -1,0 +1,32 @@
+Create a YouTube thumbnail for The School of Breath.
+
+Canvas: 1280x720, 16:9.
+Mode: WITHOUT CHARACTER.
+Do not include any person.
+
+Style:
+- bold
+- practical
+- high-contrast
+- modern YouTube thumbnail
+- title-driven
+- results-driven
+
+Layout:
+- [LAYOUT]
+- strong typography as hero
+- one supporting visual only
+- mobile-first readability
+
+Text hierarchy:
+- Top context: [TOP_LINE]
+- Main hook: [MAIN_HOOK]
+- Bottom strip: [BOTTOM_STRIP]
+
+Color direction:
+- [COLOR_DIRECTION]
+
+Topic/category: [TOPIC]
+Support visual: [SUPPORT_VISUAL]
+Background style: [BACKGROUND_STYLE]
+Additional note: [SPECIAL_NOTE]
