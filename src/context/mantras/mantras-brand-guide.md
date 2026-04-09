@@ -54,11 +54,11 @@ Top video earns **2.7x more views** than second tier — the gap is large. Repli
 | **Style** | **"Cinematic Divine Aura"** — Cinematic Hyperreal Devotional with DEITY-FAITHFUL color palette (NOT always gold). Modern AI cinematic hybrid. NOT cartoon, NOT illustration, NOT painting, NOT temple sculpture. |
 | **Background** | Deep dark gradient (black to dark warm tone matching deity's aura). Energy effects in DEITY'S OWN AURA COLOR — swirling fire/energy, embers, sparks, light flares. NO architecture, NO scenery. |
 | **Deity placement** | ⚡ LEFT SIDE (40–45% width): EXTREME close-up — face + ONE blessing hand ONLY. NO lower body, NO full figure. Face fills **75-80%+** of left zone height (zoom 10-15% tighter). Eyes DOMINANT, BRIGHT, and luminous at mobile size. |
-| **Text placement** | ⚡ RIGHT SIDE (55–60%): DARK EMPTY SPACE (visual silence). Text BAKED INTO the generated image. |
+| **Text placement** | ⚡ RIGHT SIDE (55–60%): 3 text elements baked into image: (1) TOP: "THE SCHOOL OF MANTRAS" tiny white semi-transparent (2) CENTER: MAIN HOOK — 2-line hierarchy, BIG BOLD poster-style (3) BOTTOM: "[Deity] Mantra · [108x]" small white tag. |
 | **Aura** | ⚡ Concentric sacred rings/halo in DEITY'S OWN AURA COLOR (blue for Shiva, orange for Hanuman, violet for Durga, etc.). NOT always gold. Gold only for Ganesha/Lakshmi/Ram. |
 | **Lighting** | Strong rim light from behind deity in DEITY'S AURA COLOR. High contrast: bright deity vs dark background. Eyes slightly brighter/luminous for instant connection. |
 | **Atmosphere** | Deity-colored energy swirls around deity area. Matching sparks and embers. Subtle mist at base. Text area must be ULTRA-DARK and ULTRA-CLEAN — NO glow bleed, NO light interference into text area. |
-| **Text hierarchy** | ⚡ **2-LINE SPLIT (critical):** LINE 1 = command word (BIG, WHITE `#FFFFFF`, DOMINANT — 40-50% bigger). LINE 2 = emotion word (smaller, COLORED — intent accent color e.g. RED `#FF3B3B` for healing). Creates visual hierarchy → faster reading → stronger impact. Both lines have STRONG drop shadow. |
+| **Text hierarchy** | ⚡ **3-5 words, 2-LINE SPLIT:** LINE 1 = command/action (HUGE, BOLD WHITE `#FFFFFF`, DOMINANT — 30-40% bigger). LINE 2 = emotion/promise (LARGE, BOLD, COLORED — intent accent). Text must be BIG poster-style, not subtle. Both lines have STRONG drop shadow. |
 | **Text area** | Right side = ULTRA-DARK EMPTY SPACE. NO props, NO particles, NO glow, NO light interference behind text. Text sits in PURE darkness. Make it DARKER than seems necessary. The extreme contrast is the click trigger. |
 | **Visual trigger** | ONE subtle story element per thumbnail: energy from hand, glowing heart, light beam, subtle third-eye glow, or faint energy pulse. Only ONE — never combine. Just a HINT of energy. |
 | **Character fidelity** | Preserve canonical deity attributes exactly. NO mixing iconography. EXTREME close-up: eyes must be large AND BRIGHT, expression must match intent (fierce/loving/serene). Tighter crop = more emotional pull = higher CTR. |
@@ -120,34 +120,36 @@ Every thumbnail combines these 4 systems. All must be present:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                                                         │
+│                         "THE SCHOOL OF MANTRAS"  (tiny) │
 │  [ DEITY EXTREME                                        │
-│    CLOSE-UP ]            "STOP"    ← LINE 1: BIG,      │
-│  Left 40-45%                          WHITE, DOMINANT   │
-│  FACE fills 75-80%+      "PAIN"    ← LINE 2: smaller,  │
-│  Eyes BRIGHT + DOMINANT                COLORED (#FF3B3B)│
-│  ONE blessing hand                                      │
-│  Deity-colored aura      ← ULTRA-DARK EMPTY SPACE →    │
-│  ONE micro-hook trigger    NO glow, NO particles,       │
-│  (hand energy/third eye    NO light interference.       │
-│   glow/heart glow)         PURE DARKNESS behind text.   │
+│    CLOSE-UP ]                                           │
+│  Left 40-45%             "STOP THE"  ← LINE 1: HUGE,   │
+│  FACE fills 75-80%+                     WHITE, BOLD     │
+│  Eyes BRIGHT + DOMINANT  "PAIN NOW"  ← LINE 2: LARGE,  │
+│  ONE blessing hand                      COLORED, BOLD   │
+│  Deity-colored aura                                     │
+│  ONE micro-hook trigger  "Shiva Mantra · 108x"  (small)│
+│  (hand energy/third eye  ← ULTRA-DARK EMPTY SPACE →    │
+│   glow/heart glow)        PURE DARKNESS behind text.    │
 └─────────────────────────────────────────────────────────┘
 ```
 
-**⚡ THE 2-LINE HIERARCHY RULE (v6 — MOST IMPORTANT TEXT CHANGE):**
+**⚡ THE 2-LINE HIERARCHY RULE (v6 — 3-5 WORDS, 2 LINES):**
 
 | Element | Content | Size | Color | Example |
 |---------|---------|------|-------|---------|
-| **LINE 1 (command)** | First word — BIGGEST, triggers attention/action | 40-50% bigger than LINE 2 | WHITE `#FFFFFF` with STRONG drop shadow | "STOP" |
-| **LINE 2 (emotion)** | Second word — emotional payload, hooks the viewer | Smaller than LINE 1, still bold | COLORED — intent accent (e.g. RED `#FF3B3B`, GOLD `#FFD700`) | "PAIN" |
+| **LINE 1 (command/action)** | First half of phrase — BIGGEST, triggers attention | 30-40% bigger than LINE 2 | WHITE `#FFFFFF` with STRONG drop shadow | "STOP THE" |
+| **LINE 2 (emotion/promise)** | Second half — emotional payload, hooks the viewer | Slightly smaller, still bold | COLORED — intent accent (e.g. RED `#FF3B3B`, GOLD `#FFD700`) | "PAIN NOW" |
 
-**WHY 2-LINE HIERARCHY WORKS:**
-- "STOP" = command (grabs attention)
-- "PAIN" = emotion (hooks the viewer)
+**WHY 3-5 WORDS ACROSS 2 LINES WORKS:**
+- "STOP THE" = command (grabs attention) — more context than just "STOP"
+- "PAIN NOW" = emotion + urgency (hooks the viewer) — more compelling than just "PAIN"
+- More words = more viral + more compelling context + clearer message
 - Brain reads it in 2 steps = stronger impact than same-weight text
 - Color contrast (WHITE vs RED) = emotional trigger = higher CTR
+- ❌ Only 2 words total = too simple, lacks context, feels incomplete
 - ❌ Both lines same weight + same color = visually weaker, less dramatic
-- ❌ One line only = works ONLY when phrase is VERY strong ("HEAL NOW")
+- Size text slightly smaller than max to fit all words comfortably
 
 **LINE 2 COLOR BY INTENT:**
 ```
@@ -163,13 +165,14 @@ KNOWLEDGE:      GOLD #FFD700    (wisdom = light)
 
 **PROBLEM-SOLUTION PATTERN (high-performing):**
 - These thumbnails show a clear PAIN POINT + INSTANT PROMISE
-- "STOP PAIN" — viewer sees THEIR problem + the solution
+- "STOP THE / PAIN NOW" — viewer sees THEIR problem + the solution
 - This performs VERY well because: instant recognition → "I need this RIGHT NOW"
 
 **VIRAL TEXT PSYCHOLOGY:**
-- Must trigger: curiosity ("WHY EMPTY"), urgency ("HEAL NOW"), outcome ("FEEL LOVE")
+- Must be 3-5 words total, NEVER fewer than 3
+- Must trigger: curiosity ("WHY SO EMPTY"), urgency ("HEAL YOUR BODY"), outcome ("FEEL LOVE AGAIN")
 - NEVER generic: ❌ "DIVINE LOVE" "SACRED HEALING" "GOLDEN ABUNDANCE"
-- ALWAYS specific: ✅ "OPEN HEART" "STOP PAIN" "RISE NOW" "BREAK FREE"
+- ALWAYS specific: ✅ "OPEN YOUR HEART" "STOP THE PAIN" "RISE UP NOW" "BREAK FREE TODAY"
 - NEVER both lines same color: ❌ both white → boring, no hierarchy
 - ALWAYS color contrast: ✅ LINE 1 white + LINE 2 colored = click trigger
 
@@ -194,39 +197,50 @@ KNOWLEDGE:      GOLD #FFD700    (wisdom = light)
 
 ---
 
-### 1.6 ⭐ VIRAL HOOK FORMULAS (v5 — Curiosity/Urgency/Outcome)
+### 1.6 ⭐ VIRAL HOOK FORMULAS (v6 — 3-5 Words, More Viral)
 
 **VIRAL TEXT = what makes viewers think "I NEED this RIGHT NOW"**
 
-**By Intent — 2-3 word viral hooks:**
+**By Intent — 3-5 word viral hooks (split across 2 lines):**
 ```
-ABUNDANCE:      ATTRACT WEALTH  |  STOP STRUGGLING  |  UNLOCK SUCCESS  |  MONEY FLOWS
-PROTECTION:     SHIELD NOW      |  STOP ATTACKS      |  FEEL SAFE       |  BLOCK EVIL
-HEALING:        HEAL NOW        |  STOP PAIN         |  FEEL WHOLE      |  RESET YOURSELF
-LOVE:           OPEN HEART      |  FEEL LOVE         |  RECEIVE LOVE    |  WHY EMPTY
-POWER:          RISE NOW        |  FEAR DIES         |  CLAIM POWER     |  STOP FEAR
-PEACE:          FIND PEACE      |  STOP ANXIETY      |  CALM NOW        |  QUIET MIND
-KNOWLEDGE:      SEE CLEARLY     |  UNLOCK MIND       |  GAIN CLARITY    |  FOCUS NOW
-TRANSFORMATION: REBIRTH NOW     |  BREAK FREE        |  DESTROY KARMA   |  NEW YOU
+ABUNDANCE:      ATTRACT YOUR WEALTH  |  STOP THE STRUGGLE  |  UNLOCK YOUR SUCCESS  |  MONEY FLOWS NOW
+PROTECTION:     SHIELD YOURSELF NOW  |  STOP ALL ATTACKS    |  FEEL SAFE AGAIN      |  BLOCK ALL EVIL
+HEALING:        HEAL YOUR BODY       |  STOP THE PAIN       |  FEEL WHOLE AGAIN     |  END ALL SUFFERING
+LOVE:           OPEN YOUR HEART      |  FEEL LOVE AGAIN     |  RECEIVE MORE LOVE    |  WHY SO EMPTY
+POWER:          RISE UP NOW          |  FEAR DIES TODAY      |  CLAIM YOUR POWER     |  STOP ALL FEAR
+PEACE:          FIND YOUR PEACE      |  STOP THE ANXIETY     |  CALM YOUR MIND       |  QUIET YOUR SOUL
+KNOWLEDGE:      SEE MORE CLEARLY     |  UNLOCK YOUR MIND     |  GAIN TRUE CLARITY    |  FOCUS RIGHT NOW
+TRANSFORMATION: REBIRTH STARTS NOW   |  BREAK FREE TODAY     |  DESTROY OLD KARMA    |  YOUR NEW LIFE
+```
+
+**2-LINE SPLIT EXAMPLES (LINE 1 = white / LINE 2 = colored):**
+```
+"STOP THE"      / "PAIN NOW"      (healing — red)
+"OPEN YOUR"     / "HEART"         (love — pink)
+"RISE UP"       / "NOW"           (power — orange)
+"ATTRACT YOUR"  / "WEALTH"        (abundance — gold)
+"SHIELD YOURSELF"/ "NOW"          (protection — blue)
+"BREAK FREE"    / "TODAY"         (transformation — red)
 ```
 
 **What makes a hook VIRAL vs GENERIC:**
 ```
 ❌ GENERIC (no click):     ✅ VIRAL (instant click):
-DIVINE LOVE               → FEEL LOVE / OPEN HEART
-SACRED HEALING             → HEAL NOW / STOP PAIN
-GOLDEN ABUNDANCE           → ATTRACT WEALTH / MONEY FLOWS
-DEEP PEACE                 → STOP ANXIETY / CALM NOW
-FEARLESSNESS               → RISE NOW / FEAR DIES
+DIVINE LOVE               → FEEL LOVE AGAIN / OPEN YOUR HEART
+SACRED HEALING             → HEAL YOUR BODY / STOP THE PAIN
+GOLDEN ABUNDANCE           → ATTRACT YOUR WEALTH / MONEY FLOWS NOW
+DEEP PEACE                 → STOP THE ANXIETY / CALM YOUR MIND
+FEARLESSNESS               → RISE UP NOW / FEAR DIES TODAY
 ```
 
-**Viral trigger patterns:**
+**Viral trigger patterns (3-5 words):**
 ```
-"STOP [pain]"    — urgency (STOP PAIN, STOP FEAR, STOP ANXIETY)
-"[verb] NOW"     — immediate (HEAL NOW, RISE NOW, CALM NOW)
-"FEEL [state]"   — outcome (FEEL LOVE, FEEL SAFE, FEEL WHOLE)
-"WHY [question]" — curiosity (WHY EMPTY, WHY STUCK)
-"BREAK [thing]"  — transformation (BREAK FREE, BREAK KARMA)
+"STOP THE [pain]"   — urgency (STOP THE PAIN, STOP ALL FEAR, STOP THE ANXIETY)
+"[verb] YOUR [thing]"— personal (HEAL YOUR BODY, OPEN YOUR HEART, CALM YOUR MIND)
+"FEEL [state] AGAIN" — outcome (FEEL LOVE AGAIN, FEEL WHOLE AGAIN, FEEL SAFE AGAIN)
+"WHY SO [state]"     — curiosity (WHY SO EMPTY, WHY SO STUCK)
+"BREAK FREE [time]"  — transformation (BREAK FREE TODAY, BREAK FREE NOW)
+"[thing] STARTS NOW" — immediacy (REBIRTH STARTS NOW, YOUR NEW LIFE)
 ```
 
 ---
@@ -580,23 +594,31 @@ Photorealistic. Cinematic. Celebratory atmosphere.
                   Eyes BRIGHT + luminous
                   + 1 hand. Zoom 10-15% tighter.
   RIGHT 55-60% → ULTRA-DARK EMPTY SPACE
-                  + 2-line hierarchy text
+                  + 3-element text layout
   NO lower body. NO full figure. NO center.
 
 ════════════════════════════════════════════
-  TEXT HIERARCHY RULE (MOST CRITICAL)
+  TEXT LAYOUT (3 ELEMENTS, BAKED IN)
 ════════════════════════════════════════════
-  2-LINE SPLIT:
-  LINE 1 = command word (BIG, WHITE, DOMINANT)
-            40-50% bigger than LINE 2
-  LINE 2 = emotion word (smaller, COLORED)
-            intent accent color
+  (1) TOP: "THE SCHOOL OF MANTRAS"
+      tiny, white, semi-transparent
 
-  Example: "STOP" (white) / "PAIN" (red #FF3B3B)
-  Brain reads 2 steps = stronger impact.
+  (2) CENTER — MAIN HOOK (BIGGEST):
+      3-5 words, 2-line hierarchy:
+      LINE 1 = command (HUGE, BOLD, WHITE)
+               30-40% bigger than LINE 2
+      LINE 2 = emotion (LARGE, BOLD, COLORED)
+      Poster-style impact, not subtle.
+
+  (3) BOTTOM: "[Deity] Mantra · 108x"
+      small white text below the hook
+
+  Example: "STOP THE" (white) /
+           "PAIN NOW" (red #FF3B3B)
+  More words = more viral + more context.
+  ❌ Only 2 words total = too simple
   ❌ Both lines same weight = weak
   ❌ Both lines white = no hierarchy
-  ❌ "DIVINE LOVE" → ✅ "FEEL LOVE"
 
 ════════════════════════════════════════════
   LINE 2 COLORS (by intent)
@@ -611,16 +633,16 @@ Photorealistic. Cinematic. Celebratory atmosphere.
   Knowledge     → GOLD #FFD700
 
 ════════════════════════════════════════════
-  TOP VIRAL HOOKS (by intent)
+  TOP VIRAL HOOKS (3-5 words, by intent)
 ════════════════════════════════════════════
-  ATTRACT / WEALTH   ← abundance
-  SHIELD / NOW       ← protection
-  STOP / PAIN        ← healing
-  OPEN / HEART       ← love
-  RISE / NOW         ← power
-  FIND / PEACE       ← peace
-  SEE / CLEARLY      ← knowledge
-  BREAK / FREE       ← transformation
+  ATTRACT YOUR / WEALTH      ← abundance
+  SHIELD YOURSELF / NOW      ← protection
+  STOP THE / PAIN NOW        ← healing
+  OPEN YOUR / HEART          ← love
+  RISE UP / NOW              ← power
+  FIND YOUR / PEACE          ← peace
+  SEE MORE / CLEARLY         ← knowledge
+  BREAK FREE / TODAY         ← transformation
 
 ════════════════════════════════════════════
   DEITY AURA COLOR (NOT ALWAYS GOLD)
@@ -651,6 +673,7 @@ Photorealistic. Cinematic. Celebratory atmosphere.
   No always-gold. No glow behind text.
   No light interference in text zone.
   No same-weight lines. No both-white lines.
+  No hooks shorter than 3 words.
   No similar variants. No calm/static feel.
   No badges. No logos. No watermarks.
   No wide face zoom. Tighter = better CTR.

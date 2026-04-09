@@ -37,60 +37,62 @@ Style: **"Cinematic Divine Aura"** — Cinematic Hyperreal Devotional with DEITY
 - Text area: ULTRA-DARK EMPTY SPACE — NO particles, NO glow, NO light interference behind text. PURE darkness. Make it DARKER than seems necessary.
 
 ## Text Hierarchy Rules (v6 — CRITICAL)
-- **2-LINE SPLIT:** LINE 1 = command word (BIG, WHITE #FFFFFF, 40-50% bigger). LINE 2 = emotion word (smaller, COLORED with intent accent).
+- **3-5 words total, 2-LINE SPLIT:** LINE 1 = command/action words (BIG, WHITE #FFFFFF, 30-40% bigger). LINE 2 = emotion/promise words (slightly smaller, COLORED with intent accent).
 - **Color by intent:** Healing = RED #FF3B3B, Power = ORANGE #FF6600, Abundance = GOLD #FFD700, Love = PINK #FF69B4, Protection = BLUE #4D9FFF, Transformation = RED #FF3B3B, Peace = SOFT BLUE #B0D4F1, Knowledge = GOLD #FFD700
 - **STRONG drop shadow** on BOTH lines for mobile readability
+- **Size text slightly smaller** than maximum to comfortably fit 3-5 words while staying readable
 - **NEVER** both lines same color or same weight — kills hierarchy and CTR
-- **Problem-solution pattern:** LINE 1 = command ("STOP", "BREAK", "RISE"), LINE 2 = emotional payload ("PAIN", "FREE", "NOW")
+- **NEVER** use fewer than 3 words — more words = more viral + more compelling context
+- **Problem-solution pattern:** LINE 1 = command ("STOP THE", "BREAK FREE", "HEAL YOUR"), LINE 2 = emotional payload ("PAIN NOW", "TODAY", "BODY")
 
 ## Template A — Abundance / Success (Ganesha, Lakshmi)
 
 Formula:
 `EXTREME close-up face (75-80%+ fill) left 40-45% + golden concentric ring halo + amber/gold fire energy + dark gradient + ULTRA-DARK empty right side + 2-LINE HIERARCHY: LINE 1 BIG WHITE command + LINE 2 smaller GOLD #FFD700 emotion + STRONG drop shadow both lines + ONE micro-hook trigger`
 
-Viral hooks (split as LINE 1 / LINE 2): `ATTRACT / WEALTH`, `STOP / STRUGGLING`, `UNLOCK / SUCCESS`, `MONEY / FLOWS`
+Viral hooks (split as LINE 1 / LINE 2): `ATTRACT YOUR / WEALTH`, `STOP THE / STRUGGLE`, `UNLOCK YOUR / SUCCESS`, `MONEY FLOWS / NOW`
 
 ## Template B — Shield & Protection (Shiva, Hanuman, Durga, Kali)
 
 Formula:
 `EXTREME close-up fierce face (75-80%+ fill, eyes bright) left + concentric ring halo in DEITY'S COLOR + deity-colored energy swirls + ULTRA-DARK empty right side + 2-LINE HIERARCHY: LINE 1 BIG WHITE + LINE 2 smaller BLUE #4D9FFF + STRONG drop shadow + ONE micro-hook trigger`
 
-Viral hooks (split): `SHIELD / NOW`, `STOP / ATTACKS`, `FEEL / SAFE`, `BLOCK / EVIL`
+Viral hooks (split): `SHIELD YOURSELF / NOW`, `STOP ALL / ATTACKS`, `FEEL SAFE / AGAIN`, `BLOCK ALL / EVIL`
 
 ## Template C — Healing (Medicine Buddha, Hanuman)
 
 Formula:
 `EXTREME close-up compassionate face (75-80%+ fill, eyes bright) left + concentric ring halo in deity's color + deity-colored energy + ULTRA-DARK empty right side + 2-LINE HIERARCHY: LINE 1 BIG WHITE + LINE 2 smaller RED #FF3B3B (emotional trigger) + STRONG drop shadow + ONE micro-hook trigger`
 
-Viral hooks (split): `HEAL / NOW`, `STOP / PAIN`, `FEEL / WHOLE`, `RESET / YOURSELF`
+Viral hooks (split): `HEAL YOUR / BODY`, `STOP THE / PAIN NOW`, `FEEL WHOLE / AGAIN`, `END ALL / SUFFERING`
 
 ## Template D — Love & Peace (Krishna, Lakshmi)
 
 Formula:
 `EXTREME close-up emotionally resonant face (75-80%+ fill, eyes bright) left + concentric ring halo in devotional color + soft deity-colored energy + ULTRA-DARK empty right side + 2-LINE HIERARCHY: LINE 1 BIG WHITE + LINE 2 smaller PINK #FF69B4 + STRONG drop shadow + ONE micro-hook trigger (heart glow)`
 
-Viral hooks (split): `OPEN / HEART`, `FEEL / LOVE`, `RECEIVE / LOVE`, `WHY / EMPTY`
+Viral hooks (split): `OPEN YOUR / HEART`, `FEEL LOVE / AGAIN`, `RECEIVE MORE / LOVE`, `WHY SO / EMPTY`
 
 ## Template E — Fierce Transformation (Shiva, Kali, Durga)
 
 Formula:
 `EXTREME close-up fierce face (75-80%+ fill, eyes bright + intense) left + dramatic concentric rings in deep deity color + intense deity-colored fire energy + ULTRA-DARK empty right side + 2-LINE HIERARCHY: LINE 1 BIG WHITE + LINE 2 smaller RED #FF3B3B + STRONG drop shadow + ONE micro-hook trigger (energy burst)`
 
-Viral hooks (split): `REBIRTH / NOW`, `BREAK / FREE`, `DESTROY / KARMA`, `NEW / YOU`
+Viral hooks (split): `REBIRTH STARTS / NOW`, `BREAK FREE / TODAY`, `DESTROY OLD / KARMA`, `YOUR NEW / LIFE`
 
 ## Template F — Wisdom & Clarity (Saraswati, Ganesha, Ram)
 
 Formula:
 `EXTREME close-up wise face (75-80%+ fill, eyes bright + serene) left + concentric ring halo in ivory/gold + warm deity-colored energy + ULTRA-DARK empty right side + 2-LINE HIERARCHY: LINE 1 BIG WHITE + LINE 2 smaller GOLD #FFD700 + STRONG drop shadow + ONE micro-hook trigger (light beam)`
 
-Viral hooks (split): `SEE / CLEARLY`, `UNLOCK / MIND`, `GAIN / CLARITY`, `FOCUS / NOW`
+Viral hooks (split): `SEE MORE / CLEARLY`, `UNLOCK YOUR / MIND`, `GAIN TRUE / CLARITY`, `FOCUS RIGHT / NOW`
 
 ## Template G — Power & Courage (Hanuman, Durga, Kali)
 
 Formula:
 `EXTREME close-up fierce face (75-80%+ fill, eyes bright + fierce) left + dramatic concentric rings in fiery deity color + intense energy + ULTRA-DARK empty right side + 2-LINE HIERARCHY: LINE 1 BIG WHITE + LINE 2 smaller ORANGE #FF6600 + STRONG drop shadow + ONE micro-hook trigger (energy from raised hand)`
 
-Viral hooks (split): `RISE / NOW`, `FEAR / DIES`, `CLAIM / POWER`, `STOP / FEAR`
+Viral hooks (split): `RISE UP / NOW`, `FEAR DIES / TODAY`, `CLAIM YOUR / POWER`, `STOP ALL / FEAR`
 
 ## Variant Directives (MUST be MEANINGFULLY DIFFERENT)
 

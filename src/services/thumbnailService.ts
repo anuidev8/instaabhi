@@ -68,14 +68,14 @@ export const MANTRAS_INTENTS: Intent[] = MANTRAS_CONTEXT.intents;
 export const DEITIES: Deity[] = MANTRAS_CONTEXT.deities;
 
 const ACTION_PROMISES: Record<IntentKey, string[]> = {
-  abundance: ['ATTRACT WEALTH', 'STOP STRUGGLING', 'UNLOCK SUCCESS', 'MONEY FLOWS'],
-  protection: ['SHIELD NOW', 'STOP ATTACKS', 'FEEL SAFE', 'BLOCK EVIL'],
-  healing: ['HEAL NOW', 'STOP PAIN', 'FEEL WHOLE', 'RESET YOURSELF'],
-  love: ['OPEN HEART', 'FEEL LOVE', 'RECEIVE LOVE', 'WHY EMPTY'],
-  power: ['RISE NOW', 'FEAR DIES', 'CLAIM POWER', 'STOP FEAR'],
-  peace: ['FIND PEACE', 'STOP ANXIETY', 'CALM NOW', 'QUIET MIND'],
-  knowledge: ['SEE CLEARLY', 'UNLOCK MIND', 'GAIN CLARITY', 'FOCUS NOW'],
-  transformation: ['REBIRTH NOW', 'BREAK FREE', 'DESTROY KARMA', 'NEW YOU'],
+  abundance: ['ATTRACT YOUR WEALTH', 'STOP THE STRUGGLE', 'UNLOCK YOUR SUCCESS', 'MONEY FLOWS NOW'],
+  protection: ['SHIELD YOURSELF NOW', 'STOP ALL ATTACKS', 'FEEL SAFE AGAIN', 'BLOCK ALL EVIL'],
+  healing: ['HEAL YOUR BODY', 'STOP THE PAIN', 'FEEL WHOLE AGAIN', 'END ALL SUFFERING'],
+  love: ['OPEN YOUR HEART', 'FEEL LOVE AGAIN', 'RECEIVE MORE LOVE', 'WHY SO EMPTY'],
+  power: ['RISE UP NOW', 'FEAR DIES TODAY', 'CLAIM YOUR POWER', 'STOP ALL FEAR'],
+  peace: ['FIND YOUR PEACE', 'STOP THE ANXIETY', 'CALM YOUR MIND', 'QUIET YOUR SOUL'],
+  knowledge: ['SEE MORE CLEARLY', 'UNLOCK YOUR MIND', 'GAIN TRUE CLARITY', 'FOCUS RIGHT NOW'],
+  transformation: ['REBIRTH STARTS NOW', 'BREAK FREE TODAY', 'DESTROY OLD KARMA', 'YOUR NEW LIFE'],
 };
 
 const DEFAULT_BADGES: Record<IntentKey, string> = {
@@ -135,8 +135,9 @@ VIRAL PSYCHOLOGY (MOST IMPORTANT):
 - NOT: "This is spiritual content"
 - Text must trigger CURIOSITY, URGENCY, or a SPECIFIC OUTCOME
 - Never generic (no "DIVINE LOVE", "SACRED HEALING" — too calm, no click trigger)
-- Good examples: "OPEN HEART", "STOP PAIN", "FEEL LOVE", "RISE NOW", "BREAK FREE"
-- PROBLEM-SOLUTION pattern performs VERY well: pain point + instant promise ("STOP PAIN")
+- Good examples: "OPEN YOUR HEART", "STOP THE PAIN", "FEEL LOVE AGAIN", "RISE UP NOW", "BREAK FREE TODAY"
+- PROBLEM-SOLUTION pattern performs VERY well: pain point + instant promise ("STOP THE PAIN")
+- Hooks must be 3-5 words total (NOT just 2 words — more words = more viral + more context)
 
 STYLE — "Cinematic Divine Aura" (DEITY-COLORED, NOT ALWAYS GOLD):
 Cinematic Hyperreal Devotional with deity-faithful color palette.
@@ -149,10 +150,13 @@ Cinematic Hyperreal Devotional with deity-faithful color palette.
 CRITICAL COLOR RULE: Each deity has their own aura color. Shiva = electric blue. Hanuman = fiery orange-red. Durga = deep violet. Krishna = teal-blue. Kali = deep crimson. Saraswati = warm ivory. Use THEIR color for rim light, aura rings, energy, sparks — NOT gold for every deity. Gold is for Ganesha, Lakshmi, and Ram only.
 
 TEXT HIERARCHY RULE (v6 — MOST IMPORTANT TEXT CHANGE):
-- 2-LINE SPLIT: LINE 1 = command word (BIG, WHITE #FFFFFF, DOMINANT — 40-50% bigger than LINE 2). LINE 2 = emotion word (smaller, COLORED with intent accent).
+- Hook phrases must be 3-5 words total (NOT just 2 — more words = more viral + more compelling context).
+- 2-LINE SPLIT: Split the phrase roughly in half across 2 lines. LINE 1 = command/action part (BIG, WHITE #FFFFFF, DOMINANT — 30-40% bigger than LINE 2). LINE 2 = emotion/promise part (slightly smaller, COLORED with intent accent).
+- Examples: LINE 1 "STOP THE" + LINE 2 "PAIN NOW", LINE 1 "OPEN YOUR" + LINE 2 "HEART", LINE 1 "HEAL YOUR" + LINE 2 "BODY NOW".
 - LINE 2 COLORS: healing=RED #FF3B3B, power=ORANGE #FF6600, abundance=GOLD #FFD700, love=PINK #FF69B4, protection=BLUE #4D9FFF, transformation=RED #FF3B3B, peace=SOFT BLUE #B0D4F1, knowledge=GOLD #FFD700.
 - NEVER both lines same weight or same color. LINE 1 must visually DOMINATE.
 - Both lines need STRONG dark drop shadow.
+- Size the text slightly smaller than maximum to comfortably fit 3-5 words while keeping mobile readability.
 - Brain reads 2 steps = stronger impact than flat same-weight text.
 
 ${brandGuideMarkdown}
@@ -173,11 +177,14 @@ NON-NEGOTIABLE RULES:
 - AURA: Concentric sacred rings in DEITY'S OWN AURA COLOR. NOT always gold.
 - LIGHTING: Rim light in DEITY'S AURA COLOR from behind. High contrast. Eyes slightly brighter.
 - TEXT AREA: RIGHT side must be ULTRA-DARK EMPTY SPACE (pure visual silence). NO particles, NO glow, NO light interference behind text. Text sits in PITCH DARKNESS. Make darker than seems necessary.
-- TEXT HIERARCHY: 2-LINE SPLIT. LINE 1 = command word (BIG, WHITE, 40-50% bigger). LINE 2 = emotion word (smaller, COLORED with intent accent). BOTH lines have STRONG dark drop shadow. NEVER both lines same weight or same color.
+- TEXT LAYOUT (3 elements, all baked into image, RIGHT SIDE): (1) TOP: "THE SCHOOL OF MANTRAS" — tiny, white, semi-transparent, top area. (2) CENTER — MAIN HOOK: 2-line hierarchy, BIG and BOLD poster-style — LINE 1 = HUGE white command text, LINE 2 = LARGE colored emotion text. Must look impactful at mobile size, not small or subtle. (3) BOTTOM: "[Deity] Mantra · [108x/40 Days]" — small white text below the hook.
+- TEXT HIERARCHY: 3-5 words total, split across 2 lines. LINE 1 = command/action words (HUGE, BOLD, WHITE, 30-40% bigger). LINE 2 = emotion/promise words (LARGE but slightly smaller, BOLD, COLORED with intent accent). BOTH lines have STRONG dark drop shadow. NEVER both lines same weight or same color. Text must be BIG — poster-style impact, easily readable at thumbnail size.
 - MICRO-HOOK: Include ONE subtle visual trigger per variant: (A) energy from deity's hand, (B) glowing heart/chest, (C) light beam, (D) subtle third-eye glow, (E) faint energy pulse. Only ONE — just a HINT of energy.
 - CHARACTER FIDELITY: Preserve canonical attributes. NO mixing deities.
-- line1 AND line2 together form the 2-word hook. You MUST populate BOTH: line1 = command word (e.g. "STOP", "BREAK", "RISE", "OPEN", "HEAL"), line2 = emotion word (e.g. "PAIN", "FREE", "NOW", "HEART", "FEAR"). NEVER leave line2 empty — the 2-line hierarchy requires BOTH words. If the phrase is 3 words, put the first word in line1 and the remaining words in line2 (e.g. line1="ATTRACT", line2="WEALTH"). NEVER put the full phrase in line1 alone.
-- AVOID: generic/calm text, full body shots, gold for non-gold deities, particles behind text, glow in text area, light interference in text zone, center composition, similar-looking variants, same-weight text lines, both-lines-white, single-word hooks (always use 2-word split).
+- line1 AND line2 together form the 3-5 word hook phrase. You MUST populate BOTH: line1 = command/action words (the first half, e.g. "STOP THE", "OPEN YOUR", "HEAL YOUR", "RISE UP"). line2 = emotion/promise words (the second half, e.g. "PAIN NOW", "HEART", "BODY NOW", "TODAY"). NEVER leave line2 empty. NEVER use only 1-2 words total — the hook MUST be 3-5 words for maximum viral impact. Examples: line1="STOP THE" + line2="PAIN NOW", line1="FEEL LOVE" + line2="AGAIN", line1="BREAK FREE" + line2="TODAY".
+- badge = the deity tag line shown at the bottom (e.g. "Ganesh Mantra · 108x", "Shiva Mantra · 108x", "Hanuman Mantra · 40 Days"). Format: "[Deity Channel Name] Mantra · [suffix]".
+- schoolLabel = "THE SCHOOL OF MANTRAS" (shown tiny at top).
+- AVOID: generic/calm text, full body shots, gold for non-gold deities, particles behind text, glow in text area, light interference in text zone, center composition, similar-looking variants, same-weight text lines, both-lines-white, hooks shorter than 3 words (always use 3-5 words split across 2 lines).
 
 Return strict JSON only.`;
 
@@ -325,14 +332,20 @@ function buildAlignedSeoTitle(
   return normalizeTitle(withOutcome);
 }
 
+function buildDefaultBadge(deity: Deity, intent: Intent): string {
+  const deityName = getChannelDeityName(deity);
+  const suffix = DEFAULT_BADGES[intent.key] || '108x';
+  return `${deityName} Mantra · ${suffix}`;
+}
+
 function buildDefaultSpec(input: ThumbnailPrompt, intent: Intent, deity: Deity): ThumbnailCanvaSpec {
   const hookWord = uppercaseClean(ACTION_PROMISES[intent.key][0] ?? MANTRAS_BRAND_CONTEXT.hookWords[intent.key][0] ?? 'REMOVE OBSTACLES');
 
   return {
     hookWord,
     secondary: '',
-    badge: '',
-    schoolLabel: '',
+    badge: buildDefaultBadge(deity, intent),
+    schoolLabel: 'THE SCHOOL OF MANTRAS',
     seoTitle: buildDefaultSeoTitle(deity, intent),
     colors: getDefaultTextColors(intent, deity),
   };
@@ -350,7 +363,7 @@ function normalizeSpec(
   const rawLine2 = (parsedPlan.line2 || '').trim();
   const combinedPhrase = rawLine2 ? `${rawLine1} ${rawLine2}` : rawLine1;
   const rawPhrase = combinedPhrase || fallback.hookWord;
-  let hookWord = uppercaseClean(rawPhrase).split(/\s+/).slice(0, 3).join(' ');
+  let hookWord = uppercaseClean(rawPhrase).split(/\s+/).slice(0, 5).join(' ');
 
   if (hookWord.split(/\s+/).length < 2) {
     hookWord = fallback.hookWord;
@@ -364,11 +377,14 @@ function normalizeSpec(
       ? parsedSeoTitle
       : alignedSeoTitle;
 
+  const badgeText = (parsedPlan.badge || '').trim() || fallback.badge;
+  const schoolLabel = (parsedPlan.schoolLabel || '').trim() || fallback.schoolLabel;
+
   return {
     hookWord,
     secondary: '',
-    badge: '',
-    schoolLabel: '',
+    badge: badgeText,
+    schoolLabel,
     seoTitle: finalSeoTitle || fallback.seoTitle || input.title,
     colors: {
       hook: parsedPlan.colors?.line1?.trim() || fallback.colors.hook,
@@ -399,7 +415,19 @@ function buildDefaultSpecialInstruction(deity: Deity, intent: Intent): string {
   ].join(', ');
 }
 
+function formatHookAs2LineSplit(phrase: string): string {
+  const w = phrase.split(/\s+/);
+  if (w.length < 2) return `line1="${w[0]}" + line2="NOW"`;
+  const splitAt = Math.ceil(w.length / 2);
+  return `line1="${w.slice(0, splitAt).join(' ')}" + line2="${w.slice(splitAt).join(' ')}"`;
+}
+
 function buildPromptBrief(input: ThumbnailPrompt, intent: Intent, deity: Deity) {
+  const hookSplits = ACTION_PROMISES[intent.key]
+    .map((phrase) => formatHookAs2LineSplit(phrase))
+    .join(' | ');
+  const line2Color = LINE2_COLOR_BY_INTENT[intent.key] || '#FF3B3B';
+
   return [
     `Existing video title or working title: ${input.title.trim()}`,
     `Selected deity: ${input.deity.trim()}`,
@@ -409,8 +437,20 @@ function buildPromptBrief(input: ThumbnailPrompt, intent: Intent, deity: Deity) 
     `Deity signature: ${deity.visualSignature}`,
     `Deity aura reference: ${resolveAuraPrompt(deity, intent, resolveAuraColor(deity, intent))}`,
     input.special?.trim() ? `Special instruction or badge hint: ${input.special.trim()}` : null,
-    `Allowed viral hook words: ${intent.hookWords.join(', ')}`,
-    `Action promise options: ${ACTION_PROMISES[intent.key].join(', ')}`,
+    `Allowed viral hook phrases (ALWAYS 3-5 words): ${intent.hookWords.join(', ')}`,
+    `Action promise options (ALWAYS 3-5 words): ${ACTION_PROMISES[intent.key].join(', ')}`,
+    ``,
+    `CRITICAL — 3-5 WORD SPLIT FORMAT (you MUST follow this):`,
+    `The hook must be 3-5 words total. Split roughly in half across line1 and line2.`,
+    `line1 = the COMMAND/ACTION part (first half). line2 = the EMOTION/PROMISE part (second half).`,
+    `Example splits: ${hookSplits}`,
+    `NEVER use fewer than 3 words total. NEVER leave line2 empty. ALWAYS split across both fields.`,
+    `More words = more viral + more compelling context. Don't cut words short.`,
+    `LINE 2 COLOR for this intent: ${line2Color}`,
+    ``,
+    `BADGE (bottom tag line): "${getChannelDeityName(deity)} Mantra · ${DEFAULT_BADGES[intent.key]}"`,
+    `SCHOOL LABEL (top): "THE SCHOOL OF MANTRAS"`,
+    `TEXT STYLE: BIG and BOLD — poster-style impact. The main hook text must be HUGE, easily readable at mobile thumbnail size.`,
   ]
     .filter(Boolean)
     .join('\n');
@@ -495,44 +535,70 @@ function normalizeVariantPrompts(
 
   let finalPhrase = mainPhrase;
   if (mainPhrase.split(/\s+/).length < 2) {
-    const fallbackPhrase = ACTION_PROMISES[intent.key]?.[0] || 'STOP PAIN';
+    const fallbackPhrase = ACTION_PROMISES[intent.key]?.[0] || 'STOP THE PAIN';
     finalPhrase = fallbackPhrase;
   }
 
   const words = finalPhrase.split(/\s+/);
-  const hookWord = words[0];
-  const restWords = words.slice(1).join(' ');
+  const splitAt = Math.ceil(words.length / 2);
+  const line1Words = words.slice(0, splitAt).join(' ');
+  const line2Words = words.slice(splitAt).join(' ');
   const line2Color = LINE2_COLOR_BY_INTENT[intent.key] || '#FF3B3B';
   const deityAuraColorName = deity.auraStyle?.match(/^dramatic\s+([\w\s-]+)\s+concentric/i)?.[1]?.trim() || 'deity-colored';
 
-  const textHierarchy = `2-LINE TEXT HIERARCHY: LINE 1 "${hookWord}" = DOMINANT, WHITE #FFFFFF, 40-50% BIGGER than LINE 2, bold condensed, STRONG dark drop shadow. LINE 2 "${restWords}" = smaller, COLORED ${line2Color}, bold condensed, STRONG dark drop shadow. "${hookWord}" on one line, "${restWords}" on the next line, stacked vertically, right-aligned or center-right. NEVER render both lines the same size or same color — LINE 1 must visually DOMINATE. This creates reading hierarchy: brain reads command first, then emotional hook = stronger impact.`;
+  const badgeText = spec.badge || buildDefaultBadge(deity, intent);
+  const schoolLabel = spec.schoolLabel || 'THE SCHOOL OF MANTRAS';
+
+  const textLayout = `COMPLETE TEXT LAYOUT (3 elements, all baked into image, RIGHT SIDE): ` +
+    `(1) TOP: "${schoolLabel}" — tiny, white, semi-transparent, top-right area. ` +
+    `(2) CENTER — MAIN HOOK (BIGGEST, MOST IMPORTANT): 2-LINE HIERARCHY: ` +
+    `LINE 1 "${line1Words}" = HUGE, BOLD, EXTRA-THICK condensed white (#FFFFFF) letters, STRONG dark drop shadow, fills significant width of the right side. ` +
+    `LINE 2 "${line2Words}" = LARGE but slightly smaller than LINE 1, BOLD condensed COLORED ${line2Color} letters, STRONG dark drop shadow. ` +
+    `"${line1Words}" on top line, "${line2Words}" below it, stacked vertically. LINE 1 must be 30-40% BIGGER than LINE 2. ` +
+    `Text must be BIG and BOLD — filling a large portion of the right side, easily readable at mobile thumbnail size. Think poster-style impact, not subtle. ` +
+    `(3) BOTTOM: "${badgeText}" — small white text, 22pt equivalent, below the main hook, subtle but readable. ` +
+    `NEVER render both hook lines the same size or same color. LINE 1 must visually DOMINATE.`;
 
   const baseInstructions =
-    `CRITICAL TEXT REQUIREMENT: This image MUST contain the text "${finalPhrase}" as a 2-LINE HIERARCHY on the RIGHT side of the image using this layout: ${textHierarchy} Use proportional sizing — large enough to read at small sizes but NOT so large it fills the entire right half. This is the most important element after the deity. ` +
+    `CRITICAL TEXT REQUIREMENT: This image MUST contain ALL 3 text elements baked into the RIGHT side: ${textLayout} ` +
     `YouTube thumbnail, exactly 1280x720, 16:9 horizontal. Style: "Cinematic Divine Aura" — cinematic hyperreal devotional with DEITY-FAITHFUL color palette. ` +
     `LEFT 40-45%: ${input.deity} EXTREME close-up (10-15% TIGHTER than default), face + ONE blessing hand ONLY. NO lower body. Face fills 75-80%+ of left zone. Eyes LARGE, BRIGHT, and LUMINOUS at mobile size. ${deity.visualSignature.split(',').slice(0, 4).join(',')}. ` +
     `4 VISUAL SYSTEMS: (1) CINEMATIC LIGHTING: strong ${deityAuraColorName} rim light (${auraColor}), glow bloom, extreme contrast, eyes slightly brighter/luminous. (2) DIVINE ENERGY: ${deityAuraColorName} concentric ring halo with ${auraPrompt}, ${deityAuraColorName} sparks and energy. (3) MATERIAL REALISM: reflective metal textures on ornaments, jewelry depth, shadow realism. (4) EMOTIONAL FACE: EXTREME close-up (75-80%+ fill), eyes DOMINANT and BRIGHT, expression matching intent mood, human-like skin texture. ` +
     `BACKGROUND: deep dark gradient, ${deityAuraColorName} energy effects — swirling fire/embers/sparks in ${auraColor} hues. No architecture. ` +
-    `RIGHT 55-60%: ULTRA-DARK EMPTY SPACE (pure visual silence). ${textHierarchy} NO particles behind text. NO glow bleed. NO light interference. Text sits in PITCH DARKNESS — make it DARKER than seems necessary. ` +
-    `No extra text, no logos, no watermarks, no badges. No center composition.`;
+    `RIGHT 55-60%: ULTRA-DARK EMPTY SPACE behind text. ${textLayout} NO particles behind text. NO glow bleed. NO light interference. Text sits on PITCH DARK background for maximum contrast. ` +
+    `No center composition. The text must look BOLD and IMPACTFUL like a movie poster — not small or subtle.`;
 
   const variantDirectives = [
-    `Variant 1 — EMOTIONAL: ${textHierarchy} ${deityAuraColorName} sacred ring halo. Micro-hook visual trigger: subtle light/energy emanating from deity's blessing hand toward viewer, OR a faint third-eye glow. Face expressive, eyes bright and dominant. ULTRA-DARK text area.`,
-    `Variant 2 — INTENSE: ${textHierarchy} Bigger ${deityAuraColorName} rings, more sparks. Micro-hook visual trigger: subtle glowing element in deity's chest/heart area, OR faint energy pulse around head. More dramatic lighting, fiercer expression, higher contrast. Eyes intense and luminous. ULTRA-DARK text area.`,
+    `Variant 1 — EMOTIONAL: ${textLayout} ${deityAuraColorName} sacred ring halo. Micro-hook visual trigger: subtle light/energy emanating from deity's blessing hand toward viewer, OR a faint third-eye glow. Face expressive, eyes bright and dominant. ULTRA-DARK text area.`,
+    `Variant 2 — INTENSE: ${textLayout} Bigger ${deityAuraColorName} rings, more sparks. Micro-hook visual trigger: subtle glowing element in deity's chest/heart area, OR faint energy pulse around head. More dramatic lighting, fiercer expression, higher contrast. Eyes intense and luminous. ULTRA-DARK text area.`,
   ];
+
+  const textReinforcement = `FINAL REMINDER — THE IMAGE MUST SHOW ALL 3 TEXT ELEMENTS: (1) "${schoolLabel}" tiny at top, (2) LINE 1 "${line1Words}" HUGE WHITE + LINE 2 "${line2Words}" LARGE ${line2Color} as the dominant center text, (3) "${badgeText}" small at bottom. Text must be BIG and BOLD — poster-style impact.`;
+
+  const sanitizeAiPrompt = (raw: string): string => {
+    return raw
+      .replace(/\btext\s*[:=]\s*"[^"]*"/gi, '')
+      .replace(/\bsingle[- ]line\b/gi, '2-line hierarchy')
+      .replace(/\s+/g, ' ')
+      .trim();
+  };
 
   const normalized = prompts
     .slice(0, 2)
-    .map((prompt, index) =>
-      `${baseInstructions} ${variantDirectives[index] ?? ''} ${prompt}`.replace(/\s+/g, ' ').trim().slice(0, 2800)
-    );
+    .map((prompt, index) => {
+      const cleaned = sanitizeAiPrompt(prompt);
+      return `${baseInstructions} ${variantDirectives[index] ?? ''} ${cleaned} ${textReinforcement}`
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 3200);
+    });
 
   while (normalized.length < 2) {
     normalized.push(
-      `${baseInstructions} ${variantDirectives[normalized.length]}`
+      `${baseInstructions} ${variantDirectives[normalized.length]} ${textReinforcement}`
         .replace(/\s+/g, ' ')
         .trim()
-        .slice(0, 2800)
+        .slice(0, 3200)
     );
   }
 
@@ -765,14 +831,21 @@ export async function generateThumbnailPlan(prompt: ThumbnailPrompt): Promise<Th
         type: Type.OBJECT,
         properties: {
           templateId: { type: Type.STRING },
-          line1: { type: Type.STRING },
-          line2: { type: Type.STRING },
+          line1: {
+            type: Type.STRING,
+            description: 'The COMMAND/ACTION part (first half of the 3-5 word hook). Examples: "STOP THE", "OPEN YOUR", "HEAL YOUR", "RISE UP", "BREAK FREE", "ATTRACT YOUR". Can be 1-3 words. This becomes LINE 1 (BIG, WHITE, DOMINANT).',
+          },
+          line2: {
+            type: Type.STRING,
+            description: 'The EMOTION/PROMISE part (second half of the 3-5 word hook). Examples: "PAIN NOW", "HEART", "BODY NOW", "TODAY", "AGAIN", "WEALTH". Can be 1-3 words. MUST NOT be empty. This becomes LINE 2 (smaller, COLORED).',
+          },
           badge: { type: Type.STRING },
           schoolLabel: { type: Type.STRING },
           seoTitle: { type: Type.STRING },
           variantPrompts: {
             type: Type.ARRAY,
             items: { type: Type.STRING },
+            description: 'Exactly 2 image generation prompts. Each prompt MUST reference ALL words from line1 and line2 as a 2-LINE TEXT HIERARCHY (line1 part = BIG WHITE, line2 part = smaller COLORED). NEVER shorten or omit any words from the hook phrase.',
           },
           colors: {
             type: Type.OBJECT,
