@@ -1,8 +1,15 @@
 import hooksData from './hooks.json';
+import { buildSobRenderSpec } from './renderSpec';
+import type { SobRenderSpec } from './renderSpec';
 import styleData from './style.json';
 import topicsData from './topics.json';
 import { getAbhiReferenceImageUrls, ABHI_REFERENCE_IMAGES, filterAbhiReferencesByTags } from './abhiReferences';
-import { buildSobBasePrompt, buildSobPromptVariants } from './promptBuilder';
+import {
+  buildSobBasePrompt,
+  buildSobBasePromptFromRenderSpec,
+  buildSobPromptVariants,
+  buildSobPromptVariantsFromRenderSpec,
+} from './promptBuilder';
 import { DEFAULT_SOB_VARIANT_COUNT, getSobVariantPrompts } from './variants';
 import { validateSobInput } from './validator';
 import {
@@ -30,7 +37,15 @@ const hooks = hooksData as {
   };
 };
 
-export type { SobMode, SobPromptContext, SobPromptInput, SobTopicConfig, SobTopicKey, SobVariant };
+export type {
+  SobMode,
+  SobPromptContext,
+  SobPromptInput,
+  SobRenderSpec,
+  SobTopicConfig,
+  SobTopicKey,
+  SobVariant,
+};
 
 export function getSobStyle(): SobStyleConfig {
   return style;
@@ -84,6 +99,9 @@ export function getSobPromptContext(topic: SobTopicKey): SobPromptContext {
 
 export {
   ABHI_REFERENCE_IMAGES,
+  buildSobBasePromptFromRenderSpec,
+  buildSobPromptVariantsFromRenderSpec,
+  buildSobRenderSpec,
   getAbhiReferenceImageUrls,
   filterAbhiReferencesByTags,
   buildSobBasePrompt,

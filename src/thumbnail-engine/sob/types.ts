@@ -76,6 +76,8 @@ export interface SobPromptInput {
   topic: SobTopicKey;
   mode: SobMode;
   hook: string;
+  topStripOverride?: string;
+  ctaOverride?: string;
   specialNote?: string;
 }
 

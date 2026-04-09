@@ -214,6 +214,7 @@ function buildSpecText(draft: ThumbnailDraft): string {
     `MODE: ${sob?.mode ?? ''}`,
     `HOOK: ${draft.canvaSpec.hookWord}`,
     `TOP LINE: ${sob?.topLine ?? ''}`,
+    `CTA: ${sob?.bottomStrip ?? draft.canvaSpec.ctaText ?? ''}`,
     `SUPPORT VISUAL: ${sob?.supportVisual ?? ''}`,
     `VISUAL BADGE: ${sob?.visualBadgeType ?? ''}`,
     `CHARACTER POSE: ${sob?.characterPose ?? ''}`,
@@ -256,12 +257,8 @@ export default function SchoolOfBreathThumbnailsTab({
 
   const topicMeta = useMemo(() => getSchoolOfBreathTopicMeta(input.topic), [input.topic]);
   const hookOptions = useMemo(() => getSchoolOfBreathHookOptions(input.topic), [input.topic]);
-
-  useEffect(() => {
-    if (!hookOptions.includes(input.hook)) {
-      setInput((prev) => ({ ...prev, hook: hookOptions[0] }));
-    }
-  }, [hookOptions, input.hook]);
+  const effectiveTopStrip = (input.topStripOverride?.trim() || topicMeta.topLine).toUpperCase();
+  const effectiveCta = (input.ctaOverride?.trim() || topicMeta.cta).toUpperCase();
 
   useEffect(() => {
     if (!initialPrompt) return;
@@ -375,6 +372,17 @@ export default function SchoolOfBreathThumbnailsTab({
     const sob = draft.prompt.schoolOfBreath;
     const topic = sob?.category && isSchoolOfBreathTopic(sob.category) ? sob.category : fallback.topic;
     const hookOptionsForTopic = getSchoolOfBreathHookOptions(topic);
+    const topicMetaForRegen = getSchoolOfBreathTopicMeta(topic);
+    const topStripOverride =
+      sob?.topLine &&
+      sob.topLine.trim().toUpperCase() !== topicMetaForRegen.topLine.trim().toUpperCase()
+        ? sob.topLine
+        : '';
+    const ctaOverride =
+      sob?.bottomStrip &&
+      sob.bottomStrip.trim().toUpperCase() !== topicMetaForRegen.cta.trim().toUpperCase()
+        ? sob.bottomStrip
+        : '';
 
     const regenerateInput: SchoolOfBreathThumbnailInput = {
       title: draft.prompt.title,
@@ -384,6 +392,8 @@ export default function SchoolOfBreathThumbnailsTab({
           ? sob.mode
           : fallback.mode,
       hook: draft.canvaSpec.hookWord || hookOptionsForTopic[0],
+      topStripOverride,
+      ctaOverride,
       specialNote: draft.prompt.special || '',
     };
 
@@ -604,8 +614,23 @@ export default function SchoolOfBreathThumbnailsTab({
                           {sob?.topLine || 'Pending'}
                         </p>
                         <p>
+                          <span className="font-semibold text-stone-900">CTA:</span>{' '}
+                          {sob?.bottomStrip || draft.canvaSpec.ctaText || draftTopicMeta.cta || 'Pending'}
+                        </p>
+                        <p>
                           <span className="font-semibold text-stone-900">Support Visual:</span>{' '}
                           {sob?.supportVisual || draftTopicMeta.supportVisual || 'Pending'}
+                        </p>
+                        <p>
+                          <span className="font-semibold text-stone-900">Background Theme:</span>{' '}
+                          {(draft.canvaSpec.backgroundTheme || draftTopicMeta.backgroundTheme || 'Pending').replace(
+                            /_/g,
+                            ' '
+                          )}
+                        </p>
+                        <p>
+                          <span className="font-semibold text-stone-900">Character Pose:</span>{' '}
+                          {draft.canvaSpec.characterPose || sob?.characterPose || 'n/a (support visual mode)'}
                         </p>
                         <p>
                           <span className="font-semibold text-stone-900">SEO Title:</span>{' '}
@@ -722,6 +747,8 @@ export default function SchoolOfBreathThumbnailsTab({
                             topic,
                             mode: prev.mode,
                             hook: hooks[0],
+                            topStripOverride: '',
+                            ctaOverride: '',
                           }));
                         }}
                         className="w-full px-4 py-3 rounded-xl border border-stone-200 bg-white text-stone-800 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400"
@@ -785,9 +812,9 @@ export default function SchoolOfBreathThumbnailsTab({
                     </div>
 
                     <HookPreview
-                      topLine={topicMeta.topLine}
+                      topLine={effectiveTopStrip}
                       hook={input.hook}
-                      cta={topicMeta.cta}
+                      cta={effectiveCta}
                       accent={topicMeta.accent}
                       mode={input.mode}
                       characterSide={topicMeta.characterSide}
@@ -857,6 +884,31 @@ export default function SchoolOfBreathThumbnailsTab({
                         />
                         <p className="text-xs text-stone-500">
                           Approved hooks above are primary. Override only when needed.
+                        </p>
+
+                        <label className="text-sm font-medium text-stone-800 mt-3 block">
+                          Top Strip Override
+                        </label>
+                        <input
+                          value={input.topStripOverride ?? ''}
+                          onChange={(e) =>
+                            setInput((prev) => ({ ...prev, topStripOverride: e.target.value.toUpperCase() }))
+                          }
+                          placeholder={topicMeta.topLine}
+                          className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 font-bold uppercase focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400"
+                        />
+
+                        <label className="text-sm font-medium text-stone-800 mt-3 block">CTA Override</label>
+                        <input
+                          value={input.ctaOverride ?? ''}
+                          onChange={(e) =>
+                            setInput((prev) => ({ ...prev, ctaOverride: e.target.value.toUpperCase() }))
+                          }
+                          placeholder={topicMeta.cta}
+                          className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 font-bold uppercase focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400"
+                        />
+                        <p className="text-xs text-stone-500">
+                          Leave blank to use topic defaults.
                         </p>
                       </div>
                     </details>
@@ -953,6 +1005,20 @@ export default function SchoolOfBreathThumbnailsTab({
                           />
                           <div className="space-y-1.5 text-sm text-stone-700">
                             <p>
+                              <span className="font-semibold text-stone-900">Top Strip Text:</span>{' '}
+                              {previewPlan.prompt.schoolOfBreath?.topLine ?? topicMeta.topLine}
+                            </p>
+                            <p>
+                              <span className="font-semibold text-stone-900">Hook Text:</span>{' '}
+                              {previewPlan.canvaSpec.hookWord}
+                            </p>
+                            <p>
+                              <span className="font-semibold text-stone-900">CTA Text:</span>{' '}
+                              {previewPlan.prompt.schoolOfBreath?.bottomStrip ??
+                                previewPlan.canvaSpec.ctaText ??
+                                topicMeta.cta}
+                            </p>
+                            <p>
                               <span className="font-semibold text-stone-900">Support Visual:</span>{' '}
                               {previewPlan.prompt.schoolOfBreath?.supportVisual ?? topicMeta.supportVisual}
                             </p>
@@ -962,6 +1028,11 @@ export default function SchoolOfBreathThumbnailsTab({
                                 previewPlan.prompt.schoolOfBreath?.backgroundStyle ??
                                 topicMeta.backgroundTheme
                               ).replace(/_/g, ' ')}
+                            </p>
+                            <p>
+                              <span className="font-semibold text-stone-900">Character Pose:</span>{' '}
+                              {previewPlan.prompt.schoolOfBreath?.characterPose ||
+                                'n/a (support visual mode)'}
                             </p>
                           </div>
                         </div>

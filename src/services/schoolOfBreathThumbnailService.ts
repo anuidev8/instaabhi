@@ -1,6 +1,8 @@
 import { GoogleGenAI } from '@google/genai';
 import {
   DEFAULT_SOB_VARIANT_COUNT,
+  buildSobPromptVariantsFromRenderSpec,
+  buildSobRenderSpec,
   getAbhiReferenceImageUrls,
   getSobDefaultMode,
   getSobDefaultTopic,
@@ -8,12 +10,12 @@ import {
   isSobHookChannelProven,
   getSobPromptContext,
   getSobTopics,
-  getSobVariantPrompts,
   getSobTopicConfig,
   SobMode,
   SobTopicKey,
   validateSobInput,
 } from '../thumbnail-engine/sob';
+import type { SobRenderSpec } from '../thumbnail-engine/sob';
 import { IntentKey, ThumbnailCanvaSpec, ThumbnailDraft, ThumbnailPrompt } from '../types';
 
 const GEMINI_API_KEY =
@@ -42,6 +44,8 @@ export interface SchoolOfBreathThumbnailInput {
   topic: SobTopicKey;
   mode: SobMode;
   hook: string;
+  topStripOverride?: string;
+  ctaOverride?: string;
   specialNote?: string;
 }
 
@@ -117,6 +121,8 @@ export function getSchoolOfBreathDefaultInput(): SchoolOfBreathThumbnailInput {
     topic,
     mode: getSobDefaultMode(topic),
     hook: hooks[0],
+    topStripOverride: '',
+    ctaOverride: '',
     specialNote: '',
   };
 }
@@ -181,13 +187,37 @@ export async function suggestSchoolOfBreathInput(params: {
   };
 }
 
-function buildCanvaSpec(input: SchoolOfBreathThumbnailInput): ThumbnailCanvaSpec {
+function buildRenderSpec(
+  input: SchoolOfBreathThumbnailInput,
+  context = getSobPromptContext(input.topic)
+): SobRenderSpec {
+  return buildSobRenderSpec(
+    {
+      title: input.title,
+      topic: input.topic,
+      mode: input.mode,
+      hook: input.hook,
+      topStripOverride: input.topStripOverride,
+      ctaOverride: input.ctaOverride,
+      specialNote: input.specialNote,
+    },
+    context,
+    {
+      isChannelProvenHook: isSobHookChannelProven(input.hook),
+    }
+  );
+}
+
+function buildCanvaSpec(
+  input: SchoolOfBreathThumbnailInput,
+  renderSpec: SobRenderSpec
+): ThumbnailCanvaSpec {
   const topic = getSobTopicConfig(input.topic);
 
   return {
-    hookWord: input.hook.toUpperCase(),
-    secondary: topic.cta,
-    badge: topic.cta,
+    hookWord: renderSpec.mainHookText,
+    secondary: renderSpec.ctaText,
+    badge: renderSpec.visualBadgeType,
     schoolLabel: 'THE SCHOOL OF BREATH',
     seoTitle: buildSuggestedTitle({
       topic: input.topic,
@@ -200,35 +230,45 @@ function buildCanvaSpec(input: SchoolOfBreathThumbnailInput): ThumbnailCanvaSpec
       secondary: '#FFFFFF',
       brand: '#FFD400',
       badge: '#FFFFFF',
-      aura: '#000000',
+      aura: topic.accent,
     },
+    topStripText: renderSpec.topStripText,
+    ctaText: renderSpec.ctaText,
+    supportVisual: renderSpec.supportVisual,
+    backgroundTheme: renderSpec.backgroundTheme,
+    visualBadgeType: renderSpec.visualBadgeType,
+    characterPose: renderSpec.characterPose,
+    subjectType: renderSpec.subjectType,
   };
 }
 
-function buildThumbnailPrompt(input: SchoolOfBreathThumbnailInput): ThumbnailPrompt {
-  const topic = getSobTopicConfig(input.topic);
-
+function buildThumbnailPrompt(input: SchoolOfBreathThumbnailInput, renderSpec: SobRenderSpec): ThumbnailPrompt {
   return {
     title: input.title.trim(),
-    deity: input.mode === 'with_character' ? 'Abhi' : 'No Character',
+    deity: renderSpec.subjectType === 'abhi' ? 'Abhi' : 'No Character',
     intent: TOPIC_TO_INTENT[input.topic],
     brand: 'school_of_breath',
-    line1: input.hook,
-    line2: topic.cta,
-    badge: topic.cta,
+    line1: renderSpec.mainHookText,
+    line2: renderSpec.ctaText,
+    badge: renderSpec.visualBadgeType,
     special: input.specialNote?.trim() || undefined,
     schoolOfBreath: {
-      mode: input.mode,
+      mode: renderSpec.mode,
       category: input.topic,
       hookFamily: buildHookFamily(input.hook, input.topic),
-      topLine: topic.topLine,
-      bottomStrip: topic.cta,
-      supportVisual: topic.supportVisual,
-      colorEmphasis: topic.accent,
-      backgroundStyle: `${topic.backgroundTheme} | ${topic.textSide}-text-${topic.characterSide}-visual`,
-      visualBadgeType: topic.visualBadgeType,
-      arrowAllowed: topic.arrowAllowed,
-      characterPose: topic.characterPose,
+      layoutPreset: renderSpec.layoutPreset,
+      subjectType: renderSpec.subjectType,
+      textSide: renderSpec.textSide,
+      subjectSide: renderSpec.subjectSide,
+      topLine: renderSpec.topStripText,
+      bottomStrip: renderSpec.ctaText,
+      supportVisual: renderSpec.supportVisual,
+      colorEmphasis: renderSpec.accentColor,
+      backgroundStyle: renderSpec.backgroundTheme,
+      visualBadgeType: renderSpec.visualBadgeType,
+      arrowAllowed: renderSpec.arrowAllowed,
+      characterPose: renderSpec.characterPose,
+      isChannelProvenHook: renderSpec.isChannelProvenHook,
     },
   };
 }
@@ -241,6 +281,8 @@ export async function generateSchoolOfBreathThumbnailPlan(
     topic: input.topic,
     mode: input.mode,
     hook: input.hook.trim().toUpperCase(),
+    topStripOverride: input.topStripOverride?.trim() || undefined,
+    ctaOverride: input.ctaOverride?.trim() || undefined,
     specialNote: input.specialNote?.trim() || undefined,
   };
 
@@ -251,6 +293,8 @@ export async function generateSchoolOfBreathThumbnailPlan(
       topic: normalizedInput.topic,
       mode: normalizedInput.mode,
       hook: normalizedInput.hook,
+      topStripOverride: normalizedInput.topStripOverride,
+      ctaOverride: normalizedInput.ctaOverride,
       specialNote: normalizedInput.specialNote,
     },
     context
@@ -260,34 +304,32 @@ export async function generateSchoolOfBreathThumbnailPlan(
     throw new Error(validation.errors.join('\n'));
   }
 
-  const generationPrompts = getSobVariantPrompts(
-    {
-      title: normalizedInput.title,
-      topic: normalizedInput.topic,
-      mode: normalizedInput.mode,
-      hook: normalizedInput.hook,
-      specialNote: normalizedInput.specialNote,
-    },
-    context,
+  const renderSpec = buildRenderSpec(normalizedInput, context);
+  const generationPrompts = buildSobPromptVariantsFromRenderSpec(
+    renderSpec,
     DEFAULT_SOB_VARIANT_COUNT
-  );
+  ).map((variant) => variant.prompt);
 
   return {
     id: crypto.randomUUID(),
     status: 'draft',
-    prompt: buildThumbnailPrompt(normalizedInput),
+    prompt: buildThumbnailPrompt(normalizedInput, renderSpec),
     baseImages: [],
-    canvaSpec: buildCanvaSpec(normalizedInput),
+    canvaSpec: buildCanvaSpec(normalizedInput, renderSpec),
     createdAt: new Date(),
     generationPrompts,
     templateId: `sob-lightweight-${normalizedInput.mode}-v1`,
     validationSummary: [
       ...validation.warnings,
       `Flow: topic=${normalizedInput.topic} mode=${normalizedInput.mode} hook=${normalizedInput.hook}`,
-      `Background theme: ${context.topic.backgroundTheme}`,
-      `Support visual: ${context.topic.supportVisual}`,
-      `Character pose: ${context.topic.characterPose}`,
-      `Visual badge: ${context.topic.visualBadgeType}`,
+      `Render spec: preset=${renderSpec.layoutPreset} subjectType=${renderSpec.subjectType}`,
+      `Top strip: ${renderSpec.topStripText}`,
+      `CTA: ${renderSpec.ctaText}`,
+      `Background theme: ${renderSpec.backgroundTheme}`,
+      `Support visual: ${renderSpec.supportVisual}`,
+      `Character pose: ${renderSpec.characterPose || 'n/a (support visual mode)'}`,
+      `Visual badge: ${renderSpec.visualBadgeType}`,
+      `Channel-proven hook: ${renderSpec.isChannelProvenHook ? 'yes' : 'no'}`,
     ],
   };
 }

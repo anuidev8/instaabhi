@@ -17,6 +17,20 @@ export function validateSobInput(input: SobPromptInput, context: SobPromptContex
     errors.push(`Hook must be between 2 and ${context.style.text.maxWords} words.`);
   }
 
+  if (input.topStripOverride?.trim()) {
+    const topStripWords = words(input.topStripOverride);
+    if (topStripWords.length > 5) {
+      errors.push('Top strip override must be 5 words or fewer.');
+    }
+  }
+
+  if (input.ctaOverride?.trim()) {
+    const ctaWords = words(input.ctaOverride);
+    if (ctaWords.length > 4) {
+      errors.push('CTA override must be 4 words or fewer.');
+    }
+  }
+
   if (input.mode === 'without_character' && /\b(abhi|man|woman|person|face|portrait)\b/i.test(input.hook)) {
     warnings.push('Hook mentions a person while mode is without character.');
   }

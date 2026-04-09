@@ -257,6 +257,10 @@ export interface SchoolOfBreathSettings {
   mode: SchoolOfBreathMode;
   category: SchoolOfBreathCategory;
   hookFamily: SchoolOfBreathHookFamily;
+  layoutPreset?: 'sob-channel-hard-stack';
+  subjectType?: 'abhi' | 'support_visual';
+  textSide?: 'left' | 'right';
+  subjectSide?: 'left' | 'right';
   topLine?: string;
   bottomStrip?: string;
   supportVisual?: string;
@@ -265,6 +269,7 @@ export interface SchoolOfBreathSettings {
   visualBadgeType?: string;
   arrowAllowed?: boolean;
   characterPose?: string;
+  isChannelProvenHook?: boolean;
 }
 
 export type IntentKey =
@@ -320,6 +325,13 @@ export interface ThumbnailCanvaSpec {
     badge?: string;
     aura?: string;
   };
+  topStripText?: string;
+  ctaText?: string;
+  supportVisual?: string;
+  backgroundTheme?: string;
+  visualBadgeType?: string;
+  characterPose?: string;
+  subjectType?: 'abhi' | 'support_visual';
 }
 
 export type ThumbnailDraftStatus = 'draft' | 'generating' | 'ready' | 'error';

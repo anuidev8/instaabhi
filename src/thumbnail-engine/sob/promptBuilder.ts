@@ -1,21 +1,6 @@
+import { buildSobRenderSpec } from './renderSpec';
+import type { SobRenderSpec } from './renderSpec';
 import { SobPromptContext, SobPromptInput, SobVariant } from './types';
-
-interface SobRenderSlots {
-  brand: string;
-  topic: string;
-  mode: SobPromptInput['mode'];
-  topLine: string;
-  mainHook: string;
-  cta: string;
-  supportVisual: string;
-  characterSide: 'left' | 'right';
-  textSide: 'left' | 'right';
-  backgroundTheme: string;
-  accentColor: string;
-  visualBadgeType: string;
-  arrowAllowed: boolean;
-  characterPose: string;
-}
 
 function getBackgroundMatchRules(backgroundTheme: string): string[] {
   const theme = backgroundTheme.toLowerCase();
@@ -37,7 +22,7 @@ function getBackgroundMatchRules(backgroundTheme: string): string[] {
   if (theme.includes('fire')) {
     return [
       '- Match a volcanic fire scene: flame walls, lava heat, dark rock contrast.',
-      '- Keep orange/red heat intensity high and clearly visible behind the subject/visual zone.',
+      '- Keep orange/red heat intensity high and clearly visible behind the subject/support zone.',
     ];
   }
 
@@ -61,29 +46,11 @@ function getBackgroundMatchRules(backgroundTheme: string): string[] {
   ];
 }
 
-function toSlots(input: SobPromptInput, context: SobPromptContext): SobRenderSlots {
-  return {
-    brand: context.style.brand,
-    topic: context.topic.label,
-    mode: input.mode,
-    topLine: context.topic.topLine,
-    mainHook: input.hook,
-    cta: context.topic.cta,
-    supportVisual: context.topic.supportVisual,
-    characterSide: context.topic.characterSide,
-    textSide: context.topic.textSide,
-    backgroundTheme: context.topic.backgroundTheme,
-    accentColor: context.topic.accent,
-    visualBadgeType: context.topic.visualBadgeType,
-    arrowAllowed: context.topic.arrowAllowed,
-    characterPose: context.topic.characterPose,
-  };
-}
+function buildSobRenderPrompt(spec: SobRenderSpec): string {
+  const backgroundMatchRules = getBackgroundMatchRules(spec.backgroundTheme);
 
-function buildSobRenderPrompt(slots: SobRenderSlots): string {
-  const backgroundMatchRules = getBackgroundMatchRules(slots.backgroundTheme);
   const modeRules =
-    slots.mode === 'with_character'
+    spec.subjectType === 'abhi'
       ? [
           'MODE RULES:',
           '- WITH CHARACTER mode.',
@@ -92,90 +59,80 @@ function buildSobRenderPrompt(slots: SobRenderSlots): string {
           '- Preserve exact Abhi face identity.',
           '- Preserve mature Indian male teacher appearance.',
           '- Keep Abhi in a seated or breath-teaching pose.',
-          `- Required pose guidance: ${slots.characterPose}.`,
-          `- Place Abhi on the ${slots.characterSide} 40-45% zone with natural body proportions.`,
-          '- No fashion portrait look, no generic guru look, no ad-poster portrait style.',
+          `- Required pose guidance: ${spec.characterPose || 'seated breath teacher pose'}.`,
+          `- Place Abhi on the ${spec.subjectSide} 40-45% zone with natural body proportions.`,
+          '- Not a fashion portrait, not a sticker cutout, not a generic guru.',
         ]
       : [
           'MODE RULES:',
           '- WITHOUT CHARACTER mode.',
           '- No human subject, no face, no silhouette, no body parts.',
-          `- The ${slots.characterSide} 40-45% zone is a SUPPORT VISUAL ZONE (not empty).`,
+          `- The ${spec.subjectSide} 40-45% zone is a SUPPORT VISUAL ZONE.`,
           '- Place exactly one strong support visual in that zone.',
-          '- Integrate that support visual into the scene background naturally.',
+          '- Integrate that support visual into the scene naturally.',
           '- Never leave the support visual zone as plain background-only space.',
-          '- No extra text in the support visual zone.',
-          '- No secondary icons beyond the one support visual and one badge.',
+          '- No text in the support visual zone.',
+          '- No secondary icons beyond one support visual and one support badge.',
         ];
 
   return [
-    'Create a 1280x720 School of Breath YouTube thumbnail.',
-    'This is an assembly instruction, not a creative brief.',
-    '',
-    'REQUIRED SLOTS:',
-    `- brand: ${slots.brand}`,
-    `- topic: ${slots.topic}`,
-    `- mode: ${slots.mode}`,
-    `- topLine: ${slots.topLine}`,
-    `- mainHook: ${slots.mainHook}`,
-    `- cta: ${slots.cta}`,
-    `- supportVisual: ${slots.supportVisual}`,
-    `- characterSide: ${slots.characterSide}`,
-    `- textSide: ${slots.textSide}`,
-    `- backgroundTheme: ${slots.backgroundTheme}`,
-    `- accentColor: ${slots.accentColor}`,
+    `Create a 1280x720 YouTube thumbnail for The School of Breath.`,
+    `Use this exact channel layout preset: ${spec.layoutPreset}.`,
     '',
     'LOCKED LAYOUT:',
     '- Full-bleed frame. No borders, no white frame, no mockup card.',
-    `- Text stack occupies ${slots.textSide} 55-60% in rigid stacked rectangles.`,
-    `- Character/support-visual zone occupies ${slots.characterSide} 40-45%.`,
-    '- No floating text.',
-    '- Top strip is full width across text zone, dark charcoal/black, white uppercase compact text.',
-    '- Main block is huge yellow rectangle with ultra-bold condensed uppercase dark text.',
-    '- CTA block is red rectangle directly below main block with white uppercase text.',
-    '- One circular support badge only near lower boundary between text stack and right zone.',
-    `- Support badge style: ${slots.visualBadgeType}.`,
-    slots.arrowAllowed ? '- One directional arrow is allowed only if it improves support visual clarity.' : '- No arrows.',
+    `- ${spec.textSide} 55-60% = rigid stacked text rectangles.`,
+    `- ${spec.subjectSide} 40-45% = subject zone.`,
+    '- Top dark strip with white uppercase text.',
+    '- Giant yellow hook block with very dark condensed uppercase text.',
+    '- Red CTA block below.',
+    '- One circular support badge near lower boundary of text stack and subject zone.',
+    '- No floating text. No extra decorative text elements.',
     '',
-    'TEXT RULES:',
-    '- Use only three text elements: topLine, mainHook, cta.',
-    '- Main hook is the largest text and dominates left stack.',
-    '- Typography is ultra-bold condensed uppercase.',
-    '- Mobile readability is mandatory.',
+    'TEXT SLOTS:',
+    `- Top strip text: "${spec.topStripText}"`,
+    `- Main hook text: "${spec.mainHookText}"`,
+    `- CTA text: "${spec.ctaText}"`,
+    '',
+    'VISUAL SLOTS:',
+    `- Support visual: ${spec.supportVisual}`,
+    `- Visual badge type: ${spec.visualBadgeType}`,
+    spec.arrowAllowed
+      ? '- Arrow: allowed only if it increases support visual clarity.'
+      : '- Arrow: not allowed.',
     '',
     'BACKGROUND RULES:',
     '- Background is mandatory and must fill the full frame.',
-    '- No plain solid-color background and no generic empty gradient.',
+    '- No plain solid color and no generic empty gradient.',
     '- Keep background busy but controlled, dramatic depth, high contrast.',
-    '- Match proven School of Breath channel atmosphere for this theme.',
-    `- Background theme: ${slots.backgroundTheme}.`,
+    `- Background theme: ${spec.backgroundTheme}`,
     ...backgroundMatchRules,
     '',
     ...modeRules,
     '',
-    'ANTI-DRIFT RULES:',
-    '- Do not output minimalist flat design.',
-    '- Do not output soft pastel wellness style.',
-    '- Do not add random extra words, subtitles, or paragraph text.',
-    '- Keep one dominant promise, one support visual, one badge.',
-    '- Final result must feel native to aggressive School of Breath channel thumbnails.',
-  ].join('\n');
+    'STYLE LOCK:',
+    '- Aggressive YouTube thumbnail style.',
+    '- Hard rectangular blocks.',
+    '- Match School of Breath channel grammar, not minimalist design.',
+    '- Keep one dominant promise, one support visual, one support badge.',
+    spec.isChannelProvenHook
+      ? '- Hook source: channel-proven phrase.'
+      : '- Hook source: custom or non-proven phrase; keep strict style lock.',
+    spec.specialNote ? `SPECIAL NOTE: ${spec.specialNote}` : null,
+  ]
+    .filter(Boolean)
+    .join('\n');
 }
 
-export function buildSobBasePrompt(input: SobPromptInput, context: SobPromptContext): string {
-  const slots = toSlots(input, context);
-  const basePrompt = buildSobRenderPrompt(slots);
-  const specialNote = input.specialNote?.trim();
-
-  return [basePrompt, specialNote ? `SPECIAL NOTE: ${specialNote}` : null].filter(Boolean).join('\n');
+export function buildSobBasePromptFromRenderSpec(spec: SobRenderSpec): string {
+  return buildSobRenderPrompt(spec);
 }
 
-export function buildSobPromptVariants(
-  input: SobPromptInput,
-  context: SobPromptContext,
+export function buildSobPromptVariantsFromRenderSpec(
+  spec: SobRenderSpec,
   variantCount: number
 ): SobVariant[] {
-  const basePrompt = buildSobBasePrompt(input, context);
+  const basePrompt = buildSobBasePromptFromRenderSpec(spec);
 
   const channelMatch: SobVariant = {
     id: 'A',
@@ -205,4 +162,26 @@ export function buildSobPromptVariants(
   };
 
   return variantCount <= 1 ? [channelMatch] : [channelMatch, hookPush];
+}
+
+export function buildSobBasePrompt(input: SobPromptInput, context: SobPromptContext): string {
+  const normalizedHook = input.hook.trim().toUpperCase();
+  const isTopicApprovedHook = (context.topic.hooks ?? []).some(
+    (hook) => hook.trim().toUpperCase() === normalizedHook
+  );
+  const spec = buildSobRenderSpec(input, context, { isChannelProvenHook: isTopicApprovedHook });
+  return buildSobBasePromptFromRenderSpec(spec);
+}
+
+export function buildSobPromptVariants(
+  input: SobPromptInput,
+  context: SobPromptContext,
+  variantCount: number
+): SobVariant[] {
+  const normalizedHook = input.hook.trim().toUpperCase();
+  const isTopicApprovedHook = (context.topic.hooks ?? []).some(
+    (hook) => hook.trim().toUpperCase() === normalizedHook
+  );
+  const spec = buildSobRenderSpec(input, context, { isChannelProvenHook: isTopicApprovedHook });
+  return buildSobPromptVariantsFromRenderSpec(spec, variantCount);
 }

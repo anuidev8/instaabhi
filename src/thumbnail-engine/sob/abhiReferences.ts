@@ -17,9 +17,20 @@ export const ABHI_REFERENCE_IMAGES: AbhiReference[] = sortedEntries.map(([key, p
   tags: inferTagsFromPath(key),
 }));
 
+const CURATED_ABHI_REFERENCE_IDS: string[] = ['abhi_02', 'abhi_04', 'abhi_05', 'abhi_08'];
+
+function getCuratedAbhiReferences(): AbhiReference[] {
+  const curated = CURATED_ABHI_REFERENCE_IDS.map((id) =>
+    ABHI_REFERENCE_IMAGES.find((image) => image.id === id)
+  ).filter((value): value is AbhiReference => Boolean(value));
+
+  return curated.length > 0 ? curated : ABHI_REFERENCE_IMAGES;
+}
+
 export function getAbhiReferenceImageUrls(limit?: number): string[] {
-  if (!limit || limit <= 0) return ABHI_REFERENCE_IMAGES.map((item) => item.path);
-  return ABHI_REFERENCE_IMAGES.slice(0, limit).map((item) => item.path);
+  const curated = getCuratedAbhiReferences();
+  if (!limit || limit <= 0) return curated.map((item) => item.path);
+  return curated.slice(0, limit).map((item) => item.path);
 }
 
 export function filterAbhiReferencesByTags(tags: string[]): AbhiReference[] {
