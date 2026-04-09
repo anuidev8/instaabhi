@@ -10,6 +10,7 @@ import {
   SchoolOfBreathMode,
   validateSchoolOfBreathInput,
 } from '../sob-thumbnail-engine';
+import { getAbhiReferenceImageUrls } from '../sob-thumbnail-engine/character/abhiReferenceImages';
 import { IntentKey, ThumbnailCanvaSpec, ThumbnailDraft, ThumbnailPrompt } from '../types';
 
 const GEMINI_API_KEY =
@@ -21,6 +22,17 @@ const IMAGE_MODEL =
   'gemini-3.1-flash-image-preview';
 
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+const MAX_ABHI_REFERENCE_IMAGES = 8;
+
+type InlineImagePart = {
+  inlineData: {
+    mimeType: string;
+    data: string;
+  };
+};
+
+let cachedAbhiReferenceParts: InlineImagePart[] | null = null;
+let cachedAbhiReferencePromise: Promise<InlineImagePart[]> | null = null;
 
 export interface SchoolOfBreathThumbnailInput {
   title: string;
@@ -75,6 +87,66 @@ function buildSeoTitle(input: {
   const topic = input.category.replace(/_/g, ' ');
   const modeSuffix = input.mode === 'with_character' ? 'Guided by Abhi' : 'No-Fluff Method';
   return `${toTitleCase(input.hook)} Breath Method | ${toTitleCase(topic)} | ${modeSuffix}`;
+}
+
+async function imageUrlToInlinePart(url: string): Promise<InlineImagePart> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to load Abhi reference image: ${url}`);
+  }
+
+  const blob = await response.blob();
+  return resizeReferenceImageForModel(blob);
+}
+
+async function resizeReferenceImageForModel(blob: Blob): Promise<InlineImagePart> {
+  const blobUrl = URL.createObjectURL(blob);
+  try {
+    const image = await loadImage(blobUrl);
+    const maxEdge = 768;
+    const scale = Math.min(1, maxEdge / Math.max(image.width, image.height));
+    const targetWidth = Math.max(1, Math.round(image.width * scale));
+    const targetHeight = Math.max(1, Math.round(image.height * scale));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas is not available in this browser');
+
+    ctx.drawImage(image, 0, 0, targetWidth, targetHeight);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.86);
+    const base64Data = dataUrl.split(',')[1];
+    if (!base64Data) throw new Error('Failed to encode Abhi reference image.');
+
+    return {
+      inlineData: {
+        mimeType: 'image/jpeg',
+        data: base64Data,
+      },
+    };
+  } finally {
+    URL.revokeObjectURL(blobUrl);
+  }
+}
+
+async function getAbhiReferenceInlineParts(): Promise<InlineImagePart[]> {
+  if (cachedAbhiReferenceParts) return cachedAbhiReferenceParts;
+  if (cachedAbhiReferencePromise) return cachedAbhiReferencePromise;
+
+  cachedAbhiReferencePromise = Promise.all(
+    getAbhiReferenceImageUrls(MAX_ABHI_REFERENCE_IMAGES).map((url) => imageUrlToInlinePart(url))
+  )
+    .then((parts) => {
+      cachedAbhiReferenceParts = parts;
+      return parts;
+    })
+    .finally(() => {
+      cachedAbhiReferencePromise = null;
+    });
+
+  return cachedAbhiReferencePromise;
 }
 
 function extractImageFromResponse(response: unknown): string | null {
@@ -277,12 +349,32 @@ export async function generateSchoolOfBreathThumbnailImages(
     throw new Error('No generation prompts in the plan.');
   }
 
+  const shouldUseCharacterReferences = plan.prompt.schoolOfBreath?.mode === 'with_character';
+  const referenceParts = shouldUseCharacterReferences
+    ? await getAbhiReferenceInlineParts()
+    : [];
+
   const rawImages = await Promise.all(
     prompts.map(async (variantPrompt) => {
+      const contents =
+        referenceParts.length > 0
+          ? [
+              {
+                text:
+                  'Use the attached Abhi reference images to preserve face identity, expression style, and teacher presence. Do not invent a different person.',
+              },
+              ...referenceParts,
+              { text: variantPrompt },
+            ]
+          : variantPrompt;
+
       const imageResponse = await ai.models.generateContent({
         model: IMAGE_MODEL,
-        contents: variantPrompt,
-        config: { responseModalities: ['TEXT', 'IMAGE'] },
+        contents,
+        config: {
+          responseModalities: ['TEXT', 'IMAGE'],
+          imageConfig: { aspectRatio: '16:9', imageSize: '1K' },
+        },
       });
 
       const imageDataUrl = extractImageFromResponse(imageResponse);
@@ -299,6 +391,9 @@ export async function generateSchoolOfBreathThumbnailImages(
     baseImages: normalized,
     validationSummary: [
       ...(plan.validationSummary ?? []),
+      ...(referenceParts.length > 0
+        ? [`Character lock: used ${referenceParts.length} Abhi reference images from docs/resources/images.`]
+        : []),
       ...normalized.map((_, index) => `Variant ${index + 1}: normalized to 1280x720.`),
     ],
     errorMessage: undefined,

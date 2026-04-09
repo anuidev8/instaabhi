@@ -94,6 +94,5 @@ export function buildSchoolOfBreathVariantPrompts(
 ): string[] {
   return [
     buildSchoolOfBreathPrompt({ input, variantTone: 'clean' }),
-    buildSchoolOfBreathPrompt({ input, variantTone: 'dynamic' }),
   ];
 }

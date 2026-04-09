@@ -413,7 +413,7 @@ export default function SchoolOfBreathThumbnailsTab({
             The School of Breath Thumbnails
           </h2>
           <p className="text-sm text-stone-500 mt-0.5">
-            Practical, high-contrast thumbnails with a controlled hook system and two variants.
+            Practical, high-contrast thumbnails with a controlled hook system and one final variant.
           </p>
         </div>
         <button
@@ -465,7 +465,7 @@ export default function SchoolOfBreathThumbnailsTab({
           </div>
           <h3 className="mt-4 text-lg font-semibold text-stone-900">No School of Breath drafts yet</h3>
           <p className="mt-2 text-sm text-stone-500 max-w-xl mx-auto">
-            Pick a category, mode, and hook to build two controlled thumbnail variants.
+            Pick a category, mode, and hook to build one controlled thumbnail variant.
           </p>
         </div>
       ) : (
@@ -686,7 +686,7 @@ export default function SchoolOfBreathThumbnailsTab({
                     <p className="text-sm text-stone-500 mt-1">
                       {modalStep === 'form'
                         ? 'Step 1 — pick mode, category, and hook stack.'
-                        : 'Step 2 — review the 2-variant prompt plan before generation.'}
+                        : 'Step 2 — review the prompt plan before generation.'}
                     </p>
                   </div>
                 </div>
@@ -964,7 +964,7 @@ export default function SchoolOfBreathThumbnailsTab({
 
                   <div className="px-5 py-4 border-t border-stone-100 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
                     <p className="text-xs text-stone-400">
-                      Build a controlled prompt plan first, then generate 2 variants.
+                      Build a controlled prompt plan first, then generate the final thumbnail.
                     </p>
                     <div className="flex items-center gap-2">
                       <button
@@ -1040,7 +1040,7 @@ export default function SchoolOfBreathThumbnailsTab({
                           >
                             <div className="flex items-center justify-between">
                               <p className="text-sm font-semibold text-stone-900">
-                                Variant Prompt {index + 1}
+                                Image Prompt
                               </p>
                               <button
                                 onClick={() => navigator.clipboard.writeText(prompt)}
@@ -1080,7 +1080,7 @@ export default function SchoolOfBreathThumbnailsTab({
 
                   <div className="px-5 py-4 border-t border-stone-100 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
                     <p className="text-xs text-stone-400">
-                      Review and edit prompts. Generate to create both School of Breath variants.
+                      Review and edit the prompt. Generate to create the School of Breath thumbnail.
                     </p>
                     <div className="flex items-center gap-2">
                       <button
@@ -1103,7 +1103,7 @@ export default function SchoolOfBreathThumbnailsTab({
                         ) : (
                           <Sparkles className="w-4 h-4" />
                         )}
-                        {isGenerating ? 'Generating Variants…' : 'Generate Variants'}
+                        {isGenerating ? 'Generating Thumbnail…' : 'Generate Thumbnail'}
                       </button>
                     </div>
                   </div>
