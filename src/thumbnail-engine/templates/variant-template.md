@@ -1,13 +1,13 @@
 Emotional Variant:
-- softer expression
+- softer devotional expression
 - warm face-to-viewer connection
 - subtle blessing-hand energy OR faint third-eye glow
-- calmer halo
-- strong readability
+- atmospheric smoky haze, not bright rings
+- strong readability — text remains MASSIVE 3D extruded
 
 Intense Variant:
 - fiercer expression
-- higher contrast
-- stronger aura rings
+- higher contrast, dramatic rim-light
+- stronger atmospheric aura energy
 - heart glow OR head pulse
-- same layout, but more dramatic energy
+- same billboard-scale text layout, but more dramatic energy behind deity

@@ -158,8 +158,16 @@ function getDeity(name: string): Deity {
       (c) => c.trim().toLowerCase() === normalizedName
     )
   );
-  if (!deity) throw new Error(`Unsupported deity: ${name}`);
-  return deity;
+  if (deity) return deity;
+
+  const displayName = name.trim() || 'Divine Being';
+  return {
+    name: displayName,
+    channelName: displayName,
+    visualSignature: `${displayName} in traditional iconography, divine radiance, blessing hand, sacred ornaments`,
+    intents: ['protection', 'healing', 'peace', 'abundance', 'power', 'love', 'knowledge', 'transformation'],
+    auraColor: '#FFD700',
+  };
 }
 
 function getChannelDeityName(deity: Deity): string {
@@ -340,9 +348,13 @@ function normalizeSpec(
 ): ThumbnailCanvaSpec {
   const fallback = buildDefaultSpec(input, intent, deity);
 
-  const rawLine1 = (parsedPlan.line1 || '').trim();
-  const rawLine2 = (parsedPlan.line2 || '').trim();
-  const combinedPhrase = rawLine2 ? `${rawLine1} ${rawLine2}` : rawLine1;
+  const userLine1 = (input.line1 || '').trim();
+  const userLine2 = (input.line2 || '').trim();
+  const userProvided = userLine1.length > 0;
+
+  const effectiveLine1 = userProvided ? userLine1 : (parsedPlan.line1 || '').trim();
+  const effectiveLine2 = userProvided ? userLine2 : (parsedPlan.line2 || '').trim();
+  const combinedPhrase = effectiveLine2 ? `${effectiveLine1} ${effectiveLine2}` : effectiveLine1;
   const rawPhrase = combinedPhrase || fallback.hookWord;
   let hookWord = uppercaseClean(rawPhrase).split(/\s+/).slice(0, 5).join(' ');
 
@@ -407,11 +419,18 @@ function buildPromptBrief(input: ThumbnailPrompt, intent: Intent, deity: Deity):
     ``,
     `RULES:`,
     `- 3-5 words total split across line1 + line2`,
-    `- line1 = command/action (WHITE, DOMINANT, 30-40% bigger)`,
-    `- line2 = emotion/promise (COLORED ${line2Color}, smaller)`,
+    `- line1 = command/action (WHITE, DOMINANT, 50-60% bigger than line2)`,
+    `- line2 = emotion/promise (COLORED ${line2Color}, very large but smaller than line1)`,
     `- NEVER leave line2 empty, NEVER fewer than 3 words total`,
-    `- STRONG drop shadow on both lines`,
-    `- Generate 2 meaningfully different variant prompts (emotional + intense)`,
+    `- Each word stacked vertically like a billboard — text fills 85-95% of right zone height`,
+    `- FIRST WORD is the ABSOLUTE BIGGEST (20-30% bigger than second word), extends LEFT into deity zone — NO gap between deity and text`,
+    `- Line-2 words are 40-50% smaller than the first word`,
+    `- Font: ultra-heavy black condensed (weight 900+)`,
+    `- 3D EXTRUDED text effect: thick black drop-shadow (8-12px) creating cinematic depth/pop-out look`,
+    `- 3D parallax: deity overlaps ON TOP of first word's left letters; colored text overlaps ON TOP of deity lower body`,
+    `- Background: dark atmospheric smoke/mist — NOT bright glowing circles`,
+    `- Aura: subtle rim-light and atmospheric haze — NOT prominent concentric rings`,
+    `- Generate exactly 1 image prompt combining emotional depth with cinematic intensity`,
   ]
     .filter(Boolean)
     .join('\n');
@@ -446,29 +465,52 @@ function normalizeVariantPrompts(
   const badgeText = spec.badge || buildDefaultBadge(deity, intent);
   const schoolLabel = spec.schoolLabel || coreRules.text.topLabelText;
 
+  const allWords = words.map((w) => w.toUpperCase());
+  const stackedWordList = allWords.join('", "');
+
   const textLayout =
-    `RIGHT side text elements (baked into image): ` +
-    `"${schoolLabel}" tiny white at top. ` +
-    `MAIN HOOK: "${line1Words}" MASSIVE ULTRA-BOLD WHITE (#FFFFFF) — fills 70-80% right side, STRONG drop shadow. ` +
-    `Below: "${line2Words}" VERY LARGE BOLD ${line2Color} — slightly smaller. STRONG drop shadow. ` +
-    `"${line1Words}" 30-40% BIGGER than "${line2Words}". ` +
-    `Bottom: "${badgeText}" small white.`;
+    `RIGHT side text (baked into the image, stacked vertically like a billboard): ` +
+    `Top: "${schoolLabel}" — tiny, thin, subtle white. ` +
+    `MAIN HOOK — EACH WORD on its own line, stacked vertically, filling 85-95% of the right side HEIGHT — use the FULL vertical space: ` +
+    `"${stackedWordList}" — the line-1 words ("${line1Words}") are WHITE (#FFFFFF), the line-2 words ("${line2Words}") are ${line2Color}. ` +
+    `Font: ULTRA-HEAVY BLACK CONDENSED (weight 900+), wide compressed letterforms. ` +
+    `SIZE HIERARCHY — the FIRST WORD ("${allWords[0]}") is the ABSOLUTE BIGGEST element in the entire image. It must be noticeably larger than every other word (20-30% bigger than the second word). ` +
+    `The first word EXTENDS LEFT past the text zone boundary, overlapping INTO the deity area — its left edge starts behind/under the deity's body. There must be NO empty gap between the deity and the first word. ` +
+    `Remaining line-1 words are large but slightly smaller than the first word. Line-2 words ("${line2Words}") are ${line2Color} and 40-50% smaller than the first word. ` +
+    `3D EXTRUDED TEXT EFFECT: each letter has a thick black drop-shadow (8-12px offset below-right) creating a cinematic pop-out/depth look. ` +
+    `Bottom: "${badgeText}" — small, understated white.`;
+
+  const depthLayering =
+    `3D PARALLAX DEPTH LAYERING (CRITICAL): The image must have interleaving z-layers creating real depth: ` +
+    `(1) BACK LAYER: dark atmospheric background. ` +
+    `(2) MID LAYER: the main hook text — the first word ("${allWords[0]}") extends LEFT into the deity zone with NO gap. ` +
+    `(3) FRONT LAYER: parts of the deity (hand, snake, jewelry, accessories) overlap ON TOP of the first word's left portion, partially covering its first 1-2 letters. ` +
+    `(4) ALSO: the line-2 / colored text ("${line2Words}") overlaps slightly ON TOP of the deity's lower body/torso area, sitting in front of the character. ` +
+    `This interweaving — deity elements in front of some text, text in front of other deity parts — creates the cinematic parallax 3D effect. ` +
+    `IMPORTANT: The text and deity SHARE the same horizontal space. Do NOT leave a clean gap between the deity and the text.`;
 
   const baseInstructions =
     `${textLayout} ` +
+    `${depthLayering} ` +
     `YouTube thumbnail, 1280x720, 16:9. Style: photorealistic cinematic devotional. ` +
-    `LEFT 40-45%: ${input.deity} EXTREME close-up, face + ONE blessing hand. Face fills 75-80%+ of left zone. Eyes BRIGHT at mobile size. ${deity.visualSignature}. ` +
-    `Aura: concentric rings in ${auraColor}. Rim light in ${auraColor}. ` +
-    `BACKGROUND: deep dark gradient, energy effects in ${auraColor}. No architecture. ` +
-    `RIGHT 55-60%: ULTRA-DARK behind text. NO particles, NO glow behind text. ` +
-    `No center composition. Do NOT render labels or descriptions — ONLY the exact words.`;
+    `LEFT 35-45%: ${input.deity} EXTREME close-up, face + ONE blessing hand. Face fills 75-80%+ of left zone. Eyes BRIGHT at mobile size. ${deity.visualSignature}. ` +
+    `Aura: subtle atmospheric haze and rim-light in ${auraColor} — NOT prominent glowing concentric rings or circles. ` +
+    `BACKGROUND: dark atmospheric smoke/mist gradient in near-black tones with hints of ${auraColor}. No architecture. No bright glowing circles. ` +
+    `The text area behind the words should be ULTRA-DARK. NO particles, NO glow, NO bloom behind text. ` +
+    `No center composition. Do NOT render labels or descriptions — ONLY the exact words specified above. ` +
+    `CRITICAL: The first word must be ENORMOUS and push LEFT into the deity zone. Every word stretches to the right edge. Think movie-poster / billboard scale, readable even as a tiny phone thumbnail.`;
 
-  const variantDirectives = [
-    `Variant 1 — EMOTIONAL: ${textLayout} Softer expression, warm face-to-viewer connection. Subtle blessing-hand energy OR faint third-eye glow. Calmer halo. ULTRA-DARK text area.`,
-    `Variant 2 — INTENSE: ${textLayout} Fiercer expression, higher contrast, stronger aura rings. Heart glow OR head pulse. More dramatic energy. ULTRA-DARK text area.`,
-  ];
+  const styleDirective =
+    `Emotional depth with cinematic intensity: warm devotional expression with strong contrast and dramatic rim-light in ${auraColor}. ` +
+    `Subtle blessing-hand energy or third-eye glow. Atmospheric smoky haze. ULTRA-DARK behind text. ` +
+    `Deity overlaps on top of first word's left edge. NO gap between deity and text.`;
 
-  const textReminder = `RENDER ONLY: "${schoolLabel}" tiny top, "${line1Words}" MASSIVE WHITE + "${line2Words}" LARGE ${line2Color} as dominant hook, "${badgeText}" small bottom. No other text.`;
+  const textReminder =
+    `TEXT FINAL CHECK — render ONLY these exact words: "${schoolLabel}" tiny top. ` +
+    `"${allWords[0]}" = ABSOLUTE BIGGEST word, extends LEFT into deity zone, NO gap between deity and text. ` +
+    `Hook words stacked: "${stackedWordList}". "${line1Words}" = WHITE, "${line2Words}" = ${line2Color}. ` +
+    `Deity hand/accessories overlap ON TOP of "${allWords[0]}" left edge. Colored text overlaps ON TOP of deity lower body. ` +
+    `3D extruded shadow on every letter. "${badgeText}" small bottom. NO other text. NO thin fonts. NO small text.`;
 
   const sanitize = (raw: string): string =>
     raw
@@ -477,27 +519,18 @@ function normalizeVariantPrompts(
       .replace(/CENTER\s*[-—]\s*MAIN\s+HOOK[^.]*/gi, '')
       .replace(/\(BIGGEST[^)]*\)/gi, '')
       .replace(/\(\d+\)\s*(TOP|CENTER|BOTTOM)\s*[:—-]/gi, '')
+      .replace(/\bconcentric\s+rings?\b/gi, 'atmospheric haze')
       .replace(/\s+/g, ' ')
       .trim();
 
-  const normalized = prompts.slice(0, 2).map((prompt, index) => {
-    const cleaned = sanitize(prompt);
-    return `${baseInstructions} ${variantDirectives[index] ?? ''} ${cleaned} ${textReminder}`
-      .replace(/\s+/g, ' ')
-      .trim()
-      .slice(0, 3200);
-  });
+  const firstRaw = prompts[0] ?? '';
+  const cleaned = sanitize(firstRaw);
+  const finalPrompt = `${baseInstructions} ${styleDirective} ${cleaned} ${textReminder}`
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 3800);
 
-  while (normalized.length < 2) {
-    normalized.push(
-      `${baseInstructions} ${variantDirectives[normalized.length]} ${textReminder}`
-        .replace(/\s+/g, ' ')
-        .trim()
-        .slice(0, 3200)
-    );
-  }
-
-  return normalized;
+  return [finalPrompt];
 }
 
 // ---------------------------------------------------------------------------
@@ -741,7 +774,7 @@ export async function generateThumbnailPlan(prompt: ThumbnailPrompt): Promise<Th
             type: Type.ARRAY,
             items: { type: Type.STRING },
             description:
-              'Exactly 2 image prompts. Each references line1+line2 as 2-LINE hierarchy.',
+              'Exactly 1 image prompt referencing line1+line2 as 2-LINE hierarchy with 3D extruded billboard text.',
           },
           colors: {
             type: Type.OBJECT,

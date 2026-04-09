@@ -1,5 +1,5 @@
 # School of Mantras — Style Reference
-### v7 — Engine-Aligned (April 2026)
+### v8 — Billboard 3D Text (April 2026)
 
 > This file is a **reference only**. All production rules live in `/thumbnail-engine/config/core-rules.json`.
 > Do NOT use this file to override engine rules.
@@ -22,9 +22,14 @@
 | Style | Cinematic Divine Aura — photorealistic cinematic devotional |
 | Layout | Deity LEFT 40-45%, Text RIGHT 55-60% |
 | Character | Extreme close-up, face fills 75-80%+ of left zone |
-| Text | 3-5 words, 2-line hierarchy |
-| Background | Deep dark gradient, ultra-dark text area |
+| Text | 3-5 words, 2-line hierarchy, **each word stacked vertically** |
+| Text Fill | **80-90% of right zone height** — billboard scale |
+| Font | **Ultra-heavy black condensed (weight 900+)** |
+| Text Effect | **3D extruded — thick black drop-shadow (8-12px) creating cinematic depth/pop-out** |
+| Background | Dark atmospheric smoke/mist — **NOT bright glowing circles** |
+| Aura | Subtle rim-light + atmospheric haze — **NOT prominent concentric rings** |
 | Visual trigger | ONE subtle trigger only |
+| Depth layering | Deity may slightly overlap behind text edges |
 
 ---
 
@@ -81,8 +86,12 @@
 - No generic text (DIVINE LOVE, SACRED HEALING)
 - No full body shots — extreme close-up only
 - No always-gold — use deity-specific aura colors
-- No glow/particles behind text
+- No glow/particles/bloom behind text
 - No same-weight text lines
 - No both-lines-white
 - No center composition
 - No cartoon/illustration/painting
+- **No small text — every word must be phone-readable at 120x68px**
+- **No thin fonts — ultra-heavy black condensed only**
+- **No bright concentric circles/rings behind deity**
+- **No flat 2D text — always 3D extruded with deep shadow**

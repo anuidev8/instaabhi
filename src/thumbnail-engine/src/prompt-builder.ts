@@ -74,54 +74,66 @@ export function buildThumbnailPrompt(input: BuildInput): string {
   const suffix = input.suffix ?? '108x';
   const badge = buildBadge(deity, suffix);
 
+  const allWords = `${hook.line1} ${hook.line2}`.split(/\s+/).map((w) => w.toUpperCase());
+  const stackedWordList = allWords.join('", "');
+
   const variantDescription =
     input.variant === 'intense'
-      ? 'fiercer expression, stronger aura rings, more dramatic lighting, one intense visual trigger'
-      : 'softer expression, warm emotional connection, one subtle visual trigger';
+      ? 'fiercer expression, dramatic rim-light, higher contrast, one intense visual trigger'
+      : 'softer devotional expression, warm emotional connection, one subtle visual trigger';
 
-  return `Generate a School of Mantras viral thumbnail.
+  return `Generate a School of Mantras viral YouTube thumbnail.
 
 Canvas: ${coreRules.canvas.width}x${coreRules.canvas.height}, ${coreRules.canvas.aspect}
 
 Layout:
 - deity on ${coreRules.layout.deityZone}
 - text on ${coreRules.layout.textZone}
-- deity faces toward text
 - no center composition
 
 Character:
 - extreme close-up
 - face fills ${coreRules.character.faceFill}
 - face + one blessing hand only
-- no lower body
-- no wide shot
+- no lower body, no wide shot
 - photorealistic cinematic devotional
-- use these visual signature elements: ${deity.visualSignature.join(', ')}
+- visual signature: ${deity.visualSignature.join(', ')}
 
 Color:
 - deity aura color: ${deity.auraColor}
 - intent text color: ${intent.color}
 
 Background:
-- deep dark gradient
-- no scenery
-- no architecture
-- ultra-dark empty text area
-- no particles or glow behind text
+- dark atmospheric smoke/mist gradient — NOT bright glowing circles or rings
+- no scenery, no architecture
+- subtle rim-light and atmospheric haze in ${deity.auraColor} — NOT prominent concentric rings
+- ultra-dark pure black behind text area
+- no particles, no glow, no bloom behind text
 
-Text baked into image:
-- top tiny label: THE SCHOOL OF MANTRAS
-- line 1: ${hook.line1}
-- line 2: ${hook.line2}
-- bottom badge: ${badge}
-- line 1 white and dominant
-- line 2 colored ${intent.color}
-- strong drop shadow
+TEXT — MOST CRITICAL (billboard-scale, 3D extruded):
+- top: "THE SCHOOL OF MANTRAS" — tiny, thin, subtle white
+- MAIN HOOK — each word stacked vertically on its own line, filling 85-95% of right zone HEIGHT — use the FULL vertical space:
+  "${stackedWordList}"
+- SIZE HIERARCHY: FIRST WORD ("${allWords[0]}") is the ABSOLUTE BIGGEST element in the image — 20-30% bigger than the second word
+- The first word EXTENDS LEFT past the text zone, overlapping INTO the deity area — NO empty gap between deity and text
+- Remaining line-1 words ("${hook.line1}"): WHITE #FFFFFF, large but slightly smaller than first word
+- line 2 words ("${hook.line2}"): colored ${intent.color}, 40-50% smaller than first word
+- font: ultra-heavy black condensed (weight 900+), wide compressed letterforms
+- 3D EXTRUDED text effect: thick black drop-shadow (8-12px offset) creating cinematic depth/pop-out look
+- bottom: "${badge}" — small, understated white
+- every word must be readable at phone thumbnail size (120x68px)
+
+3D PARALLAX DEPTH LAYERING (CRITICAL):
+- BACK layer: dark atmospheric background
+- MID layer: the main hook text — first word extends LEFT into deity zone with NO gap
+- FRONT layer: deity accessories (hand, snake, jewelry) overlap ON TOP of the first word's left portion, covering first 1-2 letters
+- ALSO: the colored line-2 text ("${hook.line2}") overlaps ON TOP of the deity's lower body/torso
+- IMPORTANT: text and deity SHARE the same horizontal space — do NOT leave a clean gap between them
 
 Variant:
 - ${variantDescription}
 
-Do not use cartoon, illustration, painting, center composition, clutter, generic text, or both-lines-white.`;
+BANNED: cartoon, illustration, painting, center composition, clutter, generic text, both-lines-white, small text, thin fonts, bright concentric circles, text glow/bloom, flat 2D text without shadow depth.`;
 }
 
 /**
@@ -156,12 +168,15 @@ export function buildPromptBrief(input: BuildInput): string {
     ``,
     `RULES:`,
     `- 3-5 words total split across line1 + line2`,
-    `- line1 = command/action (WHITE, DOMINANT)`,
-    `- line2 = emotion/promise (COLORED ${intent.color}, smaller)`,
+    `- line1 = command/action (WHITE, DOMINANT, 50-60% bigger than line2)`,
+    `- line2 = emotion/promise (COLORED ${intent.color}, very large but smaller)`,
     `- NEVER leave line2 empty`,
     `- NEVER fewer than 3 words total`,
-    `- STRONG drop shadow on both lines`,
-    `- Generate 2 meaningfully different variant prompts`,
+    `- Each word stacked vertically like a billboard — fills 80-90% of right zone height`,
+    `- Font: ultra-heavy black condensed (weight 900+)`,
+    `- 3D extruded text: thick black drop-shadow creating cinematic depth/pop-out look`,
+    `- Background: dark atmospheric smoke/mist — NOT bright glowing circles`,
+    `- Generate exactly 1 image prompt combining emotional depth with cinematic intensity`,
   ]
     .filter(Boolean)
     .join('\n');

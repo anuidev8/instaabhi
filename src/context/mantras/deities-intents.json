@@ -10,10 +10,15 @@
     "textPlacement": "right 55-60%",
     "styleName": "Cinematic Divine Aura",
     "style": "photorealistic cinematic devotional",
-    "aura": "concentric sacred rings in deity aura color",
+    "aura": "subtle atmospheric haze and rim-light in deity aura color — NOT prominent concentric rings",
+    "background": "dark atmospheric smoke/mist gradient — NOT bright glowing circles",
     "noText": false,
     "negativeSpaceLeft": false,
     "textBakedIntoImage": true,
+    "textStyle": "billboard-scale 3D extruded — each word stacked vertically, ultra-heavy black condensed font (900+), thick drop-shadow creating cinematic depth/pop-out",
+    "textFill": "85-95% of right zone height — use FULL vertical space",
+    "firstWordRule": "FIRST word is BIGGEST — deity partially overlaps its left edge",
+    "depthLayering": "3D parallax: deity accessories overlap ON TOP of text left edges; colored line-2 text overlaps ON TOP of deity lower body — interweaving z-layers create cinematic depth",
     "schoolLabel": "THE SCHOOL OF MANTRAS",
     "badgeFormat": "[Deity Channel Name] Mantra · [suffix]"
   },
@@ -144,8 +149,9 @@
     }
   ],
   "textHierarchy": {
-    "rule": "3-5 words split across 2 lines. LINE 1 = command/action (WHITE, dominant). LINE 2 = emotion/promise (COLORED, smaller).",
-    "line1Style": "WHITE #FFFFFF, 30-40% bigger than line 2, STRONG drop shadow",
+    "rule": "3-5 words split across 2 lines, each word stacked vertically like a billboard. Text fills 80-90% of right zone height. LINE 1 = command/action (WHITE, dominant). LINE 2 = emotion/promise (COLORED, very large).",
+    "line1Style": "WHITE #FFFFFF, 50-60% bigger than line 2, ultra-heavy black condensed font (900+), 3D extruded with thick black drop-shadow (8-12px) creating cinematic depth",
+    "line2Style": "COLORED per intent, very large but slightly smaller, same 3D extruded effect",
     "line2Colors": {
       "abundance": "#FFD700",
       "protection": "#4D9FFF",

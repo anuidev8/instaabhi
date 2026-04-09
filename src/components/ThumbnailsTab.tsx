@@ -358,7 +358,7 @@ export default function ThumbnailsTab({
             YouTube Thumbnails
           </h2>
           <p className="text-sm text-stone-500 mt-0.5">
-            Generate 2 thumbnail variants using left-side deity composition, ultra-clean right-side
+            Generate a thumbnail using left-side deity composition, ultra-clean right-side
             text, and a high-contrast 2-line hook.
           </p>
         </div>
@@ -597,7 +597,7 @@ export default function ThumbnailsTab({
                   {!!draft.generationPrompts?.length && (
                     <details className="rounded-2xl border border-stone-200 bg-white p-4">
                       <summary className="cursor-pointer text-sm font-semibold text-stone-900">
-                        Generation Prompts
+                        Image Prompt
                       </summary>
                       <div className="mt-3 space-y-3">
                         {draft.generationPrompts.map((prompt, index) => (
@@ -605,9 +605,6 @@ export default function ThumbnailsTab({
                             key={index}
                             className="rounded-xl bg-stone-50 border border-stone-200 p-3 text-xs leading-relaxed text-stone-600"
                           >
-                            <p className="font-semibold text-stone-800 mb-1">
-                              Variant {index + 1}
-                            </p>
                             <p>{prompt}</p>
                           </div>
                         ))}
@@ -664,7 +661,7 @@ export default function ThumbnailsTab({
                     <p className="text-sm text-stone-500 mt-1">
                       {modalStep === 'form'
                         ? 'Step 1 — Choose the intent, deity, and hook direction. Then review the title and full generation plan.'
-                        : 'Step 2 — Review the generated plan and text hierarchy. Approve to generate images.'}
+                        : 'Step 2 — Review and edit the generated plan. Tweak the prompt if needed, then generate.'}
                     </p>
                   </div>
                 </div>
@@ -703,31 +700,24 @@ export default function ThumbnailsTab({
                       </select>
                     </div>
 
-                    {/* 2. Deity — grouped by match strength */}
+                    {/* 2. Deity — text input with autocomplete + quick picks */}
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-stone-800">Deity</label>
-                      <select
+                      <input
+                        list="deity-options"
                         value={input.deity}
                         onChange={(e) => setInput((prev) => ({ ...prev, deity: e.target.value }))}
+                        placeholder="Type a deity name or select below"
                         className="w-full px-4 py-3 rounded-xl border border-stone-200 bg-white text-stone-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400"
-                      >
-                        <optgroup label="Best Match">
-                          {compatibleDeities.map((d) => (
-                            <option key={d.name} value={d.name}>
-                              {d.name}
-                            </option>
-                          ))}
-                        </optgroup>
-                        {otherDeities.length > 0 && (
-                          <optgroup label="All Deities">
-                            {otherDeities.map((d) => (
-                              <option key={d.name} value={d.name}>
-                                {d.name}
-                              </option>
-                            ))}
-                          </optgroup>
-                        )}
-                      </select>
+                      />
+                      <datalist id="deity-options">
+                        {compatibleDeities.map((d) => (
+                          <option key={d.name} value={d.name} />
+                        ))}
+                        {otherDeities.map((d) => (
+                          <option key={d.name} value={d.name} />
+                        ))}
+                      </datalist>
                       <div className="flex flex-wrap gap-2 mt-1">
                         {compatibleDeities.map((d) => (
                           <button
@@ -964,7 +954,7 @@ export default function ThumbnailsTab({
                   {/* Form footer */}
                   <div className="px-5 py-4 border-t border-stone-100 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
                     <p className="text-xs text-stone-400">
-                      Generate the full plan and text hierarchy for review before creating images.
+                      Generate the plan and image prompt for review before creating the thumbnail.
                     </p>
                     <div className="flex items-center gap-2">
                       <button
@@ -1083,7 +1073,7 @@ export default function ThumbnailsTab({
                           >
                             <div className="flex items-center justify-between">
                               <p className="text-sm font-semibold text-stone-900">
-                                Variant {index + 1} Prompt
+                                Image Prompt
                               </p>
                               <button
                                 onClick={() => navigator.clipboard.writeText(prompt)}
@@ -1093,9 +1083,19 @@ export default function ThumbnailsTab({
                                 Copy
                               </button>
                             </div>
-                            <p className="text-xs leading-relaxed text-stone-600 whitespace-pre-wrap break-words">
-                              {prompt}
-                            </p>
+                            <textarea
+                              value={prompt}
+                              onChange={(e) => {
+                                const updated = [...(previewPlan.generationPrompts ?? [])];
+                                updated[index] = e.target.value;
+                                setPreviewPlan({
+                                  ...previewPlan,
+                                  generationPrompts: updated,
+                                });
+                              }}
+                              rows={8}
+                              className="w-full text-xs leading-relaxed text-stone-600 bg-white border border-stone-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 resize-y"
+                            />
                           </div>
                         ))}
                       </>
@@ -1114,7 +1114,7 @@ export default function ThumbnailsTab({
                   {/* Preview footer */}
                   <div className="px-5 py-4 border-t border-stone-100 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
                     <p className="text-xs text-stone-400">
-                      Review the plan above. Click Generate to create the final thumbnail images.
+                      Review and edit the prompt above. Click Generate to create the thumbnail.
                     </p>
                     <div className="flex items-center gap-2">
                       <button
@@ -1137,7 +1137,7 @@ export default function ThumbnailsTab({
                         ) : (
                           <Sparkles className="w-4 h-4" />
                         )}
-                        {isGenerating ? 'Generating Images…' : 'Generate Thumbnails'}
+                        {isGenerating ? 'Generating Image…' : 'Generate Thumbnail'}
                       </button>
                     </div>
                   </div>

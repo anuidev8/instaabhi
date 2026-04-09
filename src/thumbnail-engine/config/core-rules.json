@@ -21,32 +21,42 @@
     "style": "photorealistic cinematic devotional"
   },
   "background": {
-    "type": "deep dark gradient",
+    "type": "dark atmospheric smoke/mist gradient — NOT bright glowing circles",
     "allowArchitecture": false,
     "allowScenery": false,
-    "textArea": "ultra-dark empty silence",
+    "textArea": "ultra-dark empty silence, pure black or near-black",
     "allowParticlesBehindText": false,
     "allowGlowBehindText": false,
-    "allowLightInterferenceBehindText": false
+    "allowLightInterferenceBehindText": false,
+    "auraStyle": "subtle rim-light and atmospheric haze in deity aura color — NOT prominent concentric rings or circles",
+    "depthLayering": "3D parallax: first word extends LEFT into deity zone with NO gap; deity accessories overlap ON TOP of first word's left letters; colored line-2 text overlaps ON TOP of deity lower body — text and deity SHARE horizontal space"
   },
   "text": {
     "topLabel": true,
     "topLabelText": "THE SCHOOL OF MANTRAS",
+    "topLabelSize": "tiny, subtle, thin weight",
     "bottomBadge": true,
+    "bottomBadgeSize": "small, understated",
     "wordCount": "3-5",
     "lineCount": 2,
+    "stackStyle": "each word on its own visual line, stacked vertically to fill 85-95% of the right zone height — use the FULL vertical space",
+    "firstWordRule": "the FIRST word is the ABSOLUTE BIGGEST element — 20-30% bigger than the second word, extends LEFT into deity zone with NO gap between deity and text",
     "line1": {
       "role": "command/action",
       "color": "#FFFFFF",
-      "sizeRelation": "30-40% bigger than line2"
+      "sizeRelation": "remaining line-1 words large but slightly smaller than first word",
+      "fillRightZone": "first word pushes LEFT into deity area, all words stretch to right edge"
     },
     "line2": {
       "role": "emotion/promise",
-      "colorSource": "intent"
+      "colorSource": "intent",
+      "size": "40-50% smaller than the first word"
     },
-    "font": "bold condensed",
-    "dropShadow": "strong",
-    "slightGlow": true
+    "font": "ultra-heavy black condensed (weight 900+), compressed wide letterforms",
+    "dropShadow": "thick 3D extrusion shadow — 8-12px black offset creating depth/pop-out effect",
+    "textEffect": "3D extruded/beveled look with deep black shadow beneath each letter giving cinematic depth",
+    "slightGlow": false,
+    "mobileReadability": "every word must be legible at phone-screen thumbnail size (120x68px)"
   },
   "visualTrigger": {
     "required": true,
@@ -73,6 +83,11 @@
     "same_weight_text_lines",
     "both_lines_white",
     "full_figure",
-    "clutter"
+    "clutter",
+    "small_text",
+    "thin_font_weight",
+    "bright_concentric_circles_behind_deity",
+    "text_glow_or_bloom",
+    "flat_2D_text_without_shadow_depth"
   ]
 }
