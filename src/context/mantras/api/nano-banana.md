@@ -8,23 +8,22 @@
   - primary: `process.env.GEMINI_API_KEY`
   - fallback: `import.meta.env.VITE_GEMINI_API_KEY`
 
-## Prompt Discipline (v4)
+## Prompt Discipline (v5 — Engine-Aligned)
 
-- Generate a 1280x720 horizontal thumbnail with deity on LEFT 40-45% and text on RIGHT 55-60%.
-- Deity: photorealistic cinematic devotional close-up (face + blessing hand). Ultra-realistic textures, 8K detail, Hollywood-grade lighting.
-- Background: deep dark gradient (black to warm dark brown/amber), pure atmospheric void, no architecture, no scenery.
-- Lighting: strong golden rim light from behind deity (#FFD700), smooth clean aura NOT noisy, high contrast.
-- Atmosphere: subtle mist at base, golden particles ONLY around deity, soft bokeh minimal.
-- Text: MAX 2-3 words ONLY, extremely large bold condensed, white or gold, strong dark drop shadow. One dominant phrase.
-- Right side must feel EMPTY and intentional — no objects, no distractions behind text.
-- Never add badges, logos, watermarks, or channel tags.
-- Character fidelity: preserve canonical deity attributes, NO mixing iconography.
-- Keep prompt self-contained so each variant can be generated independently.
+All layout, text, and color rules now come from `/thumbnail-engine/config/core-rules.json`.
+This file only documents API integration notes. Do NOT define visual rules here.
+
+- Canvas: 1280x720, 16:9 (from core-rules.json)
+- Layout: deity LEFT 40-45%, text RIGHT 55-60% (from core-rules.json)
+- Text: 3-5 words, 2-line hierarchy (from core-rules.json)
+- Deity aura: deity-specific color, NOT always gold (from deities.json)
+- Hooks: approved pairs only (from hooks.json)
+- Badges and school label: included per core-rules.json
 
 ## Validation Expectations
 
-- Normalize export to `1280x720` PNG.
-- Check that the frame stays dark overall.
-- Check that the brightest signal (deity + aura) is on the LEFT half.
-- Check that the RIGHT half is mostly clean/dark with text contrast.
-- Treat validation as heuristic; it is brand QA, not semantic deity recognition.
+- Normalize export to `1280x720` PNG
+- Check brightest signal is on LEFT half
+- Check RIGHT half is dark/clean behind text
+- Check 2-line text hierarchy: line 1 larger, line 2 colored
+- Validation is brand QA heuristic, not semantic recognition

@@ -1,0 +1,62 @@
+{
+  "Shiva": {
+    "channelName": "Shiva",
+    "auraColor": "#0066FF",
+    "visualSignature": ["third eye", "crescent moon", "blue throat", "trident", "cobra"],
+    "intents": ["protection", "transformation", "power", "peace"]
+  },
+  "Hanuman": {
+    "channelName": "Hanuman",
+    "auraColor": "#FF4500",
+    "visualSignature": ["orange-red body", "gada mace", "devotional gaze", "heroic protective posture"],
+    "intents": ["power", "protection", "healing"]
+  },
+  "Krishna": {
+    "channelName": "Hare Krishna",
+    "auraColor": "#00BFFF",
+    "visualSignature": ["dark blue skin", "flute", "peacock feather", "loving serene expression"],
+    "intents": ["love", "peace", "knowledge"]
+  },
+  "Lakshmi": {
+    "channelName": "Lakshmi",
+    "auraColor": "#FFD700",
+    "visualSignature": ["lotus", "gold sari", "coins from palm", "regal abundance"],
+    "intents": ["abundance", "love", "peace"]
+  },
+  "Durga": {
+    "channelName": "Durga",
+    "auraColor": "#6A0DAD",
+    "visualSignature": ["fierce compassionate face", "weapons", "lion energy", "warrior goddess"],
+    "intents": ["protection", "power", "transformation"]
+  },
+  "Ganesha": {
+    "channelName": "Ganesh",
+    "auraColor": "#FF8C00",
+    "visualSignature": ["elephant head", "compassionate eyes", "blessing hand", "golden ornaments"],
+    "intents": ["abundance", "knowledge", "transformation", "protection"]
+  },
+  "Kali": {
+    "channelName": "Kali",
+    "auraColor": "#8B0000",
+    "visualSignature": ["dark blue-black skin", "fierce eyes", "skull garland", "transformational force"],
+    "intents": ["transformation", "protection", "power"]
+  },
+  "Saraswati": {
+    "channelName": "Saraswati",
+    "auraColor": "#FFFACD",
+    "visualSignature": ["white sari", "veena", "lotus", "sacred wisdom"],
+    "intents": ["knowledge", "peace", "love"]
+  },
+  "Ram": {
+    "channelName": "Ram",
+    "auraColor": "#FFD700",
+    "visualSignature": ["bow and arrow", "regal calm expression", "blue skin", "gold crown"],
+    "intents": ["power", "protection", "knowledge"]
+  },
+  "Medicine Buddha": {
+    "channelName": "Medicine Buddha",
+    "auraColor": "#1E40AF",
+    "visualSignature": ["deep blue skin", "healing posture", "nectar bowl", "compassionate expression"],
+    "intents": ["healing", "peace", "abundance"]
+  }
+}

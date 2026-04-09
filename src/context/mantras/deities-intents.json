@@ -6,81 +6,73 @@
   },
   "background": ["#000000", "#0A0600", "#1A0F00"],
   "rules": {
-    "deityPlacement": "left 40-45% width, EXTREME close-up face + ONE blessing hand ONLY, slightly facing toward text side. Crop TIGHT — face fills most of the left half. NO lower body, NO full figure, NO wide shots.",
-    "textPlacement": "right 55-60%, 3 text elements baked into image: (1) TOP: 'THE SCHOOL OF MANTRAS' — tiny white semi-transparent. (2) CENTER: MAIN HOOK — 2-line hierarchy, BIG BOLD poster-style impact, fills significant width of right side. (3) BOTTOM: '[Deity] Mantra · [108x/40 Days]' — small white tag. Center-right vertical alignment, balanced margins.",
+    "deityPlacement": "left 40-45%",
+    "textPlacement": "right 55-60%",
     "styleName": "Cinematic Divine Aura",
-    "style": "Cinematic Hyperreal Devotional — deity-faithful aura color palette (NOT always gold). 4 visual systems: (1) CINEMATIC LIGHTING: strong deity-colored rim light + glow bloom + high contrast shadows — Hollywood feel. (2) DIVINE ENERGY: concentric sacred ring halo in the deity's own aura color, deity-colored energy swirls, floating sparks in matching tones. (3) MATERIAL REALISM: reflective metal textures on ornaments, jewelry depth, shadow realism — premium feel. (4) EMOTIONAL FACE: EXTREME close-up, soft compassionate eyes with visible emotion, divine expression that creates instant emotional pull — the face must be DOMINANT on mobile. Ultra-realistic skin texture. Never cartoon, never illustration, never painting, never temple sculpture. Modern AI cinematic hybrid.",
-    "aura": "dramatic concentric sacred rings or halo behind deity in the DEITY'S OWN AURA COLOR (blue for Shiva, orange-red for Hanuman, violet for Durga, etc.). NOT always gold. Color must match the deity's auraColor field.",
-    "lighting": "strong rim light from behind deity in deity's aura color, warm accent glow, high contrast: bright deity vs dark background. Rim light color should MATCH the deity's aura, not default to gold.",
-    "background": "deep dark gradient (black to dark warm tone matching deity's aura color palette). Deity-colored energy effects: swirling fire/energy in matching hues, embers, sparks, light flares radiating from the aura area. Pure atmospheric void — no architecture, no scenery. Background effects add divine energy without cluttering the text area.",
-    "atmosphere": "deity-colored energy swirls throughout background, floating sparks and embers in matching tones around deity area, subtle mist/smoke at base, soft bokeh. Effects concentrated around deity — text area must be DARK and CLEAN (visual silence for text). ONE optional visual trigger element allowed (see visualTriggers).",
-    "textRules": "3-5 VIRAL words split across 2 lines. Text must trigger CURIOSITY or URGENCY — not be descriptive or generic. Bold condensed font, sized slightly smaller than maximum to fit all words comfortably while staying readable at mobile size. STRONG dark drop shadow + slight glow on text edges. TWO-LINE HIERARCHY (critical): Split the 3-5 word phrase roughly in half across 2 lines — LINE 1 (command/action words) = DOMINANT, 30-40% bigger than LINE 2, WHITE #FFFFFF. LINE 2 (emotion/promise words) = slightly smaller, COLORED using intent accent color (e.g. RED #FF3B3B for pain/healing, ORANGE #FF6600 for power, GOLD #FFD700 for abundance). More words = more viral + more compelling. Examples: 'STOP THE / PAIN NOW', 'OPEN YOUR / HEART', 'HEAL YOUR / BODY NOW'. Problem-solution pattern: LINE 1 = command/action ('STOP THE', 'BREAK FREE', 'RISE UP'), LINE 2 = emotional payload ('PAIN NOW', 'TODAY', 'NOW'). Brain reads in 2 steps = stronger impact. NEVER use fewer than 3 words total.",
-    "negativeSpace": "right side text area must be ULTRA-DARK EMPTY SPACE (visual silence). No props, no particles behind text, no glow bleed, no light interference, no energy leak from deity side. Text sits in PURE DARKNESS with only its own drop shadow. Make it DARKER and CLEANER than seems necessary — the extreme contrast between bright deity (left) and pitch-dark text area (right) creates the click trigger. Any stray particles, light streaks, or glow bleeding into the text zone kills readability and CTR.",
-    "visualTriggers": "ONE subtle visual trigger element per thumbnail to create story: (A) energy/light emanating from deity's hand toward viewer, (B) glowing element in deity's chest/heart area, (C) light beam connecting deity to text, (D) subtle glow near third eye area (for deities with third eye like Shiva), (E) faint light pulse or energy ripple effect around deity's head. Only ONE — never combine. Must feel natural and subtle — just a HINT of energy, not overwhelming. The micro-hook adds life to an otherwise static composition without cluttering.",
+    "style": "photorealistic cinematic devotional",
+    "aura": "concentric sacred rings in deity aura color",
     "noText": false,
     "negativeSpaceLeft": false,
     "textBakedIntoImage": true,
-    "schoolLabel": "THE SCHOOL OF MANTRAS — tiny white semi-transparent text at top-right of thumbnail",
-    "badgeFormat": "[Deity Channel Name] Mantra · [108x / 40 Days / Body Mind Soul / Daily Practice] — small white text at bottom-right below the main hook",
-    "characterFidelity": "preserve canonical deity attributes exactly — NO mixing iconography. EXTREME close-up: face must fill at least 75-80% of the left zone height (zoom 10-15% tighter than default). Eyes MUST be large, bright, and clearly visible even at mobile thumbnail size — slightly increase eye brightness/luminosity for instant emotional connection. Expression should convey emotion that matches the intent (fierce for power, loving for love, serene for peace). Human-like skin texture, realistic lighting on skin, slight idealization. Face zoom is critical: tighter crop = more emotional pull = higher CTR.",
-    "avoid": "no clutter, no lower body, no full figure shots, no multiple props, no particles behind text, no glow behind text area, no light interference in text zone, no generic/calm/descriptive text (must be viral), no center composition, no same-looking variants, no always-gold (use deity colors), no same-weight text lines (must have hierarchy: line 1 dominant, line 2 smaller + colored), no both-lines-white (use color contrast between lines)"
+    "schoolLabel": "THE SCHOOL OF MANTRAS",
+    "badgeFormat": "[Deity Channel Name] Mantra · [suffix]"
   },
   "intents": [
     {
       "key": "abundance",
       "label": "Abundance / Success",
       "color": "#FFD700",
-      "mood": "sacred prosperity, breakthrough, divine support, success momentum",
-      "hookWords": ["ATTRACT YOUR WEALTH", "STOP THE STRUGGLE", "UNLOCK YOUR SUCCESS", "MONEY FLOWS NOW", "WHY YOU'RE STUCK"]
+      "mood": "prosperity, breakthrough, success momentum",
+      "hookWords": ["ATTRACT YOUR WEALTH", "STOP THE STRUGGLE", "UNLOCK YOUR SUCCESS", "MONEY FLOWS NOW"]
     },
     {
       "key": "protection",
       "label": "Protection",
-      "color": "#0066FF",
-      "mood": "shielded, fearless, spiritually guarded, protected from negativity",
-      "hookWords": ["SHIELD YOURSELF NOW", "STOP ALL ATTACKS", "FEEL SAFE AGAIN", "BLOCK ALL EVIL", "PROTECT YOUR ENERGY"]
+      "color": "#4D9FFF",
+      "mood": "shielded, fearless, spiritually guarded",
+      "hookWords": ["SHIELD YOURSELF NOW", "STOP ALL ATTACKS", "FEEL SAFE AGAIN", "BLOCK ALL EVIL"]
     },
     {
       "key": "healing",
       "label": "Healing",
-      "color": "#00C896",
-      "mood": "restorative, body-mind-soul healing, compassionate renewal",
-      "hookWords": ["HEAL YOUR BODY", "STOP THE PAIN", "FEEL WHOLE AGAIN", "END ALL SUFFERING", "YOUR BODY HEALS"]
+      "color": "#FF3B3B",
+      "mood": "restorative, compassionate, body-mind-soul healing",
+      "hookWords": ["HEAL YOUR BODY", "STOP THE PAIN NOW", "FEEL WHOLE AGAIN", "END ALL SUFFERING"]
     },
     {
       "key": "love",
       "label": "Love / Devotion",
       "color": "#FF69B4",
-      "mood": "heart-opening, devotional, soft, emotionally resonant",
-      "hookWords": ["OPEN YOUR HEART", "FEEL LOVE AGAIN", "RECEIVE MORE LOVE", "LOVE RETURNS NOW", "WHY SO EMPTY"]
+      "mood": "heart-opening, devotional, resonant",
+      "hookWords": ["OPEN YOUR HEART", "FEEL LOVE AGAIN", "RECEIVE MORE LOVE", "WHY SO EMPTY"]
     },
     {
       "key": "power",
       "label": "Power / Courage",
-      "color": "#FF4500",
-      "mood": "fierce, courageous, powerful, victorious, unstoppable",
-      "hookWords": ["RISE UP NOW", "FEAR DIES TODAY", "CLAIM YOUR POWER", "STOP ALL FEAR", "BECOME UNSTOPPABLE"]
+      "color": "#FF6600",
+      "mood": "fierce, victorious, unstoppable",
+      "hookWords": ["RISE UP NOW", "FEAR DIES TODAY", "CLAIM YOUR POWER", "STOP ALL FEAR"]
     },
     {
       "key": "peace",
       "label": "Peace / Meditation",
-      "color": "#87CEEB",
-      "mood": "deep peace, inner stillness, meditative calm, soft devotion",
-      "hookWords": ["FIND YOUR PEACE", "STOP THE ANXIETY", "CALM YOUR MIND", "REST MORE DEEPLY", "QUIET YOUR SOUL"]
+      "color": "#B0D4F1",
+      "mood": "deep peace, inner stillness, meditative calm",
+      "hookWords": ["FIND YOUR PEACE", "STOP THE ANXIETY", "CALM YOUR MIND", "QUIET YOUR SOUL"]
     },
     {
       "key": "knowledge",
       "label": "Knowledge / Clarity",
-      "color": "#FFFACD",
-      "mood": "clarity, sacred wisdom, intelligent insight, creative guidance",
-      "hookWords": ["SEE MORE CLEARLY", "UNLOCK YOUR MIND", "GAIN TRUE CLARITY", "THINK MORE SHARP", "FOCUS RIGHT NOW"]
+      "color": "#FFD700",
+      "mood": "clarity, wisdom, intelligent insight",
+      "hookWords": ["SEE MORE CLEARLY", "UNLOCK YOUR MIND", "GAIN TRUE CLARITY", "FOCUS RIGHT NOW"]
     },
     {
       "key": "transformation",
       "label": "Transformation",
-      "color": "#8B0000",
-      "mood": "fierce rebirth, karma release, destruction of obstacles, spiritual transformation",
-      "hookWords": ["REBIRTH STARTS NOW", "BREAK FREE TODAY", "DESTROY OLD KARMA", "YOUR NEW LIFE", "CHANGE YOUR LIFE"]
+      "color": "#FF3B3B",
+      "mood": "rebirth, karma release, destruction of obstacles",
+      "hookWords": ["REBIRTH STARTS NOW", "BREAK FREE TODAY", "DESTROY OLD KARMA", "YOUR NEW LIFE"]
     }
   ],
   "deities": [
@@ -88,82 +80,72 @@
       "name": "Ganesha",
       "channelName": "Ganesh",
       "aliases": ["Ganesh"],
-      "visualSignature": "elephant head with natural proportions (not exaggerated or cartoonish), large compassionate intelligent eyes with subtle glow, trunk gently curved with natural elegant flow, large symmetrical realistic ears, calm benevolent divine expression (peace + power), one hand raised in blessing (Abhaya mudra), optional second hand holding modak OR lotus (only one if cluttered), large rounded belly (symbol of abundance), rich golden ornaments: crown necklaces armlets (intricate but not overwhelming), realistic skin texture (stone-like divine skin or soft radiant tone not plastic), NO mixing with other deities (no Shiva elements no trident no third eye)",
+      "visualSignature": "elephant head, compassionate eyes, blessing hand, golden ornaments",
       "auraColor": "#FF8C00",
-      "auraStyle": "dramatic golden concentric sacred rings behind deity with warm amber-orange fire energy radiating outward, golden sparks and embers floating around halo area, swirling golden light flares, divine prosperity radiance with cinematic depth",
       "intents": ["abundance", "knowledge", "transformation", "protection"]
     },
     {
       "name": "Shiva",
-      "visualSignature": "third eye, crescent moon, blue throat, trident, cobra, ash-toned skin, meditative powerful gaze",
+      "visualSignature": "third eye, crescent moon, blue throat, trident, cobra",
       "auraColor": "#0066FF",
-      "auraStyle": "dramatic electric blue concentric sacred rings behind deity with blue-white fire energy radiating outward, blue-tinted sparks and embers floating around halo area, swirling blue light flares, divine protection charge with cinematic depth",
       "intents": ["protection", "transformation", "power", "peace"]
     },
     {
       "name": "Hanuman",
-      "visualSignature": "orange-red body, muscular build, gada mace, devotional gaze, heroic protective posture, fierce compassionate expression",
+      "visualSignature": "orange-red body, gada mace, devotional gaze, heroic protective posture",
       "auraColor": "#FF4500",
-      "auraStyle": "dramatic fiery orange-red concentric sacred rings behind deity with blazing fire energy radiating outward, orange sparks and embers floating around halo area, swirling fire light flares, fierce devotional power with cinematic depth",
       "intents": ["power", "protection", "healing"]
     },
     {
       "name": "Krishna",
       "channelName": "Hare Krishna",
       "aliases": ["Hare Krishna"],
-      "visualSignature": "dark blue skin, yellow dhoti, flute, peacock feather, serene loving expression, luminous devotional beauty",
+      "visualSignature": "dark blue skin, flute, peacock feather, loving serene expression",
       "auraColor": "#00BFFF",
-      "auraStyle": "dramatic teal-blue concentric sacred rings behind deity with soft blue-gold fire energy radiating outward, teal sparks and star particles floating around halo area, swirling devotional light flares, peaceful divine love radiance with cinematic depth",
       "intents": ["love", "peace", "knowledge"]
     },
     {
       "name": "Lakshmi",
-      "visualSignature": "four arms, lotus flowers, gold coins flowing from palm, gold sari, serene abundance, regal divine beauty",
+      "visualSignature": "lotus, gold sari, coins from palm, regal abundance",
       "auraColor": "#FFD700",
-      "auraStyle": "dramatic golden concentric sacred rings behind deity with warm gold fire energy radiating outward, golden sparks and embers floating around halo area, swirling golden light flares, sacred prosperity radiance with cinematic depth",
       "intents": ["abundance", "love", "peace"]
     },
     {
       "name": "Durga",
-      "visualSignature": "8-10 arms with weapons, lion mount, fierce compassionate face, commanding protective goddess energy",
+      "visualSignature": "fierce compassionate face, weapons, lion energy, warrior goddess",
       "auraColor": "#6A0DAD",
-      "auraStyle": "dramatic deep violet concentric sacred rings behind deity with violet-gold fire energy radiating outward, violet sparks and embers floating around halo area, swirling fierce light flares, goddess warrior radiance with cinematic depth",
       "intents": ["protection", "power", "transformation"]
     },
     {
       "name": "Saraswati",
-      "visualSignature": "white sari, veena, lotus, swan symbolism, calm radiant expression, luminous sacred wisdom",
+      "visualSignature": "white sari, veena, lotus, sacred wisdom",
       "auraColor": "#FFFACD",
-      "auraStyle": "dramatic warm ivory-gold concentric sacred rings behind deity with soft golden fire energy radiating outward, ivory-gold sparks and particles floating around halo area, swirling wisdom light flares, refined devotional clarity with cinematic depth",
       "intents": ["knowledge", "peace", "love"]
     },
     {
       "name": "Ram",
       "aliases": ["Rama"],
-      "visualSignature": "bow and arrow, calm regal expression, blue skin, gold crown, righteous warrior presence",
+      "visualSignature": "bow and arrow, regal calm expression, blue skin, gold crown",
       "auraColor": "#FFD700",
-      "auraStyle": "dramatic golden concentric sacred rings behind deity with warm sunlit fire energy radiating outward, golden sparks and embers floating around halo area, swirling righteous light flares, dharmic noble radiance with cinematic depth",
       "intents": ["power", "protection", "knowledge"]
     },
     {
       "name": "Kali",
-      "visualSignature": "dark blue-black skin, tongue out, fierce face, dramatic eyes, skull garland, transformational intensity, protective ferocity",
+      "visualSignature": "dark blue-black skin, fierce eyes, skull garland, transformational force",
       "auraColor": "#8B0000",
-      "auraStyle": "dramatic deep crimson concentric sacred rings behind deity with red-black fire energy radiating outward, crimson sparks and embers floating around halo area, swirling fierce red light flares, negativity-destroying transformational force with cinematic depth",
       "intents": ["transformation", "protection", "power"]
     },
     {
       "name": "Medicine Buddha",
       "aliases": ["Vishnu"],
-      "visualSignature": "deep blue skin, healing seated posture, nectar bowl, serene compassionate face, luminous restorative energy",
+      "visualSignature": "deep blue skin, healing posture, nectar bowl, compassionate expression",
       "auraColor": "#1E40AF",
-      "auraStyle": "dramatic deep blue concentric sacred rings behind deity with blue-gold healing fire energy radiating outward, blue-gold sparks and particles floating around halo area, swirling restorative light flares, compassionate divine medicine radiance with cinematic depth",
       "intents": ["healing", "peace", "abundance"]
     }
   ],
   "textHierarchy": {
-    "rule": "3-5 words total split across 2 lines: LINE 1 = command/action words (BIG, WHITE, dominant). LINE 2 = emotion/promise words (slightly smaller, COLORED). More words = more viral + more compelling context. Size text slightly smaller than max to fit comfortably.",
-    "line1Style": "WHITE #FFFFFF, 30-40% bigger than line 2, STRONG drop shadow, dominant position",
+    "rule": "3-5 words split across 2 lines. LINE 1 = command/action (WHITE, dominant). LINE 2 = emotion/promise (COLORED, smaller).",
+    "line1Style": "WHITE #FFFFFF, 30-40% bigger than line 2, STRONG drop shadow",
     "line2Colors": {
       "abundance": "#FFD700",
       "protection": "#4D9FFF",
@@ -173,25 +155,16 @@
       "peace": "#B0D4F1",
       "knowledge": "#FFD700",
       "transformation": "#FF3B3B"
-    },
-    "line2Style": "colored accent, smaller than line 1, STRONG drop shadow, emotional payload",
-    "examples": {
-      "healing": { "line1": "STOP THE", "line2": "PAIN NOW", "line2Color": "#FF3B3B" },
-      "love": { "line1": "OPEN YOUR", "line2": "HEART", "line2Color": "#FF69B4" },
-      "power": { "line1": "RISE UP", "line2": "NOW", "line2Color": "#FF6600" },
-      "abundance": { "line1": "ATTRACT YOUR", "line2": "WEALTH", "line2Color": "#FFD700" },
-      "protection": { "line1": "SHIELD YOURSELF", "line2": "NOW", "line2Color": "#4D9FFF" },
-      "transformation": { "line1": "BREAK FREE", "line2": "TODAY", "line2Color": "#FF3B3B" }
     }
   },
   "hookWords": {
-    "abundance": ["ATTRACT YOUR WEALTH", "STOP THE STRUGGLE", "UNLOCK YOUR SUCCESS", "MONEY FLOWS NOW", "WHY YOU'RE STUCK"],
-    "protection": ["SHIELD YOURSELF NOW", "STOP ALL ATTACKS", "FEEL SAFE AGAIN", "BLOCK ALL EVIL", "PROTECT YOUR ENERGY"],
-    "healing": ["HEAL YOUR BODY", "STOP THE PAIN", "FEEL WHOLE AGAIN", "END ALL SUFFERING", "YOUR BODY HEALS"],
-    "love": ["OPEN YOUR HEART", "FEEL LOVE AGAIN", "RECEIVE MORE LOVE", "LOVE RETURNS NOW", "WHY SO EMPTY"],
-    "power": ["RISE UP NOW", "FEAR DIES TODAY", "CLAIM YOUR POWER", "STOP ALL FEAR", "BECOME UNSTOPPABLE"],
-    "peace": ["FIND YOUR PEACE", "STOP THE ANXIETY", "CALM YOUR MIND", "REST MORE DEEPLY", "QUIET YOUR SOUL"],
-    "knowledge": ["SEE MORE CLEARLY", "UNLOCK YOUR MIND", "GAIN TRUE CLARITY", "THINK MORE SHARP", "FOCUS RIGHT NOW"],
-    "transformation": ["REBIRTH STARTS NOW", "BREAK FREE TODAY", "DESTROY OLD KARMA", "YOUR NEW LIFE", "CHANGE YOUR LIFE"]
+    "abundance": ["ATTRACT YOUR WEALTH", "STOP THE STRUGGLE", "UNLOCK YOUR SUCCESS", "MONEY FLOWS NOW"],
+    "protection": ["SHIELD YOURSELF NOW", "STOP ALL ATTACKS", "FEEL SAFE AGAIN", "BLOCK ALL EVIL"],
+    "healing": ["HEAL YOUR BODY", "STOP THE PAIN NOW", "FEEL WHOLE AGAIN", "END ALL SUFFERING"],
+    "love": ["OPEN YOUR HEART", "FEEL LOVE AGAIN", "RECEIVE MORE LOVE", "WHY SO EMPTY"],
+    "power": ["RISE UP NOW", "FEAR DIES TODAY", "CLAIM YOUR POWER", "STOP ALL FEAR"],
+    "peace": ["FIND YOUR PEACE", "STOP THE ANXIETY", "CALM YOUR MIND", "QUIET YOUR SOUL"],
+    "knowledge": ["SEE MORE CLEARLY", "UNLOCK YOUR MIND", "GAIN TRUE CLARITY", "FOCUS RIGHT NOW"],
+    "transformation": ["REBIRTH STARTS NOW", "BREAK FREE TODAY", "DESTROY OLD KARMA", "YOUR NEW LIFE"]
   }
 }

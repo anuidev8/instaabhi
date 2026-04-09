@@ -249,6 +249,9 @@ export interface ThumbnailPrompt {
   title: string;
   deity: string;
   intent: IntentKey;
+  line1?: string;
+  line2?: string;
+  badge?: string;
   special?: string;
 }
 

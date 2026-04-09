@@ -1,0 +1,50 @@
+{
+  "abundance": [
+    { "line1": "ATTRACT YOUR", "line2": "WEALTH" },
+    { "line1": "STOP THE", "line2": "STRUGGLE" },
+    { "line1": "UNLOCK YOUR", "line2": "SUCCESS" },
+    { "line1": "MONEY FLOWS", "line2": "NOW" }
+  ],
+  "protection": [
+    { "line1": "SHIELD YOURSELF", "line2": "NOW" },
+    { "line1": "STOP ALL", "line2": "ATTACKS" },
+    { "line1": "FEEL SAFE", "line2": "AGAIN" },
+    { "line1": "BLOCK ALL", "line2": "EVIL" }
+  ],
+  "healing": [
+    { "line1": "HEAL YOUR", "line2": "BODY" },
+    { "line1": "STOP THE", "line2": "PAIN NOW" },
+    { "line1": "FEEL WHOLE", "line2": "AGAIN" },
+    { "line1": "END ALL", "line2": "SUFFERING" }
+  ],
+  "love": [
+    { "line1": "OPEN YOUR", "line2": "HEART" },
+    { "line1": "FEEL LOVE", "line2": "AGAIN" },
+    { "line1": "RECEIVE MORE", "line2": "LOVE" },
+    { "line1": "WHY SO", "line2": "EMPTY" }
+  ],
+  "power": [
+    { "line1": "RISE UP", "line2": "NOW" },
+    { "line1": "FEAR DIES", "line2": "TODAY" },
+    { "line1": "CLAIM YOUR", "line2": "POWER" },
+    { "line1": "STOP ALL", "line2": "FEAR" }
+  ],
+  "peace": [
+    { "line1": "FIND YOUR", "line2": "PEACE" },
+    { "line1": "STOP THE", "line2": "ANXIETY" },
+    { "line1": "CALM YOUR", "line2": "MIND" },
+    { "line1": "QUIET YOUR", "line2": "SOUL" }
+  ],
+  "knowledge": [
+    { "line1": "SEE MORE", "line2": "CLEARLY" },
+    { "line1": "UNLOCK YOUR", "line2": "MIND" },
+    { "line1": "GAIN TRUE", "line2": "CLARITY" },
+    { "line1": "FOCUS RIGHT", "line2": "NOW" }
+  ],
+  "transformation": [
+    { "line1": "REBIRTH STARTS", "line2": "NOW" },
+    { "line1": "BREAK FREE", "line2": "TODAY" },
+    { "line1": "DESTROY OLD", "line2": "KARMA" },
+    { "line1": "YOUR NEW", "line2": "LIFE" }
+  ]
+}

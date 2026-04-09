@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "canvas": {
+    "width": 1280,
+    "height": 720,
+    "aspect": "16:9"
+  },
+  "layout": {
+    "deityZone": "left 40-45%",
+    "textZone": "right 55-60%",
+    "characterFacing": "toward text",
+    "centerCompositionAllowed": false
+  },
+  "character": {
+    "crop": "extreme close-up",
+    "faceFill": "75-80%+ of left zone",
+    "allowedBody": "face + one blessing hand only",
+    "allowLowerBody": false,
+    "allowWideShot": false,
+    "eyes": "bright, large, visible on mobile",
+    "style": "photorealistic cinematic devotional"
+  },
+  "background": {
+    "type": "deep dark gradient",
+    "allowArchitecture": false,
+    "allowScenery": false,
+    "textArea": "ultra-dark empty silence",
+    "allowParticlesBehindText": false,
+    "allowGlowBehindText": false,
+    "allowLightInterferenceBehindText": false
+  },
+  "text": {
+    "topLabel": true,
+    "topLabelText": "THE SCHOOL OF MANTRAS",
+    "bottomBadge": true,
+    "wordCount": "3-5",
+    "lineCount": 2,
+    "line1": {
+      "role": "command/action",
+      "color": "#FFFFFF",
+      "sizeRelation": "30-40% bigger than line2"
+    },
+    "line2": {
+      "role": "emotion/promise",
+      "colorSource": "intent"
+    },
+    "font": "bold condensed",
+    "dropShadow": "strong",
+    "slightGlow": true
+  },
+  "visualTrigger": {
+    "required": true,
+    "maxCount": 1,
+    "allowed": [
+      "hand_energy",
+      "heart_glow",
+      "third_eye_glow",
+      "light_beam",
+      "head_pulse"
+    ]
+  },
+  "colorSystem": {
+    "useDeityAuraColor": true,
+    "defaultGoldForAll": false
+  },
+  "bans": [
+    "cartoon",
+    "illustration",
+    "painting",
+    "temple_sculpture_style",
+    "center_deity",
+    "generic_text",
+    "same_weight_text_lines",
+    "both_lines_white",
+    "full_figure",
+    "clutter"
+  ]
+}

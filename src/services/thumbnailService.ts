@@ -1,8 +1,25 @@
 import { GoogleGenAI, Type } from '@google/genai';
-import brandGuideMarkdown from '../context/mantras/mantras-brand-guide.md?raw';
-import promptTemplatesMarkdown from '../context/mantras/prompt-templates.md?raw';
-import nanoBananaMarkdown from '../context/mantras/api/nano-banana.md?raw';
-import mantrasContextRaw from '../context/mantras/deities-intents.json?raw';
+import systemPromptMarkdown from '../thumbnail-engine/templates/system-prompt.md?raw';
+import {
+  coreRules,
+  deities as deityMap,
+  intents as intentMap,
+  hooks as hookMap,
+  getDeity as engineGetDeity,
+  getIntent as engineGetIntent,
+  getHook,
+  getHooks,
+  buildBadge,
+  buildPromptBrief as engineBuildBrief,
+  getDeitiesForIntent,
+} from '../thumbnail-engine';
+import { validateImageData } from '../thumbnail-engine/src/validator';
+import type {
+  DeityConfig,
+  IntentConfig,
+  HookPair,
+  IntentKey as EngineIntentKey,
+} from '../thumbnail-engine/src/types';
 import {
   Deity,
   Intent,
@@ -59,24 +76,63 @@ export interface ThumbnailInputSuggestion {
   title: string;
 }
 
-type MantrasContextPayload = MantrasBrandContext;
+// ---------------------------------------------------------------------------
+// Bridge: Convert new engine configs → legacy exported types
+// ---------------------------------------------------------------------------
 
-const MANTRAS_CONTEXT = JSON.parse(mantrasContextRaw) as MantrasContextPayload;
+function deityConfigToLegacy(name: string, config: DeityConfig): Deity {
+  return {
+    name,
+    channelName: config.channelName,
+    auraColor: config.auraColor,
+    visualSignature: config.visualSignature.join(', '),
+    intents: config.intents as IntentKey[],
+  };
+}
 
-export const MANTRAS_BRAND_CONTEXT: MantrasBrandContext = MANTRAS_CONTEXT;
-export const MANTRAS_INTENTS: Intent[] = MANTRAS_CONTEXT.intents;
-export const DEITIES: Deity[] = MANTRAS_CONTEXT.deities;
+function intentConfigToLegacy(key: IntentKey, config: IntentConfig): Intent {
+  const hookPool = getHooks(key as EngineIntentKey);
+  return {
+    key,
+    label: key.charAt(0).toUpperCase() + key.slice(1),
+    color: config.color,
+    mood: config.mood,
+    hookWords: hookPool.map((h) => `${h.line1} ${h.line2}`),
+  };
+}
 
-const ACTION_PROMISES: Record<IntentKey, string[]> = {
-  abundance: ['ATTRACT YOUR WEALTH', 'STOP THE STRUGGLE', 'UNLOCK YOUR SUCCESS', 'MONEY FLOWS NOW'],
-  protection: ['SHIELD YOURSELF NOW', 'STOP ALL ATTACKS', 'FEEL SAFE AGAIN', 'BLOCK ALL EVIL'],
-  healing: ['HEAL YOUR BODY', 'STOP THE PAIN', 'FEEL WHOLE AGAIN', 'END ALL SUFFERING'],
-  love: ['OPEN YOUR HEART', 'FEEL LOVE AGAIN', 'RECEIVE MORE LOVE', 'WHY SO EMPTY'],
-  power: ['RISE UP NOW', 'FEAR DIES TODAY', 'CLAIM YOUR POWER', 'STOP ALL FEAR'],
-  peace: ['FIND YOUR PEACE', 'STOP THE ANXIETY', 'CALM YOUR MIND', 'QUIET YOUR SOUL'],
-  knowledge: ['SEE MORE CLEARLY', 'UNLOCK YOUR MIND', 'GAIN TRUE CLARITY', 'FOCUS RIGHT NOW'],
-  transformation: ['REBIRTH STARTS NOW', 'BREAK FREE TODAY', 'DESTROY OLD KARMA', 'YOUR NEW LIFE'],
+export const DEITIES: Deity[] = Object.entries(deityMap).map(([name, config]) =>
+  deityConfigToLegacy(name, config)
+);
+
+export const MANTRAS_INTENTS: Intent[] = (Object.keys(intentMap) as IntentKey[]).map(
+  (key) => intentConfigToLegacy(key, intentMap[key as EngineIntentKey])
+);
+
+const hookWordsByIntent: Record<IntentKey, string[]> = {} as Record<IntentKey, string[]>;
+for (const key of Object.keys(hookMap) as IntentKey[]) {
+  hookWordsByIntent[key] = hookMap[key as EngineIntentKey].map((h) => `${h.line1} ${h.line2}`);
+}
+
+export const MANTRAS_BRAND_CONTEXT: MantrasBrandContext = {
+  canvas: { width: 1280, height: 720, aspect: '16:9' },
+  background: ['#000000', '#0A0600', '#1A0F00'],
+  rules: {
+    deityPlacement: coreRules.layout.deityZone,
+    style: coreRules.character.style,
+    aura: 'concentric sacred rings in deity aura color',
+    noText: false,
+    negativeSpaceLeft: false,
+    textBakedIntoImage: true,
+  },
+  deities: DEITIES,
+  intents: MANTRAS_INTENTS,
+  hookWords: hookWordsByIntent,
 };
+
+// ---------------------------------------------------------------------------
+// Intent / Deity lookups (use engine, return legacy types)
+// ---------------------------------------------------------------------------
 
 const DEFAULT_BADGES: Record<IntentKey, string> = {
   abundance: '108x',
@@ -89,16 +145,38 @@ const DEFAULT_BADGES: Record<IntentKey, string> = {
   transformation: '40 Days',
 };
 
-const LINE2_COLOR_BY_INTENT: Record<IntentKey, string> = {
-  abundance: '#FFD700',
-  protection: '#4D9FFF',
-  healing: '#FF3B3B',
-  love: '#FF69B4',
-  power: '#FF6600',
-  peace: '#B0D4F1',
-  knowledge: '#FFD700',
-  transformation: '#FF3B3B',
-};
+function getIntent(intentKey: IntentKey): Intent {
+  const intent = MANTRAS_INTENTS.find((i) => i.key === intentKey);
+  if (!intent) throw new Error(`Unsupported thumbnail intent: ${intentKey}`);
+  return intent;
+}
+
+function getDeity(name: string): Deity {
+  const normalizedName = name.trim().toLowerCase();
+  const deity = DEITIES.find((item) =>
+    [item.name, ...(item.aliases ?? [])].some(
+      (c) => c.trim().toLowerCase() === normalizedName
+    )
+  );
+  if (!deity) throw new Error(`Unsupported deity: ${name}`);
+  return deity;
+}
+
+function getChannelDeityName(deity: Deity): string {
+  return deity.channelName?.trim() || deity.name;
+}
+
+function resolveAuraColor(deity: Deity): string {
+  return deity.auraColor?.trim() || '#FFD700';
+}
+
+function getLine2Color(intentKey: IntentKey): string {
+  return intentMap[intentKey as EngineIntentKey]?.color ?? '#FF3B3B';
+}
+
+// ---------------------------------------------------------------------------
+// Gemini helpers
+// ---------------------------------------------------------------------------
 
 function isModelNotFoundError(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error);
@@ -110,83 +188,28 @@ async function generateContentWithModelFallback(
   params: Omit<GenerateContentParams, 'model'>
 ) {
   let lastError: unknown;
-
   for (const model of modelCandidates) {
     try {
-      return await ai.models.generateContent({
-        ...params,
-        model,
-      });
+      return await ai.models.generateContent({ ...params, model });
     } catch (error) {
       lastError = error;
       if (!isModelNotFoundError(error)) throw error;
     }
   }
-
   throw lastError ?? new Error('No Gemini model candidates were configured');
 }
 
-const THUMBNAIL_SYSTEM_PROMPT = `You are a viral YouTube thumbnail strategist for School of Mantras.
+// ---------------------------------------------------------------------------
+// System prompt — short, structured, no giant docs
+// ---------------------------------------------------------------------------
 
-Your goal: create thumbnails that get 5-10%+ CTR. Not beautiful — INSTANTLY CLICKABLE.
-
-VIRAL PSYCHOLOGY (MOST IMPORTANT):
-- The thumbnail must make viewers feel: "This will change how I feel RIGHT NOW"
-- NOT: "This is spiritual content"
-- Text must trigger CURIOSITY, URGENCY, or a SPECIFIC OUTCOME
-- Never generic (no "DIVINE LOVE", "SACRED HEALING" — too calm, no click trigger)
-- Good examples: "OPEN YOUR HEART", "STOP THE PAIN", "FEEL LOVE AGAIN", "RISE UP NOW", "BREAK FREE TODAY"
-- PROBLEM-SOLUTION pattern performs VERY well: pain point + instant promise ("STOP THE PAIN")
-- Hooks must be 3-5 words total (NOT just 2 words — more words = more viral + more context)
-
-STYLE — "Cinematic Divine Aura" (DEITY-COLORED, NOT ALWAYS GOLD):
-Cinematic Hyperreal Devotional with deity-faithful color palette.
-4 visual systems must ALL be present:
-1. CINEMATIC LIGHTING: strong rim light in DEITY'S OWN AURA COLOR (blue for Shiva, orange for Hanuman, violet for Durga, etc.), glow bloom, extreme contrast. Eyes slightly brighter/luminous.
-2. DIVINE ENERGY: concentric sacred ring halo in deity's aura color, deity-colored energy swirls, matching sparks. NOT ALWAYS GOLD.
-3. MATERIAL REALISM: reflective metal textures, jewelry depth, shadow realism.
-4. EMOTIONAL FACE (MOST CRITICAL): EXTREME close-up. Face fills 75-80%+ of left zone (10-15% tighter zoom). Eyes must be BIG, BRIGHT, and luminous at mobile size. Expression must match intent emotion.
-
-CRITICAL COLOR RULE: Each deity has their own aura color. Shiva = electric blue. Hanuman = fiery orange-red. Durga = deep violet. Krishna = teal-blue. Kali = deep crimson. Saraswati = warm ivory. Use THEIR color for rim light, aura rings, energy, sparks — NOT gold for every deity. Gold is for Ganesha, Lakshmi, and Ram only.
-
-TEXT HIERARCHY RULE (v6 — MOST IMPORTANT TEXT CHANGE):
-- Hook phrases must be 3-5 words total (NOT just 2 — more words = more viral + more compelling context).
-- 2-LINE SPLIT: Split the phrase roughly in half across 2 lines. LINE 1 = command/action part (BIG, WHITE #FFFFFF, DOMINANT — 30-40% bigger than LINE 2). LINE 2 = emotion/promise part (slightly smaller, COLORED with intent accent).
-- Examples: LINE 1 "STOP THE" + LINE 2 "PAIN NOW", LINE 1 "OPEN YOUR" + LINE 2 "HEART", LINE 1 "HEAL YOUR" + LINE 2 "BODY NOW".
-- LINE 2 COLORS: healing=RED #FF3B3B, power=ORANGE #FF6600, abundance=GOLD #FFD700, love=PINK #FF69B4, protection=BLUE #4D9FFF, transformation=RED #FF3B3B, peace=SOFT BLUE #B0D4F1, knowledge=GOLD #FFD700.
-- NEVER both lines same weight or same color. LINE 1 must visually DOMINATE.
-- Both lines need STRONG dark drop shadow.
-- Size the text slightly smaller than maximum to comfortably fit 3-5 words while keeping mobile readability.
-- Brain reads 2 steps = stronger impact than flat same-weight text.
-
-${brandGuideMarkdown}
-
-${promptTemplatesMarkdown}
-
-${nanoBananaMarkdown}
-
-Brand context JSON:
-${JSON.stringify(MANTRAS_BRAND_CONTEXT)}
-
-NON-NEGOTIABLE RULES:
-- Generate exactly 2 MEANINGFULLY DIFFERENT image prompts (not just intensity variations).
-- Each prompt must create a 1280x720 thumbnail.
-- LAYOUT: EXTREME close-up deity on LEFT 40-45% — face fills 75-80%+ of left zone (10-15% tighter zoom) + ONE blessing hand ONLY. NO lower body. Face must DOMINATE. RIGHT 55-60% for text.
-- FACE: Crop TIGHT (tighter than default). Eyes must be large, BRIGHT, and luminous at mobile size. Expression must match intent emotion (fierce for power, loving for love, serene for peace).
-- BACKGROUND: Deep dark gradient. Energy effects in DEITY'S AURA COLOR (not always gold). Swirling fire/energy, embers, sparks in matching deity hues. No architecture.
-- AURA: Concentric sacred rings in DEITY'S OWN AURA COLOR. NOT always gold.
-- LIGHTING: Rim light in DEITY'S AURA COLOR from behind. High contrast. Eyes slightly brighter.
-- TEXT AREA: RIGHT side must be ULTRA-DARK EMPTY SPACE (pure visual silence). NO particles, NO glow, NO light interference behind text. Text sits in PITCH DARKNESS. Make darker than seems necessary.
-- TEXT LAYOUT (3 elements, all baked into image, RIGHT SIDE): (1) TOP: "THE SCHOOL OF MANTRAS" — tiny, white, semi-transparent, top area. (2) CENTER — MAIN HOOK: 2-line hierarchy, BIG and BOLD poster-style — LINE 1 = HUGE white command text, LINE 2 = LARGE colored emotion text. Must look impactful at mobile size, not small or subtle. (3) BOTTOM: "[Deity] Mantra · [108x/40 Days]" — small white text below the hook.
-- TEXT HIERARCHY: 3-5 words total, split across 2 lines. LINE 1 = command/action words (HUGE, BOLD, WHITE, 30-40% bigger). LINE 2 = emotion/promise words (LARGE but slightly smaller, BOLD, COLORED with intent accent). BOTH lines have STRONG dark drop shadow. NEVER both lines same weight or same color. Text must be BIG — poster-style impact, easily readable at thumbnail size.
-- MICRO-HOOK: Include ONE subtle visual trigger per variant: (A) energy from deity's hand, (B) glowing heart/chest, (C) light beam, (D) subtle third-eye glow, (E) faint energy pulse. Only ONE — just a HINT of energy.
-- CHARACTER FIDELITY: Preserve canonical attributes. NO mixing deities.
-- line1 AND line2 together form the 3-5 word hook phrase. You MUST populate BOTH: line1 = command/action words (the first half, e.g. "STOP THE", "OPEN YOUR", "HEAL YOUR", "RISE UP"). line2 = emotion/promise words (the second half, e.g. "PAIN NOW", "HEART", "BODY NOW", "TODAY"). NEVER leave line2 empty. NEVER use only 1-2 words total — the hook MUST be 3-5 words for maximum viral impact. Examples: line1="STOP THE" + line2="PAIN NOW", line1="FEEL LOVE" + line2="AGAIN", line1="BREAK FREE" + line2="TODAY".
-- badge = the deity tag line shown at the bottom (e.g. "Ganesh Mantra · 108x", "Shiva Mantra · 108x", "Hanuman Mantra · 40 Days"). Format: "[Deity Channel Name] Mantra · [suffix]".
-- schoolLabel = "THE SCHOOL OF MANTRAS" (shown tiny at top).
-- AVOID: generic/calm text, full body shots, gold for non-gold deities, particles behind text, glow in text area, light interference in text zone, center composition, similar-looking variants, same-weight text lines, both-lines-white, hooks shorter than 3 words (always use 3-5 words split across 2 lines).
+const THUMBNAIL_SYSTEM_PROMPT = `${systemPromptMarkdown}
 
 Return strict JSON only.`;
+
+// ---------------------------------------------------------------------------
+// Utility helpers
+// ---------------------------------------------------------------------------
 
 function uppercaseClean(value: string): string {
   return value.replace(/\s+/g, ' ').trim().toUpperCase();
@@ -197,13 +220,12 @@ function titleCaseFromCaps(value: string): string {
     .toLowerCase()
     .split(/\s+/)
     .filter(Boolean)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(' ');
 }
 
 function extractYear(text: string): string | null {
-  const match = text.match(/\b(20\d{2})\b/);
-  return match?.[1] ?? null;
+  return text.match(/\b(20\d{2})\b/)?.[1] ?? null;
 }
 
 function normalizeTitle(value: string): string {
@@ -214,80 +236,33 @@ function includesNormalized(haystack: string, needle: string): boolean {
   return normalizeTitle(haystack).toLowerCase().includes(normalizeTitle(needle).toLowerCase());
 }
 
-function getIntent(intentKey: IntentKey): Intent {
-  const intent = MANTRAS_INTENTS.find((item) => item.key === intentKey);
-  if (!intent) throw new Error(`Unsupported thumbnail intent: ${intentKey}`);
-  return intent;
-}
-
-function getDeity(name: string): Deity {
-  const normalizedName = name.trim().toLowerCase();
-  const deity = DEITIES.find((item) =>
-    [item.name, ...(item.aliases ?? [])].some((candidate) => candidate.trim().toLowerCase() === normalizedName)
-  );
-  if (!deity) throw new Error(`Unsupported deity: ${name}`);
-  return deity;
-}
-
-function getChannelDeityName(deity: Deity): string {
-  return deity.channelName?.trim() || deity.name;
-}
-
-function resolveAuraColor(deity: Deity, intent: Intent): string {
-  return deity.auraColor?.trim() || intent.color;
-}
-
-function resolveAuraPrompt(deity: Deity, intent: Intent, auraColor: string): string {
-  const auraStyle = deity.auraStyle?.trim();
-  const deityAura = deity.auraColor?.trim();
-
-  if (auraStyle) {
-    if (deityAura && deityAura.toLowerCase() !== intent.color.toLowerCase()) {
-      return `${auraStyle}, supported by a restrained ${intent.color} intent accent where it strengthens the selected mood`;
-    }
-    return auraStyle;
-  }
-
-  if (deityAura && deityAura.toLowerCase() !== intent.color.toLowerCase()) {
-    return `${deityAura} deity-faithful aura with a subtle ${intent.color} intent support glow`;
-  }
-
-  return `${auraColor} aura`;
-}
+// ---------------------------------------------------------------------------
+// Default spec builders
+// ---------------------------------------------------------------------------
 
 function getDefaultTextColors(intent: Intent, deity: Deity): ThumbnailCanvaSpec['colors'] {
   return {
     hook: '#FFFFFF',
-    secondary: LINE2_COLOR_BY_INTENT[intent.key],
+    secondary: getLine2Color(intent.key),
     brand: '#FFD700',
     badge: 'rgba(255,255,255,0.88)',
-    aura: resolveAuraColor(deity, intent),
+    aura: resolveAuraColor(deity),
   };
 }
 
 function buildDefaultSeoTitle(deity: Deity, intent: Intent): string {
   const deityName = getChannelDeityName(deity);
-
-  switch (intent.key) {
-    case 'abundance':
-      return `${deityName} Mantra for 2026 Success | Remove All Obstacles & Achieve Your Goals`;
-    case 'protection':
-      return `${deityName} Mantra for Protection 2026 | Shield Yourself from Negative Energy & Start Fresh`;
-    case 'healing':
-      return `${deityName} Mantra — Healing Meditation for Body, Mind & Soul`;
-    case 'love':
-      return `${deityName} Mantra for Divine Love | Open Your Heart & Return to Joy`;
-    case 'power':
-      return `${deityName} Mantra for Strength & Fearlessness [Listen Daily for 40 Days]`;
-    case 'peace':
-      return `${deityName} Mantra for Deep Peace & Love 2026`;
-    case 'knowledge':
-      return `${deityName} Mantra for Divine Knowledge | Unlock Wisdom & Achieve Focus`;
-    case 'transformation':
-      return `${deityName} Mantra for 2026 Transformation | Release Karma & Rebirth Now`;
-    default:
-      return `${deityName} Mantra for 2026 ${intent.label.split('/')[0].trim()} | Divine Blessings`;
-  }
+  const titleMap: Partial<Record<IntentKey, string>> = {
+    abundance: `${deityName} Mantra for 2026 Success | Remove All Obstacles & Achieve Your Goals`,
+    protection: `${deityName} Mantra for Protection 2026 | Shield Yourself from Negative Energy & Start Fresh`,
+    healing: `${deityName} Mantra — Healing Meditation for Body, Mind & Soul`,
+    love: `${deityName} Mantra for Divine Love | Open Your Heart & Return to Joy`,
+    power: `${deityName} Mantra for Strength & Fearlessness [Listen Daily for 40 Days]`,
+    peace: `${deityName} Mantra for Deep Peace & Love 2026`,
+    knowledge: `${deityName} Mantra for Divine Knowledge | Unlock Wisdom & Achieve Focus`,
+    transformation: `${deityName} Mantra for 2026 Transformation | Release Karma & Rebirth Now`,
+  };
+  return titleMap[intent.key] ?? `${deityName} Mantra for 2026 | Divine Blessings`;
 }
 
 function buildAlignedSeoTitle(
@@ -299,7 +274,8 @@ function buildAlignedSeoTitle(
 ): string {
   const deityName = getChannelDeityName(deity);
   const year = extractYear(line1);
-  const benefit = titleCaseFromCaps(line1.replace(/\b20\d{2}\b/g, '').trim()) || titleCaseFromCaps(line1);
+  const benefit =
+    titleCaseFromCaps(line1.replace(/\b20\d{2}\b/g, '').trim()) || titleCaseFromCaps(line1);
   const action = titleCaseFromCaps(line2);
 
   const leading = year
@@ -338,14 +314,19 @@ function buildDefaultBadge(deity: Deity, intent: Intent): string {
   return `${deityName} Mantra · ${suffix}`;
 }
 
-function buildDefaultSpec(input: ThumbnailPrompt, intent: Intent, deity: Deity): ThumbnailCanvaSpec {
-  const hookWord = uppercaseClean(ACTION_PROMISES[intent.key][0] ?? MANTRAS_BRAND_CONTEXT.hookWords[intent.key][0] ?? 'REMOVE OBSTACLES');
+function buildDefaultSpec(
+  input: ThumbnailPrompt,
+  intent: Intent,
+  deity: Deity
+): ThumbnailCanvaSpec {
+  const firstHook = getHook(intent.key as EngineIntentKey, 0);
+  const hookWord = uppercaseClean(`${firstHook.line1} ${firstHook.line2}`);
 
   return {
     hookWord,
     secondary: '',
     badge: buildDefaultBadge(deity, intent),
-    schoolLabel: 'THE SCHOOL OF MANTRAS',
+    schoolLabel: coreRules.text.topLabelText,
     seoTitle: buildDefaultSeoTitle(deity, intent),
     colors: getDefaultTextColors(intent, deity),
   };
@@ -368,6 +349,7 @@ function normalizeSpec(
   if (hookWord.split(/\s+/).length < 2) {
     hookWord = fallback.hookWord;
   }
+
   const parsedSeoTitle = (parsedPlan.seoTitle || '').trim();
   const alignedSeoTitle = buildAlignedSeoTitle(input, deity, intent, hookWord, '');
   const finalSeoTitle =
@@ -396,131 +378,48 @@ function normalizeSpec(
   };
 }
 
-function buildDefaultSuggestedTitle(deity: Deity, intent: Intent): string {
-  return buildDefaultSeoTitle(deity, intent);
-}
+// ---------------------------------------------------------------------------
+// Prompt brief builder — structured values only, no giant docs
+// ---------------------------------------------------------------------------
 
-function buildDefaultSpecialInstruction(deity: Deity, intent: Intent): string {
-  const auraColor = resolveAuraColor(deity, intent);
-  return [
-    deity.auraStyle?.trim() || `${auraColor} concentric sacred ring aura`,
-    `concentric rings halo in deity's aura color (${auraColor})`,
-    `energy swirls, sparks and embers in matching ${auraColor} hues`,
-    `strong rim light from behind deity in ${auraColor}`,
-    'EXTREME close-up face (75-80%+ fill, 10-15% tighter zoom) — eyes BRIGHT and dominant at mobile size',
-    'ONE micro-hook trigger: energy from hand, glowing heart, third-eye glow, or faint energy pulse',
-    `2-LINE HIERARCHY: LINE 1 = BIG WHITE command, LINE 2 = smaller ${LINE2_COLOR_BY_INTENT[intent.key]} emotion`,
-    'ULTRA-DARK text area — NO light interference',
-    deity.visualSignature.split(',').slice(0, 2).join(', ').trim(),
-  ].join(', ');
-}
-
-function formatHookAs2LineSplit(phrase: string): string {
-  const w = phrase.split(/\s+/);
-  if (w.length < 2) return `line1="${w[0]}" + line2="NOW"`;
-  const splitAt = Math.ceil(w.length / 2);
-  return `line1="${w.slice(0, splitAt).join(' ')}" + line2="${w.slice(splitAt).join(' ')}"`;
-}
-
-function buildPromptBrief(input: ThumbnailPrompt, intent: Intent, deity: Deity) {
-  const hookSplits = ACTION_PROMISES[intent.key]
-    .map((phrase) => formatHookAs2LineSplit(phrase))
+function buildPromptBrief(input: ThumbnailPrompt, intent: Intent, deity: Deity): string {
+  const line2Color = getLine2Color(intent.key);
+  const hookPool = getHooks(intent.key as EngineIntentKey);
+  const hookSplits = hookPool
+    .map((h) => `line1="${h.line1}" + line2="${h.line2}"`)
     .join(' | ');
-  const line2Color = LINE2_COLOR_BY_INTENT[intent.key] || '#FF3B3B';
 
   return [
     `Existing video title or working title: ${input.title.trim()}`,
     `Selected deity: ${input.deity.trim()}`,
     `Preferred channel naming: ${getChannelDeityName(deity)}`,
-    `Selected intent: ${intent.key} (${intent.label})`,
+    `Selected intent: ${intent.key}`,
     `Intent mood: ${intent.mood}`,
-    `Deity signature: ${deity.visualSignature}`,
-    `Deity aura reference: ${resolveAuraPrompt(deity, intent, resolveAuraColor(deity, intent))}`,
-    input.special?.trim() ? `Special instruction or badge hint: ${input.special.trim()}` : null,
-    `Allowed viral hook phrases (ALWAYS 3-5 words): ${intent.hookWords.join(', ')}`,
-    `Action promise options (ALWAYS 3-5 words): ${ACTION_PROMISES[intent.key].join(', ')}`,
+    `Deity visual signature: ${deity.visualSignature}`,
+    `Deity aura color: ${resolveAuraColor(deity)}`,
+    input.special?.trim() ? `Special instruction: ${input.special.trim()}` : null,
     ``,
-    `CRITICAL — 3-5 WORD SPLIT FORMAT (you MUST follow this):`,
-    `The hook must be 3-5 words total. Split roughly in half across line1 and line2.`,
-    `line1 = the COMMAND/ACTION part (first half). line2 = the EMOTION/PROMISE part (second half).`,
-    `Example splits: ${hookSplits}`,
-    `NEVER use fewer than 3 words total. NEVER leave line2 empty. ALWAYS split across both fields.`,
-    `More words = more viral + more compelling context. Don't cut words short.`,
+    `Approved hook pairs (3-5 words, 2-line split): ${hookSplits}`,
     `LINE 2 COLOR for this intent: ${line2Color}`,
     ``,
-    `BADGE (bottom tag line): "${getChannelDeityName(deity)} Mantra · ${DEFAULT_BADGES[intent.key]}"`,
-    `SCHOOL LABEL (top): "THE SCHOOL OF MANTRAS"`,
-    `TEXT STYLE: BIG and BOLD — poster-style impact. The main hook text must be HUGE, easily readable at mobile thumbnail size.`,
+    `Badge: "${buildDefaultBadge(deity, intent)}"`,
+    `School label: "${coreRules.text.topLabelText}"`,
+    ``,
+    `RULES:`,
+    `- 3-5 words total split across line1 + line2`,
+    `- line1 = command/action (WHITE, DOMINANT, 30-40% bigger)`,
+    `- line2 = emotion/promise (COLORED ${line2Color}, smaller)`,
+    `- NEVER leave line2 empty, NEVER fewer than 3 words total`,
+    `- STRONG drop shadow on both lines`,
+    `- Generate 2 meaningfully different variant prompts (emotional + intense)`,
   ]
     .filter(Boolean)
     .join('\n');
 }
 
-export async function suggestThumbnailInput(params: {
-  deity: string;
-  intent: IntentKey;
-  topicSeed?: string;
-}): Promise<ThumbnailInputSuggestion> {
-  if (!GEMINI_API_KEY) {
-    throw new Error('Gemini API key not configured. Add GEMINI_API_KEY or VITE_GEMINI_API_KEY.');
-  }
-
-  const intent = getIntent(params.intent);
-  const deity = getDeity(params.deity);
-
-  const response = await generateContentWithModelFallback(TEXT_MODEL_CANDIDATES, {
-    contents: [
-      `Selected deity: ${deity.name}`,
-      `Preferred channel naming: ${getChannelDeityName(deity)}`,
-      `Selected intent: ${intent.key} (${intent.label})`,
-      `Deity signature: ${deity.visualSignature}`,
-      `Deity aura reference: ${resolveAuraPrompt(deity, intent, resolveAuraColor(deity, intent))}`,
-      `Intent mood: ${intent.mood}`,
-      `High-performing hook words: ${intent.hookWords.join(', ')}`,
-      `Action phrases: ${ACTION_PROMISES[intent.key].join(', ')}`,
-      params.topicSeed?.trim() ? `Seed topic or draft title: ${params.topicSeed.trim()}` : null,
-    ]
-      .filter(Boolean)
-      .join('\n'),
-    config: {
-      systemInstruction: `You are the School of Mantras YouTube strategist.
-
-Use the local channel knowledge and proven formulas from this guide:
-${brandGuideMarkdown}
-
-Return one recommended YouTube video title.
-
-Rules:
-- Title must be YouTube-ready and clickworthy.
-- Prefer the proven structure: [Deity] + for 2026 + benefit + | + action promise + positive outcome.
-- Keep it aligned with the selected deity and intent.
-- If a seed topic is provided, refine it instead of ignoring it.
-- Keep one clear promise chain only: avoid stacking unrelated claims.
-- The thumbnail will only show 2-3 words (e.g. "REMOVE OBSTACLES" or "2026 SUCCESS"). Title should map naturally to one such dominant phrase.
-- Return strict JSON only.`,
-      responseMimeType: 'application/json',
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          title: { type: Type.STRING },
-        },
-        required: ['title'],
-      },
-    },
-  });
-
-  const text = response.text;
-  if (!text) {
-    return {
-      title: buildDefaultSuggestedTitle(deity, intent),
-    };
-  }
-
-  const parsed = JSON.parse(text) as Partial<ThumbnailInputSuggestion>;
-  return {
-    title: (parsed.title || buildDefaultSuggestedTitle(deity, intent)).trim(),
-  };
-}
+// ---------------------------------------------------------------------------
+// Variant prompt normalization
+// ---------------------------------------------------------------------------
 
 function normalizeVariantPrompts(
   prompts: string[],
@@ -529,73 +428,69 @@ function normalizeVariantPrompts(
   deity: Deity,
   spec: ThumbnailCanvaSpec
 ): string[] {
-  const auraColor = spec.colors.aura || resolveAuraColor(deity, intent);
-  const auraPrompt = resolveAuraPrompt(deity, intent, auraColor);
+  const auraColor = spec.colors.aura || resolveAuraColor(deity);
   const mainPhrase = spec.hookWord;
 
   let finalPhrase = mainPhrase;
   if (mainPhrase.split(/\s+/).length < 2) {
-    const fallbackPhrase = ACTION_PROMISES[intent.key]?.[0] || 'STOP THE PAIN';
-    finalPhrase = fallbackPhrase;
+    const firstHook = getHook(intent.key as EngineIntentKey, 0);
+    finalPhrase = `${firstHook.line1} ${firstHook.line2}`;
   }
 
   const words = finalPhrase.split(/\s+/);
   const splitAt = Math.ceil(words.length / 2);
   const line1Words = words.slice(0, splitAt).join(' ');
   const line2Words = words.slice(splitAt).join(' ');
-  const line2Color = LINE2_COLOR_BY_INTENT[intent.key] || '#FF3B3B';
-  const deityAuraColorName = deity.auraStyle?.match(/^dramatic\s+([\w\s-]+)\s+concentric/i)?.[1]?.trim() || 'deity-colored';
+  const line2Color = getLine2Color(intent.key);
 
   const badgeText = spec.badge || buildDefaultBadge(deity, intent);
-  const schoolLabel = spec.schoolLabel || 'THE SCHOOL OF MANTRAS';
+  const schoolLabel = spec.schoolLabel || coreRules.text.topLabelText;
 
-  const textLayout = `COMPLETE TEXT LAYOUT (3 elements, all baked into image, RIGHT SIDE): ` +
-    `(1) TOP: "${schoolLabel}" — tiny, white, semi-transparent, top-right area. ` +
-    `(2) CENTER — MAIN HOOK (BIGGEST, MOST IMPORTANT): 2-LINE HIERARCHY: ` +
-    `LINE 1 "${line1Words}" = HUGE, BOLD, EXTRA-THICK condensed white (#FFFFFF) letters, STRONG dark drop shadow, fills significant width of the right side. ` +
-    `LINE 2 "${line2Words}" = LARGE but slightly smaller than LINE 1, BOLD condensed COLORED ${line2Color} letters, STRONG dark drop shadow. ` +
-    `"${line1Words}" on top line, "${line2Words}" below it, stacked vertically. LINE 1 must be 30-40% BIGGER than LINE 2. ` +
-    `Text must be BIG and BOLD — filling a large portion of the right side, easily readable at mobile thumbnail size. Think poster-style impact, not subtle. ` +
-    `(3) BOTTOM: "${badgeText}" — small white text, 22pt equivalent, below the main hook, subtle but readable. ` +
-    `NEVER render both hook lines the same size or same color. LINE 1 must visually DOMINATE.`;
+  const textLayout =
+    `RIGHT side text elements (baked into image): ` +
+    `"${schoolLabel}" tiny white at top. ` +
+    `MAIN HOOK: "${line1Words}" MASSIVE ULTRA-BOLD WHITE (#FFFFFF) — fills 70-80% right side, STRONG drop shadow. ` +
+    `Below: "${line2Words}" VERY LARGE BOLD ${line2Color} — slightly smaller. STRONG drop shadow. ` +
+    `"${line1Words}" 30-40% BIGGER than "${line2Words}". ` +
+    `Bottom: "${badgeText}" small white.`;
 
   const baseInstructions =
-    `CRITICAL TEXT REQUIREMENT: This image MUST contain ALL 3 text elements baked into the RIGHT side: ${textLayout} ` +
-    `YouTube thumbnail, exactly 1280x720, 16:9 horizontal. Style: "Cinematic Divine Aura" — cinematic hyperreal devotional with DEITY-FAITHFUL color palette. ` +
-    `LEFT 40-45%: ${input.deity} EXTREME close-up (10-15% TIGHTER than default), face + ONE blessing hand ONLY. NO lower body. Face fills 75-80%+ of left zone. Eyes LARGE, BRIGHT, and LUMINOUS at mobile size. ${deity.visualSignature.split(',').slice(0, 4).join(',')}. ` +
-    `4 VISUAL SYSTEMS: (1) CINEMATIC LIGHTING: strong ${deityAuraColorName} rim light (${auraColor}), glow bloom, extreme contrast, eyes slightly brighter/luminous. (2) DIVINE ENERGY: ${deityAuraColorName} concentric ring halo with ${auraPrompt}, ${deityAuraColorName} sparks and energy. (3) MATERIAL REALISM: reflective metal textures on ornaments, jewelry depth, shadow realism. (4) EMOTIONAL FACE: EXTREME close-up (75-80%+ fill), eyes DOMINANT and BRIGHT, expression matching intent mood, human-like skin texture. ` +
-    `BACKGROUND: deep dark gradient, ${deityAuraColorName} energy effects — swirling fire/embers/sparks in ${auraColor} hues. No architecture. ` +
-    `RIGHT 55-60%: ULTRA-DARK EMPTY SPACE behind text. ${textLayout} NO particles behind text. NO glow bleed. NO light interference. Text sits on PITCH DARK background for maximum contrast. ` +
-    `No center composition. The text must look BOLD and IMPACTFUL like a movie poster — not small or subtle.`;
+    `${textLayout} ` +
+    `YouTube thumbnail, 1280x720, 16:9. Style: photorealistic cinematic devotional. ` +
+    `LEFT 40-45%: ${input.deity} EXTREME close-up, face + ONE blessing hand. Face fills 75-80%+ of left zone. Eyes BRIGHT at mobile size. ${deity.visualSignature}. ` +
+    `Aura: concentric rings in ${auraColor}. Rim light in ${auraColor}. ` +
+    `BACKGROUND: deep dark gradient, energy effects in ${auraColor}. No architecture. ` +
+    `RIGHT 55-60%: ULTRA-DARK behind text. NO particles, NO glow behind text. ` +
+    `No center composition. Do NOT render labels or descriptions — ONLY the exact words.`;
 
   const variantDirectives = [
-    `Variant 1 — EMOTIONAL: ${textLayout} ${deityAuraColorName} sacred ring halo. Micro-hook visual trigger: subtle light/energy emanating from deity's blessing hand toward viewer, OR a faint third-eye glow. Face expressive, eyes bright and dominant. ULTRA-DARK text area.`,
-    `Variant 2 — INTENSE: ${textLayout} Bigger ${deityAuraColorName} rings, more sparks. Micro-hook visual trigger: subtle glowing element in deity's chest/heart area, OR faint energy pulse around head. More dramatic lighting, fiercer expression, higher contrast. Eyes intense and luminous. ULTRA-DARK text area.`,
+    `Variant 1 — EMOTIONAL: ${textLayout} Softer expression, warm face-to-viewer connection. Subtle blessing-hand energy OR faint third-eye glow. Calmer halo. ULTRA-DARK text area.`,
+    `Variant 2 — INTENSE: ${textLayout} Fiercer expression, higher contrast, stronger aura rings. Heart glow OR head pulse. More dramatic energy. ULTRA-DARK text area.`,
   ];
 
-  const textReinforcement = `FINAL REMINDER — THE IMAGE MUST SHOW ALL 3 TEXT ELEMENTS: (1) "${schoolLabel}" tiny at top, (2) LINE 1 "${line1Words}" HUGE WHITE + LINE 2 "${line2Words}" LARGE ${line2Color} as the dominant center text, (3) "${badgeText}" small at bottom. Text must be BIG and BOLD — poster-style impact.`;
+  const textReminder = `RENDER ONLY: "${schoolLabel}" tiny top, "${line1Words}" MASSIVE WHITE + "${line2Words}" LARGE ${line2Color} as dominant hook, "${badgeText}" small bottom. No other text.`;
 
-  const sanitizeAiPrompt = (raw: string): string => {
-    return raw
+  const sanitize = (raw: string): string =>
+    raw
       .replace(/\btext\s*[:=]\s*"[^"]*"/gi, '')
       .replace(/\bsingle[- ]line\b/gi, '2-line hierarchy')
+      .replace(/CENTER\s*[-—]\s*MAIN\s+HOOK[^.]*/gi, '')
+      .replace(/\(BIGGEST[^)]*\)/gi, '')
+      .replace(/\(\d+\)\s*(TOP|CENTER|BOTTOM)\s*[:—-]/gi, '')
       .replace(/\s+/g, ' ')
       .trim();
-  };
 
-  const normalized = prompts
-    .slice(0, 2)
-    .map((prompt, index) => {
-      const cleaned = sanitizeAiPrompt(prompt);
-      return `${baseInstructions} ${variantDirectives[index] ?? ''} ${cleaned} ${textReinforcement}`
-        .replace(/\s+/g, ' ')
-        .trim()
-        .slice(0, 3200);
-    });
+  const normalized = prompts.slice(0, 2).map((prompt, index) => {
+    const cleaned = sanitize(prompt);
+    return `${baseInstructions} ${variantDirectives[index] ?? ''} ${cleaned} ${textReminder}`
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 3200);
+  });
 
   while (normalized.length < 2) {
     normalized.push(
-      `${baseInstructions} ${variantDirectives[normalized.length]} ${textReinforcement}`
+      `${baseInstructions} ${variantDirectives[normalized.length]} ${textReminder}`
         .replace(/\s+/g, ' ')
         .trim()
         .slice(0, 3200)
@@ -605,15 +500,21 @@ function normalizeVariantPrompts(
   return normalized;
 }
 
-function extractImageFromNanoBananaResponse(response: unknown): string | null {
+// ---------------------------------------------------------------------------
+// Image extraction
+// ---------------------------------------------------------------------------
+
+function extractImageFromResponse(response: unknown): string | null {
   const record = response as Record<string, unknown>;
   if (typeof record.data === 'string') return `data:image/png;base64,${record.data}`;
 
-  const candidates = record.candidates as Array<{
-    content?: {
-      parts?: Array<{ inlineData?: { data?: string; mimeType?: string } }>;
-    };
-  }> | undefined;
+  const candidates = record.candidates as
+    | Array<{
+        content?: {
+          parts?: Array<{ inlineData?: { data?: string; mimeType?: string } }>;
+        };
+      }>
+    | undefined;
 
   const parts = candidates?.[0]?.content?.parts ?? [];
   for (const part of parts) {
@@ -627,6 +528,10 @@ function extractImageFromNanoBananaResponse(response: unknown): string | null {
   return null;
 }
 
+// ---------------------------------------------------------------------------
+// Canvas validation
+// ---------------------------------------------------------------------------
+
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const image = new Image();
@@ -636,70 +541,20 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-function rgbToHsl(r: number, g: number, b: number) {
-  const rn = r / 255;
-  const gn = g / 255;
-  const bn = b / 255;
-  const max = Math.max(rn, gn, bn);
-  const min = Math.min(rn, gn, bn);
-  let h = 0;
-  let s = 0;
-  const l = (max + min) / 2;
-
-  if (max !== min) {
-    const d = max - min;
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-
-    switch (max) {
-      case rn:
-        h = (gn - bn) / d + (gn < bn ? 6 : 0);
-        break;
-      case gn:
-        h = (bn - rn) / d + 2;
-        break;
-      default:
-        h = (rn - gn) / d + 4;
-        break;
-    }
-
-    h /= 6;
-  }
-
-  return { h: h * 360, s, l };
-}
-
-function isHueNear(hue: number, target: number, tolerance: number): boolean {
-  const diff = Math.abs(hue - target);
-  return Math.min(diff, 360 - diff) <= tolerance;
-}
-
-function hueFromHex(hex: string | undefined): number | null {
-  if (!hex || !/^#[0-9a-f]{6}$/i.test(hex.trim())) return null;
-
-  const normalized = hex.trim();
-  return rgbToHsl(
-    parseInt(normalized.slice(1, 3), 16),
-    parseInt(normalized.slice(3, 5), 16),
-    parseInt(normalized.slice(5, 7), 16)
-  ).h;
-}
-
 async function validateAndNormalizeThumbnail(
   dataUrl: string,
-  intent: Intent,
-  deity: Deity
+  _intent: Intent,
+  _deity: Deity
 ): Promise<ThumbnailValidationResult> {
   const image = await loadImage(dataUrl);
-  const targetWidth = MANTRAS_BRAND_CONTEXT.canvas.width;
-  const targetHeight = MANTRAS_BRAND_CONTEXT.canvas.height;
+  const targetWidth = coreRules.canvas.width;
+  const targetHeight = coreRules.canvas.height;
   const canvas = document.createElement('canvas');
   canvas.width = targetWidth;
   canvas.height = targetHeight;
 
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  if (!ctx) {
-    throw new Error('Canvas is not available in this browser');
-  }
+  if (!ctx) throw new Error('Canvas is not available in this browser');
 
   const scale = Math.max(targetWidth / image.width, targetHeight / image.height);
   const drawWidth = image.width * scale;
@@ -708,101 +563,129 @@ async function validateAndNormalizeThumbnail(
   const dy = (targetHeight - drawHeight) / 2;
   ctx.drawImage(image, dx, dy, drawWidth, drawHeight);
 
-  const { data, width, height } = ctx.getImageData(0, 0, targetWidth, targetHeight);
-  const targetHues = [hueFromHex(intent.color), hueFromHex(deity.auraColor)].filter(
-    (value): value is number => value !== null
-  );
-
-  let totalLuminance = 0;
-  let sampleCount = 0;
-
-  let leftSignal = 0;
-  let leftSamples = 0;
-  let centerSignal = 0;
-  let centerSamples = 0;
-  let rightTextSignal = 0;
-  let rightSamples = 0;
-
-  for (let y = 0; y < height; y += 6) {
-    for (let x = 0; x < width; x += 6) {
-      const index = (y * width + x) * 4;
-      const r = data[index];
-      const g = data[index + 1];
-      const b = data[index + 2];
-      const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-      const { h, s, l } = rgbToHsl(r, g, b);
-
-      const isGold = isHueNear(h, 45, 20) && s >= 0.25 && l >= 0.35;
-      const isIntentAccent = targetHues.some((targetHue) => isHueNear(h, targetHue, 24)) && s >= 0.25 && l >= 0.28;
-      const isWhiteTextLike = s <= 0.16 && l >= 0.72;
-      const brightSignal = luminance >= 170 ? 1 : 0;
-      const accentSignal = isGold || isIntentAccent ? 1 : 0;
-      const textSignal = (isWhiteTextLike ? 1 : 0) + accentSignal + brightSignal;
-
-      totalLuminance += luminance;
-      sampleCount += 1;
-
-      if (x < width * 0.4) {
-        leftSamples += 1;
-        leftSignal += accentSignal + brightSignal * 0.45;
-      } else if (x > width * 0.6) {
-        rightSamples += 1;
-        rightTextSignal += textSignal;
-      } else {
-        centerSamples += 1;
-        centerSignal += accentSignal + brightSignal * 0.35;
-      }
-    }
-  }
-
-  const averageLuminance = totalLuminance / Math.max(sampleCount, 1);
-  const leftHeroSignal = leftSignal / Math.max(leftSamples, 1);
-  const rightTypographySignal = rightTextSignal / Math.max(rightSamples, 1);
-  const centerBusySignal = centerSignal / Math.max(centerSamples, 1);
-
-  const isDarkEnough = averageLuminance <= 135;
-  const hasLeftHero = leftHeroSignal >= 0.08;
-  const hasRightTextBlock = rightTypographySignal >= 0.03;
-  const rightSideIsClean = rightTypographySignal <= 0.85;
-  const avoidsCenteredComposition = centerBusySignal <= leftHeroSignal * 1.15;
-
-  const notes = [
-    isDarkEnough
-      ? 'Dark background heuristic passed.'
-      : 'Background is brighter than the guide allows.',
-    hasLeftHero
-      ? 'Left-side deity/focal-energy heuristic passed.'
-      : 'Left-side deity emphasis looks weaker than the guide target.',
-    hasRightTextBlock
-      ? 'Right-side text heuristic passed (2-3 word phrase detected).'
-      : 'Right-side text may be too weak or missing.',
-    rightSideIsClean
-      ? 'Right-side composition looks clean.'
-      : 'Right side has strong visual signal (bold text + glow). Informational only.',
-    avoidsCenteredComposition
-      ? 'Center-composition heuristic passed.'
-      : 'Image may be drifting toward a centered composition.',
-  ];
+  const imageData = ctx.getImageData(0, 0, targetWidth, targetHeight);
+  const validation = validateImageData(imageData, targetWidth, targetHeight);
 
   return {
-    isValid: isDarkEnough && hasLeftHero && hasRightTextBlock && avoidsCenteredComposition,
+    isValid: validation.isValid,
     normalizedDataUrl: canvas.toDataURL('image/png'),
-    notes,
+    notes: validation.notes,
   };
 }
 
-export function getQuickPicks(intentKey: IntentKey): { deities: string[]; hooks: string[] } {
+// ---------------------------------------------------------------------------
+// Public API — Quick picks
+// ---------------------------------------------------------------------------
+
+export interface HookPairUI {
+  line1: string;
+  line2: string;
+}
+
+export interface QuickPicksResult {
+  deities: string[];
+  hooks: string[];
+  hookPairs: HookPairUI[];
+  badgeOptions: string[];
+  defaultAura: string;
+}
+
+const BADGE_OPTIONS = ['108x', '40 Days', 'Body, Mind & Soul', 'Daily Practice'];
+
+export function getQuickPicks(intentKey: IntentKey): QuickPicksResult {
+  const pairs = getHooks(intentKey as EngineIntentKey);
   return {
-    deities: DEITIES.filter((deity) => deity.intents.includes(intentKey))
-      .map((deity) => deity.name)
-      .slice(0, 4),
-    hooks: MANTRAS_BRAND_CONTEXT.hookWords[intentKey].slice(0, 5),
+    deities: getDeitiesForIntent(intentKey as EngineIntentKey).slice(0, 4),
+    hooks: hookWordsByIntent[intentKey]?.slice(0, 5) ?? [],
+    hookPairs: pairs.slice(0, 5).map((h) => ({ line1: h.line1, line2: h.line2 })),
+    badgeOptions: BADGE_OPTIONS,
+    defaultAura: (() => {
+      const bestDeity = getDeitiesForIntent(intentKey as EngineIntentKey)[0];
+      if (!bestDeity) return '#FFD700';
+      try {
+        return resolveAuraColor(getDeity(bestDeity));
+      } catch {
+        return '#FFD700';
+      }
+    })(),
   };
+}
+
+export function getDeityAuraColor(deityName: string): string {
+  try {
+    return resolveAuraColor(getDeity(deityName));
+  } catch {
+    return '#FFD700';
+  }
 }
 
 export function getDefaultDeityForIntent(intentKey: IntentKey): string {
   return getQuickPicks(intentKey).deities[0] ?? DEITIES[0]?.name ?? '';
 }
+
+// ---------------------------------------------------------------------------
+// Public API — Suggest title
+// ---------------------------------------------------------------------------
+
+export async function suggestThumbnailInput(params: {
+  deity: string;
+  intent: IntentKey;
+  topicSeed?: string;
+}): Promise<ThumbnailInputSuggestion> {
+  if (!GEMINI_API_KEY) {
+    throw new Error('Gemini API key not configured. Add GEMINI_API_KEY or VITE_GEMINI_API_KEY.');
+  }
+
+  const intent = getIntent(params.intent);
+  const deity = getDeity(params.deity);
+  const hookPool = getHooks(params.intent as EngineIntentKey);
+
+  const response = await generateContentWithModelFallback(TEXT_MODEL_CANDIDATES, {
+    contents: [
+      `Selected deity: ${deity.name}`,
+      `Channel name: ${getChannelDeityName(deity)}`,
+      `Intent: ${intent.key}`,
+      `Deity aura: ${resolveAuraColor(deity)}`,
+      `Intent mood: ${intent.mood}`,
+      `Hook phrases: ${hookPool.map((h) => `${h.line1} ${h.line2}`).join(', ')}`,
+      params.topicSeed?.trim() ? `Seed topic: ${params.topicSeed.trim()}` : null,
+    ]
+      .filter(Boolean)
+      .join('\n'),
+    config: {
+      systemInstruction: `You are the School of Mantras YouTube strategist.
+
+Return one recommended YouTube video title.
+
+Rules:
+- Title must be YouTube-ready and clickworthy.
+- Prefer: [Deity] + for 2026 + benefit + | + action promise + positive outcome.
+- Keep aligned with the selected deity and intent.
+- If a seed topic is provided, refine it.
+- Return strict JSON only.`,
+      responseMimeType: 'application/json',
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: { title: { type: Type.STRING } },
+        required: ['title'],
+      },
+    },
+  });
+
+  const text = response.text;
+  if (!text) {
+    return { title: buildDefaultSeoTitle(deity, intent) };
+  }
+
+  const parsed = JSON.parse(text) as Partial<ThumbnailInputSuggestion>;
+  return {
+    title: (parsed.title || buildDefaultSeoTitle(deity, intent)).trim(),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Public API — Generate thumbnail plan
+// ---------------------------------------------------------------------------
 
 export async function generateThumbnailPlan(prompt: ThumbnailPrompt): Promise<ThumbnailDraft> {
   if (!GEMINI_API_KEY) {
@@ -813,6 +696,9 @@ export async function generateThumbnailPlan(prompt: ThumbnailPrompt): Promise<Th
     title: prompt.title.trim(),
     deity: prompt.deity.trim(),
     intent: prompt.intent,
+    line1: prompt.line1?.trim() || undefined,
+    line2: prompt.line2?.trim() || undefined,
+    badge: prompt.badge?.trim() || undefined,
     special: prompt.special?.trim() || undefined,
   };
 
@@ -822,8 +708,15 @@ export async function generateThumbnailPlan(prompt: ThumbnailPrompt): Promise<Th
   const intent = getIntent(normalizedPrompt.intent);
   const deity = getDeity(normalizedPrompt.deity);
 
+  const userHookHint = normalizedPrompt.line1
+    ? `\n\nUser-specified hook: line1="${normalizedPrompt.line1}"${normalizedPrompt.line2 ? ` line2="${normalizedPrompt.line2}"` : ''}. Use this hook as the primary choice.`
+    : '';
+  const userBadgeHint = normalizedPrompt.badge
+    ? `\nUser-specified badge: "${normalizedPrompt.badge}".`
+    : '';
+
   const response = await generateContentWithModelFallback(TEXT_MODEL_CANDIDATES, {
-    contents: buildPromptBrief(normalizedPrompt, intent, deity),
+    contents: buildPromptBrief(normalizedPrompt, intent, deity) + userHookHint + userBadgeHint,
     config: {
       systemInstruction: THUMBNAIL_SYSTEM_PROMPT,
       responseMimeType: 'application/json',
@@ -833,11 +726,13 @@ export async function generateThumbnailPlan(prompt: ThumbnailPrompt): Promise<Th
           templateId: { type: Type.STRING },
           line1: {
             type: Type.STRING,
-            description: 'The COMMAND/ACTION part (first half of the 3-5 word hook). Examples: "STOP THE", "OPEN YOUR", "HEAL YOUR", "RISE UP", "BREAK FREE", "ATTRACT YOUR". Can be 1-3 words. This becomes LINE 1 (BIG, WHITE, DOMINANT).',
+            description:
+              'COMMAND/ACTION part (first half of 3-5 word hook). Examples: "STOP THE", "OPEN YOUR". LINE 1 = BIG, WHITE, DOMINANT.',
           },
           line2: {
             type: Type.STRING,
-            description: 'The EMOTION/PROMISE part (second half of the 3-5 word hook). Examples: "PAIN NOW", "HEART", "BODY NOW", "TODAY", "AGAIN", "WEALTH". Can be 1-3 words. MUST NOT be empty. This becomes LINE 2 (smaller, COLORED).',
+            description:
+              'EMOTION/PROMISE part (second half). Examples: "PAIN NOW", "HEART". MUST NOT be empty. LINE 2 = smaller, COLORED.',
           },
           badge: { type: Type.STRING },
           schoolLabel: { type: Type.STRING },
@@ -845,7 +740,8 @@ export async function generateThumbnailPlan(prompt: ThumbnailPrompt): Promise<Th
           variantPrompts: {
             type: Type.ARRAY,
             items: { type: Type.STRING },
-            description: 'Exactly 2 image generation prompts. Each prompt MUST reference ALL words from line1 and line2 as a 2-LINE TEXT HIERARCHY (line1 part = BIG WHITE, line2 part = smaller COLORED). NEVER shorten or omit any words from the hook phrase.',
+            description:
+              'Exactly 2 image prompts. Each references line1+line2 as 2-LINE hierarchy.',
           },
           colors: {
             type: Type.OBJECT,
@@ -888,13 +784,17 @@ export async function generateThumbnailPlan(prompt: ThumbnailPrompt): Promise<Th
   };
 }
 
+// ---------------------------------------------------------------------------
+// Public API — Generate thumbnail images
+// ---------------------------------------------------------------------------
+
 export async function generateThumbnailImages(plan: ThumbnailDraft): Promise<ThumbnailDraft> {
   if (!GEMINI_API_KEY) {
     throw new Error('Gemini API key not configured. Add GEMINI_API_KEY or VITE_GEMINI_API_KEY.');
   }
 
   const prompts = plan.generationPrompts ?? [];
-  if (prompts.length === 0) throw new Error('No generation prompts in the plan. Generate a plan first.');
+  if (prompts.length === 0) throw new Error('No generation prompts in the plan.');
 
   const intent = getIntent(plan.prompt.intent);
   const deity = getDeity(plan.prompt.deity);
@@ -904,22 +804,23 @@ export async function generateThumbnailImages(plan: ThumbnailDraft): Promise<Thu
       const imageResponse = await ai.models.generateContent({
         model: IMAGE_MODEL,
         contents: variantPrompt,
-        config: {
-          responseModalities: ['TEXT', 'IMAGE'],
-        },
+        config: { responseModalities: ['TEXT', 'IMAGE'] },
       });
 
-      const imageDataUrl = extractImageFromNanoBananaResponse(imageResponse);
-      if (!imageDataUrl) throw new Error('Gemini image generation returned no inline image data.');
+      const imageDataUrl = extractImageFromResponse(imageResponse);
+      if (!imageDataUrl) throw new Error('Image generation returned no inline image data.');
       return imageDataUrl;
     })
   );
 
-  const validations = await Promise.all(rawImages.map((image) => validateAndNormalizeThumbnail(image, intent, deity)));
-  const validImages = validations.filter((result) => result.isValid).map((result) => result.normalizedDataUrl);
-  const fallbackImages = validations.map((result) => result.normalizedDataUrl);
-  const validationSummary = validations.flatMap((result, index) =>
-    result.notes.map((note) => `Variant ${index + 1}: ${note}`)
+  const validations = await Promise.all(
+    rawImages.map((img) => validateAndNormalizeThumbnail(img, intent, deity))
+  );
+
+  const validImages = validations.filter((r) => r.isValid).map((r) => r.normalizedDataUrl);
+  const fallbackImages = validations.map((r) => r.normalizedDataUrl);
+  const validationSummary = validations.flatMap((r, i) =>
+    r.notes.map((note) => `Variant ${i + 1}: ${note}`)
   );
 
   return {
@@ -930,9 +831,13 @@ export async function generateThumbnailImages(plan: ThumbnailDraft): Promise<Thu
     errorMessage:
       validImages.length > 0
         ? undefined
-        : 'Generated variants did not pass the guide-aligned layout heuristics. Review the previews or regenerate.',
+        : 'Variants did not pass layout heuristics. Review previews or regenerate.',
   };
 }
+
+// ---------------------------------------------------------------------------
+// Public API — Combined plan + generate
+// ---------------------------------------------------------------------------
 
 export async function generateThumbnailDraft(prompt: ThumbnailPrompt): Promise<ThumbnailDraft> {
   const plan = await generateThumbnailPlan(prompt);

@@ -1,0 +1,34 @@
+{
+  "abundance": {
+    "color": "#FFD700",
+    "mood": "prosperity, breakthrough, success momentum"
+  },
+  "protection": {
+    "color": "#4D9FFF",
+    "mood": "shielded, fearless, spiritually guarded"
+  },
+  "healing": {
+    "color": "#FF3B3B",
+    "mood": "restorative, compassionate, body-mind-soul healing"
+  },
+  "love": {
+    "color": "#FF69B4",
+    "mood": "heart-opening, devotional, resonant"
+  },
+  "power": {
+    "color": "#FF6600",
+    "mood": "fierce, victorious, unstoppable"
+  },
+  "peace": {
+    "color": "#B0D4F1",
+    "mood": "deep peace, inner stillness, meditative calm"
+  },
+  "knowledge": {
+    "color": "#FFD700",
+    "mood": "clarity, wisdom, intelligent insight"
+  },
+  "transformation": {
+    "color": "#FF3B3B",
+    "mood": "rebirth, karma release, destruction of obstacles"
+  }
+}
