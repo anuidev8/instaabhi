@@ -1,0 +1,32 @@
+{
+  "families": {
+    "safe": [
+      "BOOST YOUR ENERGY",
+      "CALM YOUR MIND",
+      "SLEEP BETTER FAST",
+      "BREATHE THIS WAY"
+    ],
+    "aggressive": [
+      "NEVER GET SICK AGAIN",
+      "FIX YOUR STRESS",
+      "10X GUT RESET",
+      "UNLOCK ENERGY NOW"
+    ],
+    "curiosity": [
+      "NO ONE TALKS ABOUT THIS",
+      "THIS CHANGES EVERYTHING",
+      "DO IT THIS WAY",
+      "MOST PEOPLE MISS THIS"
+    ]
+  },
+  "patterns": [
+    "NEVER [PROBLEM] AGAIN",
+    "[VERB] YOUR [RESULT]",
+    "DO THIS [TIME]",
+    "[NUMBER]X [BENEFIT]",
+    "NO ONE TALKS ABOUT THIS"
+  ],
+  "verbs": ["BOOST", "CALM", "FIX", "RESET", "UNLOCK", "ACTIVATE"],
+  "results": ["ENERGY", "SLEEP", "FOCUS", "DIGESTION", "CALM"],
+  "problems": ["STRESS", "BLOATING", "FATIGUE", "BRAIN FOG"]
+}

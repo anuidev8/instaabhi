@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   AlertCircle,
@@ -23,18 +23,22 @@ import {
   generateSchoolOfBreathThumbnailImages,
   generateSchoolOfBreathThumbnailPlan,
   getSchoolOfBreathDefaultInput,
-  getSchoolOfBreathQuickPickSet,
+  getSchoolOfBreathHookOptions,
+  getSchoolOfBreathTopicMeta,
+  isSchoolOfBreathTopic,
   SchoolOfBreathThumbnailInput,
-  SOB_THUMBNAIL_CATEGORIES,
+  SOB_THUMBNAIL_TOPICS,
   suggestSchoolOfBreathInput,
 } from '../../services/schoolOfBreathThumbnailService';
-import {
-  SchoolOfBreathCategory,
-  SchoolOfBreathHookFamily,
-  SchoolOfBreathMode,
-  ThumbnailDraft,
-} from '../../types';
+import { SchoolOfBreathMode, ThumbnailDraft } from '../../types';
 import { downloadThumbnailDraftAsZip } from '../../utils/thumbnailZipDownload';
+
+interface SchoolOfBreathThumbnailsTabProps {
+  thumbnailDrafts: ThumbnailDraft[];
+  setThumbnailDrafts: React.Dispatch<React.SetStateAction<ThumbnailDraft[]>>;
+  initialPrompt?: string;
+  onInitialPromptConsumed?: () => void;
+}
 
 function StatusBadge({ status }: { status: ThumbnailDraft['status'] }) {
   const map = {
@@ -51,70 +55,128 @@ function StatusBadge({ status }: { status: ThumbnailDraft['status'] }) {
   );
 }
 
-function ColorDot({ color }: { color: string }) {
-  return (
-    <span
-      className="inline-block w-4 h-4 rounded-full border border-stone-300 shrink-0"
-      style={{ backgroundColor: color }}
-    />
-  );
-}
-
 function HookPreview({
   topLine,
   hook,
-  bottomStrip,
-  hookColor,
+  cta,
+  accent,
+  mode,
+  characterSide,
+  backgroundScene,
 }: {
   topLine: string;
   hook: string;
-  bottomStrip: string;
-  hookColor: string;
+  cta: string;
+  accent: string;
+  mode: SchoolOfBreathMode;
+  characterSide: 'left' | 'right';
+  backgroundScene: string;
 }) {
-  return (
-    <div className="rounded-xl bg-stone-950 p-5 flex flex-col items-center justify-center gap-2 min-h-[120px]">
-      <span className="text-[11px] font-semibold tracking-[0.2em] text-white/70 uppercase text-center">
-        {topLine || 'BREATH PROTOCOL'}
-      </span>
-      <span
-        className="text-2xl sm:text-3xl font-black tracking-tight drop-shadow-lg leading-tight text-center uppercase"
-        style={{ color: hookColor || '#FFD400' }}
+  const cinematicBackground = getCinematicSceneStyle(backgroundScene, accent);
+
+  const textPanel = (
+    <div className="flex flex-col h-full">
+      <div className="bg-stone-800 px-3 py-1.5 text-[11px] font-extrabold tracking-wide text-white uppercase leading-tight">
+        {topLine || 'PRANAYAMA SEQUENCE'}
+      </div>
+      <div className="bg-yellow-400 px-3 py-2 flex-1 flex items-center">
+        <span className="text-[28px] sm:text-[34px] font-black leading-[0.95] tracking-tight uppercase text-stone-900">
+          {hook || 'DO IT THIS WAY'}
+        </span>
+      </div>
+      <div
+        className="px-3 py-2 text-[12px] sm:text-[13px] font-extrabold tracking-wide text-white uppercase leading-tight"
+        style={{ backgroundColor: '#E21313' }}
       >
-        {hook || 'DO IT THIS WAY'}
+        {cta || 'WATCH NOW'}
+      </div>
+    </div>
+  );
+
+  const characterPanel = (
+    <div className="h-full relative" style={cinematicBackground}>
+      {mode === 'without_character' ? (
+        <div className="absolute inset-0 border-2 border-dashed border-white/35 flex items-center justify-center">
+          <span className="text-[10px] font-bold tracking-wider text-white/75 uppercase text-center px-2">
+            Empty Character Zone
+          </span>
+        </div>
+      ) : (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-[10px] font-bold tracking-wider text-white/70 uppercase text-center px-2">
+            Cinematic Character Zone
+          </span>
+        </div>
+      )}
+      <span
+        className="absolute bottom-2 left-2 w-7 h-7 rounded-full border-2 border-white"
+        style={{ backgroundColor: accent || '#FF3B30' }}
+      />
+      <span className="absolute top-2 left-2 text-[9px] text-white/80 font-semibold uppercase tracking-wide">
+        Cinematic BG
       </span>
-      <span className="px-2 py-1 rounded bg-red-600 text-white text-[10px] font-bold tracking-wider uppercase">
-        {bottomStrip || 'WATCH NOW'}
-      </span>
+    </div>
+  );
+
+  return (
+    <div className="rounded-xl overflow-hidden border border-stone-300 min-h-[140px]">
+      <div className="grid grid-cols-11 h-[140px]">
+        {characterSide === 'left' ? (
+          <>
+            <div className="col-span-5">{characterPanel}</div>
+            <div className="col-span-6">{textPanel}</div>
+          </>
+        ) : (
+          <>
+            <div className="col-span-6">{textPanel}</div>
+            <div className="col-span-5">{characterPanel}</div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
 
-interface SchoolOfBreathThumbnailsTabProps {
-  thumbnailDrafts: ThumbnailDraft[];
-  setThumbnailDrafts: React.Dispatch<React.SetStateAction<ThumbnailDraft[]>>;
-  initialPrompt?: string;
-  onInitialPromptConsumed?: () => void;
-}
+function getCinematicSceneStyle(backgroundScene: string, accent: string): React.CSSProperties {
+  const scene = backgroundScene.toLowerCase();
 
-function buildSpecText(draft: ThumbnailDraft): string {
-  const sob = draft.prompt.schoolOfBreath;
-  return [
-    `Brand: SCHOOL OF BREATH`,
-    `Title: ${draft.prompt.title}`,
-    `Category: ${sob?.category ?? 'technique'}`,
-    `Mode: ${sob?.mode ?? 'with_character'}`,
-    `Hook Family: ${sob?.hookFamily ?? 'instruction'}`,
-    `Top Line: ${sob?.topLine ?? ''}`,
-    `Main Hook: ${draft.canvaSpec.hookWord}`,
-    `Bottom Strip: ${sob?.bottomStrip ?? draft.canvaSpec.badge ?? ''}`,
-    `Support Visual: ${sob?.supportVisual ?? ''}`,
-    `Color Emphasis: ${sob?.colorEmphasis ?? ''}`,
-    `Background Style: ${sob?.backgroundStyle ?? ''}`,
-    `SEO Title: ${draft.canvaSpec.seoTitle ?? ''}`,
-    `Hook Color: ${draft.canvaSpec.colors.hook}`,
-    `Secondary Color: ${draft.canvaSpec.colors.secondary}`,
-    `Brand Color: ${draft.canvaSpec.colors.brand}`,
-  ].join('\n');
+  if (/(volcanic|lava|fire|flame|smoke)/.test(scene)) {
+    return {
+      background:
+        'radial-gradient(circle at 78% 22%, rgba(255,132,0,0.62), transparent 38%), radial-gradient(circle at 18% 82%, rgba(255,70,0,0.38), transparent 40%), linear-gradient(140deg, #1a0a05 0%, #3f1407 45%, #0c0c0e 100%)',
+      boxShadow: `inset 0 0 72px ${accent}4a`,
+    };
+  }
+
+  if (/(forest|river|nature|waterfall|jungle|moss)/.test(scene)) {
+    return {
+      background:
+        'radial-gradient(circle at 72% 18%, rgba(132,255,209,0.45), transparent 42%), radial-gradient(circle at 18% 86%, rgba(88,164,255,0.35), transparent 44%), linear-gradient(140deg, #07120c 0%, #0d3324 52%, #071019 100%)',
+      boxShadow: `inset 0 0 72px ${accent}33`,
+    };
+  }
+
+  if (/(cosmic|nebula|night|stars|galaxy|chakra)/.test(scene)) {
+    return {
+      background:
+        'radial-gradient(circle at 75% 20%, rgba(117,173,255,0.5), transparent 42%), radial-gradient(circle at 20% 80%, rgba(187,123,255,0.42), transparent 44%), linear-gradient(140deg, #060a1f 0%, #131e49 54%, #080818 100%)',
+      boxShadow: `inset 0 0 72px ${accent}40`,
+    };
+  }
+
+  if (/(sunrise|morning|sun|golden)/.test(scene)) {
+    return {
+      background:
+        'radial-gradient(circle at 78% 22%, rgba(255,225,133,0.68), transparent 42%), radial-gradient(circle at 18% 78%, rgba(255,142,69,0.46), transparent 42%), linear-gradient(140deg, #2a1406 0%, #7a3305 54%, #140a0f 100%)',
+      boxShadow: `inset 0 0 72px ${accent}40`,
+    };
+  }
+
+  return {
+    background:
+      'radial-gradient(circle at 80% 20%, rgba(255,255,255,0.24), transparent 42%), radial-gradient(circle at 20% 80%, rgba(255,255,255,0.14), transparent 44%), linear-gradient(140deg, #0f1117 0%, #24324a 52%, #101820 100%)',
+    boxShadow: `inset 0 0 72px ${accent}33`,
+  };
 }
 
 function formatCreatedAt(value: Date): string {
@@ -127,8 +189,23 @@ function formatCreatedAt(value: Date): string {
   });
 }
 
+function buildSpecText(draft: ThumbnailDraft): string {
+  const sob = draft.prompt.schoolOfBreath;
+  return [
+    'BRAND: THE SCHOOL OF BREATH',
+    `TITLE: ${draft.prompt.title}`,
+    `TOPIC: ${sob?.category ?? ''}`,
+    `MODE: ${sob?.mode ?? ''}`,
+    `HOOK: ${draft.canvaSpec.hookWord}`,
+    `TOP LINE: ${sob?.topLine ?? ''}`,
+    `SUPPORT VISUAL: ${sob?.supportVisual ?? ''}`,
+    `ACCENT: ${sob?.colorEmphasis ?? ''}`,
+    `SEO TITLE: ${draft.canvaSpec.seoTitle ?? ''}`,
+  ].join('\n');
+}
+
 const MODE_OPTIONS: Array<{ key: SchoolOfBreathMode; label: string }> = [
-  { key: 'with_character', label: 'With Character (Abhi)' },
+  { key: 'with_character', label: 'With Character' },
   { key: 'without_character', label: 'Without Character' },
 ];
 
@@ -138,7 +215,6 @@ export default function SchoolOfBreathThumbnailsTab({
   initialPrompt,
   onInitialPromptConsumed,
 }: SchoolOfBreathThumbnailsTabProps) {
-  const defaultInput = getSchoolOfBreathDefaultInput();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalStep, setModalStep] = useState<'form' | 'preview'>('form');
   const [previewPlan, setPreviewPlan] = useState<ThumbnailDraft | null>(null);
@@ -151,99 +227,39 @@ export default function SchoolOfBreathThumbnailsTab({
   const [modalError, setModalError] = useState<string | null>(null);
   const [suggestionRefreshKey, setSuggestionRefreshKey] = useState(0);
   const [lockUserText, setLockUserText] = useState(false);
-  const [touched, setTouched] = useState({
-    title: false,
-    mainHook: false,
-    topLine: false,
-    bottomStrip: false,
-  });
+  const [titleTouched, setTitleTouched] = useState(false);
 
-  const [input, setInput] = useState<SchoolOfBreathThumbnailInput>(defaultInput);
+  const [input, setInput] = useState<SchoolOfBreathThumbnailInput>(() =>
+    getSchoolOfBreathDefaultInput()
+  );
 
   useWakeLock(isPlanning || isGenerating || isSuggestingInput || !!regeneratingId);
 
-  const quickPicks = getSchoolOfBreathQuickPickSet(input.category, input.hookFamily);
+  const topicMeta = useMemo(() => getSchoolOfBreathTopicMeta(input.topic), [input.topic]);
+  const hookOptions = useMemo(() => getSchoolOfBreathHookOptions(input.topic), [input.topic]);
 
   useEffect(() => {
-    if (!quickPicks.hookFamilies.includes(input.hookFamily)) {
-      setInput((prev) => ({ ...prev, hookFamily: quickPicks.hookFamilies[0] }));
+    if (!hookOptions.includes(input.hook)) {
+      setInput((prev) => ({ ...prev, hook: hookOptions[0] }));
     }
-  }, [input.category, input.hookFamily, quickPicks.hookFamilies]);
-
-  useEffect(() => {
-    setInput((prev) => {
-      let changed = false;
-      let next = prev;
-
-      if (!touched.mainHook && quickPicks.hooks[0] && prev.mainHook !== quickPicks.hooks[0]) {
-        next = { ...next, mainHook: quickPicks.hooks[0] };
-        changed = true;
-      }
-
-      if (!touched.topLine && quickPicks.topLines[0] && prev.topLine !== quickPicks.topLines[0]) {
-        next = { ...next, topLine: quickPicks.topLines[0] };
-        changed = true;
-      }
-
-      if (
-        !touched.bottomStrip &&
-        quickPicks.bottomStrips[0] &&
-        prev.bottomStrip !== quickPicks.bottomStrips[0]
-      ) {
-        next = { ...next, bottomStrip: quickPicks.bottomStrips[0] };
-        changed = true;
-      }
-
-      if (!prevValue(prev.supportVisual) && quickPicks.supportVisuals[0]) {
-        next = { ...next, supportVisual: quickPicks.supportVisuals[0] };
-        changed = true;
-      }
-
-      if (!prevValue(prev.colorEmphasis) && quickPicks.colorEmphasis[0]) {
-        next = { ...next, colorEmphasis: quickPicks.colorEmphasis[0] };
-        changed = true;
-      }
-
-      if (!prevValue(prev.backgroundStyle) && quickPicks.backgroundStyles[0]) {
-        next = { ...next, backgroundStyle: quickPicks.backgroundStyles[0] };
-        changed = true;
-      }
-
-      return changed ? next : prev;
-    });
-  }, [
-    input.category,
-    input.hookFamily,
-    quickPicks.hooks,
-    quickPicks.topLines,
-    quickPicks.bottomStrips,
-    quickPicks.supportVisuals,
-    quickPicks.colorEmphasis,
-    quickPicks.backgroundStyles,
-    touched.mainHook,
-    touched.topLine,
-    touched.bottomStrip,
-  ]);
+  }, [hookOptions, input.hook]);
 
   useEffect(() => {
     if (!initialPrompt) return;
     setInput((prev) => ({ ...prev, title: initialPrompt }));
-    setTouched((prev) => ({ ...prev, title: true }));
+    setTitleTouched(true);
     setIsModalOpen(true);
     onInitialPromptConsumed?.();
   }, [initialPrompt, onInitialPromptConsumed]);
 
   useEffect(() => {
-    if (!isModalOpen) return;
-    if (lockUserText || touched.title) return;
-
+    if (!isModalOpen || lockUserText || titleTouched) return;
     let cancelled = false;
-    setIsSuggestingInput(true);
 
+    setIsSuggestingInput(true);
     suggestSchoolOfBreathInput({
-      category: input.category,
+      topic: input.topic,
       mode: input.mode,
-      hookFamily: input.hookFamily,
       topicSeed: initialPrompt?.trim() || undefined,
     })
       .then((suggestion) => {
@@ -251,14 +267,11 @@ export default function SchoolOfBreathThumbnailsTab({
         setInput((prev) => ({
           ...prev,
           title: suggestion.title,
-          mainHook: touched.mainHook ? prev.mainHook : suggestion.mainHook,
-          topLine: touched.topLine ? prev.topLine : suggestion.topLine,
-          bottomStrip: touched.bottomStrip ? prev.bottomStrip : suggestion.bottomStrip,
+          hook: hookOptions.includes(prev.hook) ? prev.hook : suggestion.hooks[0],
         }));
       })
       .catch((error) => {
         if (cancelled) return;
-        console.error('Failed to suggest School of Breath thumbnail input:', error);
         setModalError(
           error instanceof Error ? error.message : 'Failed to generate School of Breath suggestion.'
         );
@@ -270,32 +283,23 @@ export default function SchoolOfBreathThumbnailsTab({
     return () => { cancelled = true; };
   }, [
     isModalOpen,
-    input.category,
+    input.topic,
     input.mode,
-    input.hookFamily,
     initialPrompt,
     suggestionRefreshKey,
     lockUserText,
-    touched.title,
-    touched.mainHook,
-    touched.topLine,
-    touched.bottomStrip,
+    titleTouched,
+    hookOptions,
   ]);
 
   const resetModal = () => {
-    const fresh = getSchoolOfBreathDefaultInput();
-    setInput(fresh);
+    setInput(getSchoolOfBreathDefaultInput());
     setModalError(null);
     setSuggestionRefreshKey(0);
     setModalStep('form');
     setPreviewPlan(null);
     setLockUserText(false);
-    setTouched({
-      title: false,
-      mainHook: false,
-      topLine: false,
-      bottomStrip: false,
-    });
+    setTitleTouched(false);
   };
 
   const handleGeneratePlan = async () => {
@@ -328,7 +332,7 @@ export default function SchoolOfBreathThumbnailsTab({
       setIsModalOpen(false);
       resetModal();
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to generate images.';
+      const message = error instanceof Error ? error.message : 'Failed to generate thumbnail.';
       setModalError(message);
       setThumbnailDrafts((prev) =>
         prev.map((d) =>
@@ -348,23 +352,20 @@ export default function SchoolOfBreathThumbnailsTab({
       )
     );
 
-    const sob = draft.prompt.schoolOfBreath;
     const fallback = getSchoolOfBreathDefaultInput();
+    const sob = draft.prompt.schoolOfBreath;
+    const topic = sob?.category && isSchoolOfBreathTopic(sob.category) ? sob.category : fallback.topic;
+    const hookOptionsForTopic = getSchoolOfBreathHookOptions(topic);
 
     const regenerateInput: SchoolOfBreathThumbnailInput = {
       title: draft.prompt.title,
-      category: sob?.category ?? fallback.category,
+      topic,
       mode:
-        sob?.mode ??
-        (draft.prompt.deity.toLowerCase() === 'no character' ? 'without_character' : 'with_character'),
-      hookFamily: sob?.hookFamily ?? fallback.hookFamily,
-      mainHook: draft.canvaSpec.hookWord || draft.prompt.line1 || fallback.mainHook,
-      topLine: sob?.topLine ?? fallback.topLine,
-      bottomStrip: sob?.bottomStrip ?? draft.canvaSpec.badge ?? fallback.bottomStrip,
-      supportVisual: sob?.supportVisual ?? fallback.supportVisual,
-      colorEmphasis: sob?.colorEmphasis ?? fallback.colorEmphasis,
-      backgroundStyle: sob?.backgroundStyle ?? fallback.backgroundStyle,
-      specialNote: draft.prompt.special ?? '',
+        sob?.mode === 'with_character' || sob?.mode === 'without_character'
+          ? sob.mode
+          : fallback.mode,
+      hook: draft.canvaSpec.hookWord || hookOptionsForTopic[0],
+      specialNote: draft.prompt.special || '',
     };
 
     try {
@@ -373,7 +374,7 @@ export default function SchoolOfBreathThumbnailsTab({
         prev.map((d) => (d.id === draft.id ? { ...regenerated, id: draft.id } : d))
       );
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to regenerate.';
+      const message = error instanceof Error ? error.message : 'Failed to regenerate thumbnail.';
       setThumbnailDrafts((prev) =>
         prev.map((d) =>
           d.id === draft.id ? { ...d, status: 'error', errorMessage: message } : d
@@ -391,7 +392,7 @@ export default function SchoolOfBreathThumbnailsTab({
   const handleCopySpec = async (draft: ThumbnailDraft) => {
     await navigator.clipboard.writeText(buildSpecText(draft));
     setCopiedSpecId(draft.id);
-    setTimeout(() => setCopiedSpecId(null), 2000);
+    setTimeout(() => setCopiedSpecId(null), 1800);
   };
 
   const handleExport = async (draft: ThumbnailDraft) => {
@@ -403,8 +404,6 @@ export default function SchoolOfBreathThumbnailsTab({
     }
   };
 
-  const firstHook = quickPicks.hooks[0] ?? '—';
-
   return (
     <div className="space-y-4 sm:space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -413,7 +412,7 @@ export default function SchoolOfBreathThumbnailsTab({
             The School of Breath Thumbnails
           </h2>
           <p className="text-sm text-stone-500 mt-0.5">
-            Practical, high-contrast thumbnails with a controlled hook system and one final variant.
+            Lightweight flow: Topic, Mode, 3 Hooks, Generate.
           </p>
         </div>
         <button
@@ -434,27 +433,18 @@ export default function SchoolOfBreathThumbnailsTab({
           <p className="mt-2 text-2xl font-bold text-stone-900">{thumbnailDrafts.length}</p>
         </div>
         <div className="bg-white border border-stone-200 rounded-2xl p-4">
-          <p className="text-xs font-semibold tracking-wider uppercase text-stone-500">
-            Top Hook
-          </p>
-          <p className="mt-2 text-base font-bold text-stone-900 leading-tight">{firstHook}</p>
-          <p className="mt-1 text-xs text-stone-500">{input.category} category</p>
+          <p className="text-xs font-semibold tracking-wider uppercase text-stone-500">Topic</p>
+          <p className="mt-2 text-base font-bold text-stone-900">{topicMeta.label}</p>
         </div>
         <div className="bg-white border border-stone-200 rounded-2xl p-4">
-          <p className="text-xs font-semibold tracking-wider uppercase text-stone-500">
-            Mode
-          </p>
+          <p className="text-xs font-semibold tracking-wider uppercase text-stone-500">Mode</p>
           <p className="mt-2 text-base font-bold text-stone-900">
             {input.mode === 'with_character' ? 'With Character' : 'Without Character'}
           </p>
-          <p className="mt-1 text-xs text-stone-500">{input.hookFamily} hooks</p>
         </div>
         <div className="bg-white border border-stone-200 rounded-2xl p-4">
-          <p className="text-xs font-semibold tracking-wider uppercase text-stone-500">
-            Support Visual
-          </p>
-          <p className="mt-2 text-base font-bold text-stone-900">{input.supportVisual || '—'}</p>
-          <p className="mt-1 text-xs text-stone-500">{input.colorEmphasis || '—'}</p>
+          <p className="text-xs font-semibold tracking-wider uppercase text-stone-500">Hook</p>
+          <p className="mt-2 text-base font-bold text-stone-900 leading-tight">{input.hook}</p>
         </div>
       </div>
 
@@ -465,13 +455,19 @@ export default function SchoolOfBreathThumbnailsTab({
           </div>
           <h3 className="mt-4 text-lg font-semibold text-stone-900">No School of Breath drafts yet</h3>
           <p className="mt-2 text-sm text-stone-500 max-w-xl mx-auto">
-            Pick a category, mode, and hook to build one controlled thumbnail variant.
+            Start with topic, pick one of three hooks, and generate.
           </p>
         </div>
       ) : (
         <div className="space-y-4">
           {thumbnailDrafts.map((draft) => {
             const sob = draft.prompt.schoolOfBreath;
+            const mode: SchoolOfBreathMode = sob?.mode === 'without_character' ? 'without_character' : 'with_character';
+            const accent = sob?.colorEmphasis || '#FF3B30';
+            const draftTopicMeta =
+              sob?.category && isSchoolOfBreathTopic(sob.category)
+                ? getSchoolOfBreathTopicMeta(sob.category)
+                : topicMeta;
             return (
               <div
                 key={draft.id}
@@ -487,8 +483,7 @@ export default function SchoolOfBreathThumbnailsTab({
                       <div>
                         <h3 className="text-lg font-semibold text-stone-900">{draft.prompt.title}</h3>
                         <p className="text-sm text-stone-500 mt-1">
-                          {sob?.category ?? 'technique'} · {sob?.mode ?? 'with_character'} ·{' '}
-                          {sob?.hookFamily ?? 'instruction'}
+                          {sob?.category ?? 'pranayama'} · {mode}
                         </p>
                       </div>
                     </div>
@@ -558,8 +553,8 @@ export default function SchoolOfBreathThumbnailsTab({
                     ) : (
                       <div className="rounded-2xl border border-dashed border-stone-300 bg-stone-50 p-10 text-center text-sm text-stone-500">
                         {draft.status === 'generating'
-                          ? 'Generating image variants…'
-                          : 'No preview images yet.'}
+                          ? 'Generating thumbnail…'
+                          : 'No preview image yet.'}
                       </div>
                     )}
                   </div>
@@ -571,14 +566,17 @@ export default function SchoolOfBreathThumbnailsTab({
                         <p className="text-sm font-semibold text-stone-900">Thumbnail Text Plan</p>
                       </div>
                       <HookPreview
-                        topLine={sob?.topLine ?? ''}
+                        topLine={sob?.topLine ?? draftTopicMeta.topLine}
                         hook={draft.canvaSpec.hookWord}
-                        bottomStrip={sob?.bottomStrip ?? draft.canvaSpec.badge ?? ''}
-                        hookColor={draft.canvaSpec.colors.hook}
+                        cta={sob?.bottomStrip ?? draftTopicMeta.cta}
+                        accent={accent}
+                        mode={mode}
+                        characterSide={draftTopicMeta.characterSide}
+                        backgroundScene={draftTopicMeta.backgroundScene}
                       />
                       <div className="space-y-1.5 text-sm text-stone-600">
                         <p>
-                          <span className="font-semibold text-stone-900">Main Hook:</span>{' '}
+                          <span className="font-semibold text-stone-900">Hook:</span>{' '}
                           {draft.canvaSpec.hookWord || 'Pending'}
                         </p>
                         <p>
@@ -586,23 +584,9 @@ export default function SchoolOfBreathThumbnailsTab({
                           {sob?.topLine || 'Pending'}
                         </p>
                         <p>
-                          <span className="font-semibold text-stone-900">Bottom Strip:</span>{' '}
-                          {sob?.bottomStrip || draft.canvaSpec.badge || 'Pending'}
-                        </p>
-                        <p>
                           <span className="font-semibold text-stone-900">SEO Title:</span>{' '}
                           {draft.canvaSpec.seoTitle || 'Pending'}
                         </p>
-                        <div className="flex items-center gap-3 flex-wrap">
-                          <span className="flex items-center gap-1.5">
-                            <ColorDot color={draft.canvaSpec.colors.hook} />
-                            <span className="text-xs">Hook</span>
-                          </span>
-                          <span className="flex items-center gap-1.5">
-                            <ColorDot color={draft.canvaSpec.colors.secondary} />
-                            <span className="text-xs">Secondary</span>
-                          </span>
-                        </div>
                       </div>
                     </div>
 
@@ -620,11 +604,8 @@ export default function SchoolOfBreathThumbnailsTab({
                         <p className="text-sm font-semibold text-stone-900">Validation Notes</p>
                         <div className="mt-3 space-y-2">
                           {draft.validationSummary.map((item, index) => (
-                            <div
-                              key={index}
-                              className="flex items-start gap-2 text-sm text-stone-600"
-                            >
-                              {item.toLowerCase().includes('normalized') ? (
+                            <div key={index} className="flex items-start gap-2 text-sm text-stone-600">
+                              {item.toLowerCase().includes('lock') || item.toLowerCase().includes('normalized') ? (
                                 <CheckCircle2 className="w-4 h-4 mt-0.5 text-emerald-600 shrink-0" />
                               ) : (
                                 <AlertCircle className="w-4 h-4 mt-0.5 text-amber-600 shrink-0" />
@@ -685,8 +666,8 @@ export default function SchoolOfBreathThumbnailsTab({
                     </h3>
                     <p className="text-sm text-stone-500 mt-1">
                       {modalStep === 'form'
-                        ? 'Step 1 — pick mode, category, and hook stack.'
-                        : 'Step 2 — review the prompt plan before generation.'}
+                        ? 'Topic → Mode → Hook → Generate'
+                        : 'Review prompt and generate.'}
                     </p>
                   </div>
                 </div>
@@ -704,6 +685,31 @@ export default function SchoolOfBreathThumbnailsTab({
               {modalStep === 'form' ? (
                 <>
                   <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-stone-800">Topic</label>
+                      <select
+                        value={input.topic}
+                        onChange={(e) => {
+                          const topic = e.target.value;
+                          if (!isSchoolOfBreathTopic(topic)) return;
+                          const hooks = getSchoolOfBreathHookOptions(topic);
+                          setInput((prev) => ({
+                            ...prev,
+                            topic,
+                            mode: prev.mode,
+                            hook: hooks[0],
+                          }));
+                        }}
+                        className="w-full px-4 py-3 rounded-xl border border-stone-200 bg-white text-stone-800 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400"
+                      >
+                        {SOB_THUMBNAIL_TOPICS.map((topic) => (
+                          <option key={topic.key} value={topic.key}>
+                            {topic.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-stone-800">Mode</label>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -724,65 +730,16 @@ export default function SchoolOfBreathThumbnailsTab({
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-stone-800">Category</label>
-                      <select
-                        value={input.category}
-                        onChange={(e) =>
-                          setInput((prev) => ({
-                            ...prev,
-                            category: e.target.value as SchoolOfBreathCategory,
-                          }))
-                        }
-                        className="w-full px-4 py-3 rounded-xl border border-stone-200 bg-white text-stone-800 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400"
-                      >
-                        {SOB_THUMBNAIL_CATEGORIES.map((category) => (
-                          <option key={category.key} value={category.key}>
-                            {category.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-stone-800">Hook Family</label>
-                      <div className="flex flex-wrap gap-2">
-                        {quickPicks.hookFamilies.map((family) => (
-                          <button
-                            key={family}
-                            onClick={() =>
-                              setInput((prev) => ({
-                                ...prev,
-                                hookFamily: family as SchoolOfBreathHookFamily,
-                              }))
-                            }
-                            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                              input.hookFamily === family
-                                ? 'bg-amber-600 text-white'
-                                : 'bg-white border border-stone-200 text-stone-600 hover:border-amber-300 hover:text-amber-700'
-                            }`}
-                          >
-                            {family.replace('_', ' ')}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <p className="text-xs font-semibold tracking-wider uppercase text-stone-500">
-                        Hook Quick Picks
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {quickPicks.hooks.map((hook) => (
+                      <label className="text-sm font-medium text-stone-800">Hook Options</label>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        {hookOptions.map((hook) => (
                           <button
                             key={hook}
-                            onClick={() => {
-                              setInput((prev) => ({ ...prev, mainHook: hook }));
-                              setTouched((prev) => ({ ...prev, mainHook: true }));
-                            }}
-                            className={`px-3 py-2 rounded-xl text-xs font-medium transition-colors ${
-                              input.mainHook === hook
-                                ? 'bg-stone-900 text-white'
-                                : 'bg-white border border-stone-200 text-stone-700 hover:border-stone-400'
+                            onClick={() => setInput((prev) => ({ ...prev, hook }))}
+                            className={`px-3 py-2 rounded-xl text-xs font-semibold tracking-wide transition-colors ${
+                              input.hook === hook
+                                ? 'bg-amber-600 text-white'
+                                : 'bg-white border border-stone-200 text-stone-700 hover:border-amber-300'
                             }`}
                           >
                             {hook}
@@ -792,114 +749,33 @@ export default function SchoolOfBreathThumbnailsTab({
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-sm font-medium text-stone-800">Main Hook (2-5 words)</label>
+                      <label className="text-sm font-medium text-stone-800">Selected Hook</label>
                       <input
-                        value={input.mainHook}
-                        onChange={(e) => {
-                          setInput((prev) => ({ ...prev, mainHook: e.target.value }));
-                          setTouched((prev) => ({ ...prev, mainHook: true }));
-                        }}
-                        placeholder="e.g. DO IT THIS WAY"
+                        value={input.hook}
+                        onChange={(e) => setInput((prev) => ({ ...prev, hook: e.target.value.toUpperCase() }))}
                         className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 font-bold uppercase focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400"
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-stone-800">Top Line</label>
-                        <input
-                          value={input.topLine ?? ''}
-                          onChange={(e) => {
-                            setInput((prev) => ({ ...prev, topLine: e.target.value }));
-                            setTouched((prev) => ({ ...prev, topLine: true }));
-                          }}
-                          placeholder="e.g. PRANAYAMA SEQUENCE"
-                          className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 font-semibold uppercase focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400"
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-stone-800">Bottom Strip</label>
-                        <input
-                          value={input.bottomStrip ?? ''}
-                          onChange={(e) => {
-                            setInput((prev) => ({ ...prev, bottomStrip: e.target.value }));
-                            setTouched((prev) => ({ ...prev, bottomStrip: true }));
-                          }}
-                          placeholder="e.g. WATCH NOW"
-                          className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 font-semibold uppercase focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400"
-                        />
-                      </div>
-                    </div>
-
                     <HookPreview
-                      topLine={input.topLine ?? ''}
-                      hook={input.mainHook}
-                      bottomStrip={input.bottomStrip ?? ''}
-                      hookColor={draftHookColor(input.colorEmphasis)}
+                      topLine={topicMeta.topLine}
+                      hook={input.hook}
+                      cta={topicMeta.cta}
+                      accent={topicMeta.accent}
+                      mode={input.mode}
+                      characterSide={topicMeta.characterSide}
+                      backgroundScene={topicMeta.backgroundScene}
                     />
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-stone-800">Support Visual</label>
-                        <select
-                          value={input.supportVisual ?? ''}
-                          onChange={(e) =>
-                            setInput((prev) => ({ ...prev, supportVisual: e.target.value }))
-                          }
-                          className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400"
-                        >
-                          {quickPicks.supportVisuals.map((visual) => (
-                            <option key={visual} value={visual}>
-                              {visual}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-stone-800">Color Emphasis</label>
-                        <select
-                          value={input.colorEmphasis ?? ''}
-                          onChange={(e) =>
-                            setInput((prev) => ({ ...prev, colorEmphasis: e.target.value }))
-                          }
-                          className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400"
-                        >
-                          {quickPicks.colorEmphasis.map((color) => (
-                            <option key={color} value={color}>
-                              {color.replace(/_/g, ' ')}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-sm font-medium text-stone-800">Background Style</label>
-                      <select
-                        value={input.backgroundStyle ?? ''}
-                        onChange={(e) =>
-                          setInput((prev) => ({ ...prev, backgroundStyle: e.target.value }))
-                        }
-                        className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400"
-                      >
-                        {quickPicks.backgroundStyles.map((style) => (
-                          <option key={style} value={style}>
-                            {style}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
 
                     <div className="space-y-2">
                       <div className="flex items-center justify-between gap-3">
-                        <label className="text-sm font-medium text-stone-800">YouTube Title</label>
+                        <label className="text-sm font-medium text-stone-800">Title Suggestion</label>
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => setLockUserText((v) => !v)}
                             className={`inline-flex items-center gap-1.5 text-xs font-medium transition-colors ${
                               lockUserText ? 'text-amber-700' : 'text-stone-400'
                             }`}
-                            title={lockUserText ? 'AI suggestions locked' : 'AI suggestions active'}
                           >
                             {lockUserText ? (
                               <Lock className="w-3.5 h-3.5" />
@@ -910,7 +786,7 @@ export default function SchoolOfBreathThumbnailsTab({
                           </button>
                           <button
                             onClick={() => {
-                              setTouched((prev) => ({ ...prev, title: false }));
+                              setTitleTouched(false);
                               setLockUserText(false);
                               setSuggestionRefreshKey((v) => v + 1);
                             }}
@@ -922,7 +798,7 @@ export default function SchoolOfBreathThumbnailsTab({
                             ) : (
                               <Sparkles className="w-3.5 h-3.5" />
                             )}
-                            Refresh Suggestion
+                            Refresh
                           </button>
                         </div>
                       </div>
@@ -930,23 +806,21 @@ export default function SchoolOfBreathThumbnailsTab({
                         value={input.title}
                         onChange={(e) => {
                           setInput((prev) => ({ ...prev, title: e.target.value }));
-                          setTouched((prev) => ({ ...prev, title: true }));
+                          setTitleTouched(true);
                         }}
-                        placeholder="Title for the generated thumbnail"
+                        placeholder="Suggested from topic + hook"
                         className="w-full px-4 py-3 rounded-xl border border-stone-200 bg-white text-stone-800 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400"
                       />
                     </div>
 
                     <details className="group">
                       <summary className="text-sm font-medium text-stone-500 cursor-pointer hover:text-stone-700 transition-colors">
-                        Optional special note
+                        Optional note
                       </summary>
                       <textarea
                         value={input.specialNote ?? ''}
-                        onChange={(e) =>
-                          setInput((prev) => ({ ...prev, specialNote: e.target.value }))
-                        }
-                        placeholder="Any special instruction for this thumbnail..."
+                        onChange={(e) => setInput((prev) => ({ ...prev, specialNote: e.target.value }))}
+                        placeholder="Optional instruction..."
                         rows={2}
                         className="mt-2 w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 resize-none"
                       />
@@ -963,9 +837,7 @@ export default function SchoolOfBreathThumbnailsTab({
                   </div>
 
                   <div className="px-5 py-4 border-t border-stone-100 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <p className="text-xs text-stone-400">
-                      Build a controlled prompt plan first, then generate the final thumbnail.
-                    </p>
+                    <p className="text-xs text-stone-400">Generate plan first, then render thumbnail.</p>
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => {
@@ -1001,36 +873,33 @@ export default function SchoolOfBreathThumbnailsTab({
                             <CheckCircle2 className="w-4 h-4" />
                             Generation Plan Ready
                           </div>
-
                           <HookPreview
-                            topLine={previewPlan.prompt.schoolOfBreath?.topLine ?? ''}
+                            topLine={previewPlan.prompt.schoolOfBreath?.topLine ?? topicMeta.topLine}
                             hook={previewPlan.canvaSpec.hookWord}
-                            bottomStrip={
-                              previewPlan.prompt.schoolOfBreath?.bottomStrip ??
-                              previewPlan.canvaSpec.badge ??
-                              ''
+                            cta={previewPlan.prompt.schoolOfBreath?.bottomStrip ?? topicMeta.cta}
+                            accent={previewPlan.prompt.schoolOfBreath?.colorEmphasis ?? topicMeta.accent}
+                            mode={
+                              previewPlan.prompt.schoolOfBreath?.mode === 'without_character'
+                                ? 'without_character'
+                                : 'with_character'
                             }
-                            hookColor={previewPlan.canvaSpec.colors.hook}
+                            characterSide={
+                              previewPlan.prompt.schoolOfBreath?.category &&
+                              isSchoolOfBreathTopic(previewPlan.prompt.schoolOfBreath.category)
+                                ? getSchoolOfBreathTopicMeta(
+                                    previewPlan.prompt.schoolOfBreath.category
+                                  ).characterSide
+                                : topicMeta.characterSide
+                            }
+                            backgroundScene={
+                              previewPlan.prompt.schoolOfBreath?.category &&
+                              isSchoolOfBreathTopic(previewPlan.prompt.schoolOfBreath.category)
+                                ? getSchoolOfBreathTopicMeta(
+                                    previewPlan.prompt.schoolOfBreath.category
+                                  ).backgroundScene
+                                : topicMeta.backgroundScene
+                            }
                           />
-
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                            <div>
-                              <p className="text-stone-500 text-xs font-semibold uppercase tracking-wider">
-                                Main Hook
-                              </p>
-                              <p className="mt-1 text-lg font-bold text-stone-900">
-                                {previewPlan.canvaSpec.hookWord || '—'}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-stone-500 text-xs font-semibold uppercase tracking-wider">
-                                SEO Title
-                              </p>
-                              <p className="mt-1 text-sm font-medium text-stone-700">
-                                {previewPlan.canvaSpec.seoTitle || '—'}
-                              </p>
-                            </div>
-                          </div>
                         </div>
 
                         {previewPlan.generationPrompts?.map((prompt, index) => (
@@ -1039,9 +908,7 @@ export default function SchoolOfBreathThumbnailsTab({
                             className="rounded-2xl border border-stone-200 bg-stone-50 p-4 space-y-2"
                           >
                             <div className="flex items-center justify-between">
-                              <p className="text-sm font-semibold text-stone-900">
-                                Image Prompt
-                              </p>
+                              <p className="text-sm font-semibold text-stone-900">Image Prompt</p>
                               <button
                                 onClick={() => navigator.clipboard.writeText(prompt)}
                                 className="inline-flex items-center gap-1.5 text-xs font-medium text-stone-500 hover:text-stone-700 transition-colors"
@@ -1055,10 +922,7 @@ export default function SchoolOfBreathThumbnailsTab({
                               onChange={(e) => {
                                 const updated = [...(previewPlan.generationPrompts ?? [])];
                                 updated[index] = e.target.value;
-                                setPreviewPlan({
-                                  ...previewPlan,
-                                  generationPrompts: updated,
-                                });
+                                setPreviewPlan({ ...previewPlan, generationPrompts: updated });
                               }}
                               rows={8}
                               className="w-full text-xs leading-relaxed text-stone-600 bg-white border border-stone-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 resize-y"
@@ -1067,20 +931,11 @@ export default function SchoolOfBreathThumbnailsTab({
                         ))}
                       </>
                     )}
-
-                    {modalError && (
-                      <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                        <div className="flex items-start gap-2">
-                          <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                          <p>{modalError}</p>
-                        </div>
-                      </div>
-                    )}
                   </div>
 
                   <div className="px-5 py-4 border-t border-stone-100 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
                     <p className="text-xs text-stone-400">
-                      Review and edit the prompt. Generate to create the School of Breath thumbnail.
+                      Review prompt and generate the thumbnail.
                     </p>
                     <div className="flex items-center gap-2">
                       <button
@@ -1115,16 +970,4 @@ export default function SchoolOfBreathThumbnailsTab({
       </AnimatePresence>
     </div>
   );
-}
-
-function prevValue(value: string | undefined): boolean {
-  return Boolean(value && value.trim().length > 0);
-}
-
-function draftHookColor(colorEmphasis?: string): string {
-  if (!colorEmphasis) return '#FFD400';
-  if (colorEmphasis === 'science_blue') return '#1E7BFF';
-  if (colorEmphasis === 'urgency_red') return '#FF2E2E';
-  if (colorEmphasis === 'fire_orange') return '#FF7A00';
-  return '#FFD400';
 }

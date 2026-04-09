@@ -222,6 +222,15 @@ export type ThumbnailBrand = 'school_of_mantras' | 'school_of_breath';
 export type SchoolOfBreathMode = 'with_character' | 'without_character';
 
 export type SchoolOfBreathCategory =
+  | 'pranayama'
+  | 'tummo'
+  | 'humming'
+  | 'morning_routine'
+  | 'nitric_oxide'
+  | 'digestion'
+  | 'anxiety_relief'
+  | 'chakra_balance'
+  | 'beginner_breathing'
   | 'technique'
   | 'routine'
   | 'healing'
@@ -236,9 +245,11 @@ export type SchoolOfBreathCategory =
   | 'mudra';
 
 export type SchoolOfBreathHookFamily =
+  | 'safe'
+  | 'aggressive'
+  | 'curiosity'
   | 'big_promise'
   | 'instruction'
-  | 'curiosity'
   | 'biohack'
   | 'healing';
 

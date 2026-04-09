@@ -1,16 +1,19 @@
 import { GoogleGenAI } from '@google/genai';
 import {
-  buildSchoolOfBreathVariantPrompts,
-  getSchoolOfBreathCategories,
-  getSchoolOfBreathColorSystem,
-  getSchoolOfBreathDefaultCategory,
-  getSchoolOfBreathQuickPicks,
-  SchoolOfBreathCategory,
-  SchoolOfBreathHookFamily,
-  SchoolOfBreathMode,
-  validateSchoolOfBreathInput,
-} from '../sob-thumbnail-engine';
-import { getAbhiReferenceImageUrls } from '../sob-thumbnail-engine/character/abhiReferenceImages';
+  DEFAULT_SOB_VARIANT_COUNT,
+  getAbhiReferenceImageUrls,
+  getSobDefaultMode,
+  getSobDefaultTopic,
+  getSobHookOptions,
+  getSobPromptContext,
+  getSobStyle,
+  getSobTopics,
+  getSobVariantPrompts,
+  getSobTopicConfig,
+  SobMode,
+  SobTopicKey,
+  validateSobInput,
+} from '../thumbnail-engine/sob';
 import { IntentKey, ThumbnailCanvaSpec, ThumbnailDraft, ThumbnailPrompt } from '../types';
 
 const GEMINI_API_KEY =
@@ -21,8 +24,8 @@ const IMAGE_MODEL =
   (process.env.GEMINI_IMAGE_MODEL as string | undefined)?.trim() ||
   'gemini-3.1-flash-image-preview';
 
-const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 const MAX_ABHI_REFERENCE_IMAGES = 8;
+const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 type InlineImagePart = {
   inlineData: {
@@ -36,38 +39,34 @@ let cachedAbhiReferencePromise: Promise<InlineImagePart[]> | null = null;
 
 export interface SchoolOfBreathThumbnailInput {
   title: string;
-  category: SchoolOfBreathCategory;
-  mode: SchoolOfBreathMode;
-  hookFamily: SchoolOfBreathHookFamily;
-  mainHook: string;
-  topLine?: string;
-  bottomStrip?: string;
-  supportVisual?: string;
-  colorEmphasis?: string;
-  backgroundStyle?: string;
+  topic: SobTopicKey;
+  mode: SobMode;
+  hook: string;
   specialNote?: string;
 }
 
 export interface SchoolOfBreathThumbnailSuggestion {
   title: string;
-  mainHook: string;
+  hooks: [string, string, string];
   topLine: string;
-  bottomStrip: string;
 }
 
-const CATEGORY_TO_INTENT: Record<SchoolOfBreathCategory, IntentKey> = {
-  technique: 'knowledge',
-  routine: 'peace',
-  healing: 'healing',
-  energy: 'power',
-  biohack: 'knowledge',
-  gut: 'healing',
+export const SOB_THUMBNAIL_TOPICS = getSobTopics();
+export const SOB_THUMBNAIL_CATEGORIES = SOB_THUMBNAIL_TOPICS;
+
+const TOPIC_TO_INTENT: Record<SobTopicKey, IntentKey> = {
+  pranayama: 'knowledge',
+  tummo: 'power',
+  humming: 'healing',
+  morning_routine: 'peace',
   sleep: 'peace',
-  focus: 'knowledge',
+  nitric_oxide: 'knowledge',
+  digestion: 'healing',
+  anxiety_relief: 'peace',
+  energy: 'power',
   immunity: 'protection',
-  beginner: 'transformation',
-  advanced: 'power',
-  mudra: 'love',
+  chakra_balance: 'transformation',
+  beginner_breathing: 'love',
 };
 
 function toTitleCase(text: string): string {
@@ -79,24 +78,260 @@ function toTitleCase(text: string): string {
     .join(' ');
 }
 
-function buildSeoTitle(input: {
-  hook: string;
-  category: SchoolOfBreathCategory;
-  mode: SchoolOfBreathMode;
-}): string {
-  const topic = input.category.replace(/_/g, ' ');
-  const modeSuffix = input.mode === 'with_character' ? 'Guided by Abhi' : 'No-Fluff Method';
-  return `${toTitleCase(input.hook)} Breath Method | ${toTitleCase(topic)} | ${modeSuffix}`;
+export function isSchoolOfBreathTopic(value: string): value is SobTopicKey {
+  return SOB_THUMBNAIL_TOPICS.some((topic) => topic.key === value);
 }
 
-async function imageUrlToInlinePart(url: string): Promise<InlineImagePart> {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Failed to load Abhi reference image: ${url}`);
+export function getSchoolOfBreathHookOptions(topic: SobTopicKey): [string, string, string] {
+  return getSobHookOptions(topic);
+}
+
+export function getSchoolOfBreathTopicMeta(topic: SobTopicKey) {
+  const config = getSobTopicConfig(topic);
+  return {
+    key: topic,
+    label: config.label,
+    topLine: config.topLine,
+    cta: config.cta,
+    supportVisual: config.supportVisual,
+    backgroundScene: config.backgroundScene,
+    cinematicTone: config.cinematicTone,
+    accent: config.accent,
+    textSide: config.textSide,
+    characterSide: config.characterSide,
+    hooks: getSobHookOptions(topic),
+  };
+}
+
+export function getSchoolOfBreathDefaultInput(): SchoolOfBreathThumbnailInput {
+  const topic = getSobDefaultTopic();
+  const hooks = getSobHookOptions(topic);
+  return {
+    title: '',
+    topic,
+    mode: getSobDefaultMode(topic),
+    hook: hooks[0],
+    specialNote: '',
+  };
+}
+
+export function getSchoolOfBreathQuickPickSet(topic: SobTopicKey) {
+  const meta = getSchoolOfBreathTopicMeta(topic);
+  return {
+    hooks: meta.hooks,
+    topLine: meta.topLine,
+    cta: meta.cta,
+    supportVisual: meta.supportVisual,
+    accent: meta.accent,
+    textSide: meta.textSide,
+    characterSide: meta.characterSide,
+    recommendedMode: getSobDefaultMode(topic),
+  };
+}
+
+function buildHookFamily(hook: string, topic: SobTopicKey): 'safe' | 'aggressive' | 'curiosity' {
+  const options = getSobHookOptions(topic);
+  const normalized = hook.trim().toUpperCase();
+  if (normalized === options[1].trim().toUpperCase()) return 'aggressive';
+  if (normalized === options[2].trim().toUpperCase()) return 'curiosity';
+  return 'safe';
+}
+
+function buildSuggestedTitle(input: {
+  topic: SobTopicKey;
+  hook: string;
+  mode: SobMode;
+  seed?: string;
+}): string {
+  if (input.seed?.trim()) {
+    return `${input.seed.trim()} | ${toTitleCase(input.hook)} Breath Method`;
+  }
+  const topicLabel = getSobTopicConfig(input.topic).label;
+  const modeSuffix = input.mode === 'with_character' ? 'Guided by Abhi' : 'Text-Led Method';
+  return `${toTitleCase(input.hook)} | ${topicLabel} Breathwork | ${modeSuffix}`;
+}
+
+export async function suggestSchoolOfBreathInput(params: {
+  topic: SobTopicKey;
+  mode: SobMode;
+  topicSeed?: string;
+}): Promise<SchoolOfBreathThumbnailSuggestion> {
+  const hooks = getSobHookOptions(params.topic);
+  const title = buildSuggestedTitle({
+    topic: params.topic,
+    hook: hooks[0],
+    mode: params.mode,
+    seed: params.topicSeed,
+  });
+
+  return {
+    title,
+    hooks,
+    topLine: getSobTopicConfig(params.topic).topLine,
+  };
+}
+
+function buildCanvaSpec(input: SchoolOfBreathThumbnailInput): ThumbnailCanvaSpec {
+  const topic = getSobTopicConfig(input.topic);
+
+  return {
+    hookWord: input.hook.toUpperCase(),
+    secondary: topic.cta,
+    badge: topic.cta,
+    schoolLabel: 'THE SCHOOL OF BREATH',
+    seoTitle: buildSuggestedTitle({
+      topic: input.topic,
+      hook: input.hook,
+      mode: input.mode,
+      seed: input.title,
+    }),
+    colors: {
+      hook: '#111111',
+      secondary: '#FFFFFF',
+      brand: '#FFD400',
+      badge: '#FFFFFF',
+      aura: '#000000',
+    },
+  };
+}
+
+function buildThumbnailPrompt(input: SchoolOfBreathThumbnailInput): ThumbnailPrompt {
+  const topic = getSobTopicConfig(input.topic);
+
+  return {
+    title: input.title.trim(),
+    deity: input.mode === 'with_character' ? 'Abhi' : 'No Character',
+    intent: TOPIC_TO_INTENT[input.topic],
+    brand: 'school_of_breath',
+    line1: input.hook,
+    line2: topic.cta,
+    badge: topic.cta,
+    special: input.specialNote?.trim() || undefined,
+    schoolOfBreath: {
+      mode: input.mode,
+      category: input.topic,
+      hookFamily: buildHookFamily(input.hook, input.topic),
+      topLine: topic.topLine,
+      bottomStrip: topic.cta,
+      supportVisual: topic.supportVisual,
+      colorEmphasis: topic.accent,
+      backgroundStyle: `${
+        input.mode === 'without_character'
+          ? `empty-${topic.characterSide}-character-zone`
+          : 'split-subject-text'
+      } | ${topic.backgroundScene} | ${topic.cinematicTone}`,
+    },
+  };
+}
+
+export async function generateSchoolOfBreathThumbnailPlan(
+  input: SchoolOfBreathThumbnailInput
+): Promise<ThumbnailDraft> {
+  const normalizedInput: SchoolOfBreathThumbnailInput = {
+    title: input.title.trim(),
+    topic: input.topic,
+    mode: input.mode,
+    hook: input.hook.trim().toUpperCase(),
+    specialNote: input.specialNote?.trim() || undefined,
+  };
+
+  const context = getSobPromptContext(normalizedInput.topic);
+  const validation = validateSobInput(
+    {
+      title: normalizedInput.title,
+      topic: normalizedInput.topic,
+      mode: normalizedInput.mode,
+      hook: normalizedInput.hook,
+      specialNote: normalizedInput.specialNote,
+    },
+    context
+  );
+
+  if (!validation.isValid) {
+    throw new Error(validation.errors.join('\n'));
   }
 
-  const blob = await response.blob();
-  return resizeReferenceImageForModel(blob);
+  const generationPrompts = getSobVariantPrompts(
+    {
+      title: normalizedInput.title,
+      topic: normalizedInput.topic,
+      mode: normalizedInput.mode,
+      hook: normalizedInput.hook,
+      specialNote: normalizedInput.specialNote,
+    },
+    context,
+    DEFAULT_SOB_VARIANT_COUNT
+  );
+
+  return {
+    id: crypto.randomUUID(),
+    status: 'draft',
+    prompt: buildThumbnailPrompt(normalizedInput),
+    baseImages: [],
+    canvaSpec: buildCanvaSpec(normalizedInput),
+    createdAt: new Date(),
+    generationPrompts,
+    templateId: `sob-lightweight-${normalizedInput.mode}-v1`,
+    validationSummary: [
+      ...validation.warnings,
+      `Flow: topic=${normalizedInput.topic} mode=${normalizedInput.mode} hook=${normalizedInput.hook}`,
+      `Background: ${context.topic.backgroundScene}`,
+      `Cinematic tone: ${context.topic.cinematicTone}`,
+    ],
+  };
+}
+
+function extractImageFromResponse(response: unknown): string | null {
+  const record = response as Record<string, unknown>;
+  if (typeof record.data === 'string') return `data:image/png;base64,${record.data}`;
+
+  const candidates = record.candidates as
+    | Array<{
+        content?: {
+          parts?: Array<{ inlineData?: { data?: string; mimeType?: string } }>;
+        };
+      }>
+    | undefined;
+
+  const parts = candidates?.[0]?.content?.parts ?? [];
+  for (const part of parts) {
+    const data = part.inlineData?.data;
+    if (data) {
+      const mime = part.inlineData?.mimeType || 'image/png';
+      return `data:${mime};base64,${data}`;
+    }
+  }
+  return null;
+}
+
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error('Failed to load generated image'));
+    image.src = src;
+  });
+}
+
+async function normalizeThumbnailToCanvas(dataUrl: string): Promise<string> {
+  const image = await loadImage(dataUrl);
+  const targetWidth = 1280;
+  const targetHeight = 720;
+  const canvas = document.createElement('canvas');
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas is not available in this browser');
+
+  const scale = Math.max(targetWidth / image.width, targetHeight / image.height);
+  const drawWidth = image.width * scale;
+  const drawHeight = image.height * scale;
+  const dx = (targetWidth - drawWidth) / 2;
+  const dy = (targetHeight - drawHeight) / 2;
+
+  ctx.drawImage(image, dx, dy, drawWidth, drawHeight);
+  return canvas.toDataURL('image/png');
 }
 
 async function resizeReferenceImageForModel(blob: Blob): Promise<InlineImagePart> {
@@ -131,6 +366,12 @@ async function resizeReferenceImageForModel(blob: Blob): Promise<InlineImagePart
   }
 }
 
+async function imageUrlToInlinePart(url: string): Promise<InlineImagePart> {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Failed to load Abhi reference image: ${url}`);
+  return resizeReferenceImageForModel(await response.blob());
+}
+
 async function getAbhiReferenceInlineParts(): Promise<InlineImagePart[]> {
   if (cachedAbhiReferenceParts) return cachedAbhiReferenceParts;
   if (cachedAbhiReferencePromise) return cachedAbhiReferencePromise;
@@ -149,194 +390,6 @@ async function getAbhiReferenceInlineParts(): Promise<InlineImagePart[]> {
   return cachedAbhiReferencePromise;
 }
 
-function extractImageFromResponse(response: unknown): string | null {
-  const record = response as Record<string, unknown>;
-  if (typeof record.data === 'string') return `data:image/png;base64,${record.data}`;
-
-  const candidates = record.candidates as
-    | Array<{
-        content?: {
-          parts?: Array<{ inlineData?: { data?: string; mimeType?: string } }>;
-        };
-      }>
-    | undefined;
-
-  const parts = candidates?.[0]?.content?.parts ?? [];
-  for (const part of parts) {
-    const data = part.inlineData?.data;
-    if (data) {
-      const mime = part.inlineData?.mimeType || 'image/png';
-      return `data:${mime};base64,${data}`;
-    }
-  }
-
-  return null;
-}
-
-function loadImage(src: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const image = new Image();
-    image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error('Failed to load generated image'));
-    image.src = src;
-  });
-}
-
-async function normalizeThumbnailToCanvas(dataUrl: string): Promise<string> {
-  const image = await loadImage(dataUrl);
-  const targetWidth = 1280;
-  const targetHeight = 720;
-  const canvas = document.createElement('canvas');
-  canvas.width = targetWidth;
-  canvas.height = targetHeight;
-
-  const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('Canvas is not available in this browser');
-
-  const scale = Math.max(targetWidth / image.width, targetHeight / image.height);
-  const drawWidth = image.width * scale;
-  const drawHeight = image.height * scale;
-  const dx = (targetWidth - drawWidth) / 2;
-  const dy = (targetHeight - drawHeight) / 2;
-
-  ctx.drawImage(image, dx, dy, drawWidth, drawHeight);
-  return canvas.toDataURL('image/png');
-}
-
-function buildCanvaSpec(
-  normalized: ReturnType<typeof validateSchoolOfBreathInput>['normalized']
-): ThumbnailCanvaSpec {
-  const colors = getSchoolOfBreathColorSystem();
-  const palette = colors[normalized.colorEmphasis] || {
-    primary: '#111111',
-    secondary: '#FFD400',
-    accent: '#FFFFFF',
-  };
-
-  return {
-    hookWord: normalized.mainHook,
-    secondary: normalized.bottomStrip,
-    badge: normalized.bottomStrip,
-    schoolLabel: 'THE SCHOOL OF BREATH',
-    seoTitle: buildSeoTitle({
-      hook: normalized.mainHook,
-      category: normalized.category,
-      mode: normalized.mode,
-    }),
-    colors: {
-      hook: palette.secondary,
-      secondary: palette.accent,
-      brand: palette.secondary,
-      badge: palette.accent,
-      aura: palette.primary,
-    },
-  };
-}
-
-function buildDraftPrompt(
-  normalized: ReturnType<typeof validateSchoolOfBreathInput>['normalized']
-): ThumbnailPrompt {
-  return {
-    title: normalized.title,
-    deity: normalized.mode === 'with_character' ? 'Abhi' : 'No Character',
-    intent: CATEGORY_TO_INTENT[normalized.category],
-    brand: 'school_of_breath',
-    line1: normalized.mainHook,
-    line2: normalized.bottomStrip,
-    badge: normalized.bottomStrip,
-    special: normalized.specialNote,
-    schoolOfBreath: {
-      mode: normalized.mode,
-      category: normalized.category,
-      hookFamily: normalized.hookFamily,
-      topLine: normalized.topLine,
-      bottomStrip: normalized.bottomStrip,
-      supportVisual: normalized.supportVisual,
-      colorEmphasis: normalized.colorEmphasis,
-      backgroundStyle: normalized.backgroundStyle,
-    },
-  };
-}
-
-export const SOB_THUMBNAIL_CATEGORIES = getSchoolOfBreathCategories();
-
-export function getSchoolOfBreathDefaultInput(): SchoolOfBreathThumbnailInput {
-  const category = getSchoolOfBreathDefaultCategory();
-  const quick = getSchoolOfBreathQuickPicks(category);
-
-  return {
-    title: '',
-    category,
-    mode: quick.recommendedMode,
-    hookFamily: quick.hookFamilies[0],
-    mainHook: quick.hooks[0] || 'DO IT THIS WAY',
-    topLine: quick.topLines[0],
-    bottomStrip: quick.bottomStrips[0],
-    supportVisual: quick.supportVisuals[0],
-    colorEmphasis: quick.colorEmphasis[0],
-    backgroundStyle: quick.backgroundStyles[0],
-    specialNote: '',
-  };
-}
-
-export function getSchoolOfBreathQuickPickSet(
-  category: SchoolOfBreathCategory,
-  hookFamily?: SchoolOfBreathHookFamily
-) {
-  return getSchoolOfBreathQuickPicks(category, hookFamily);
-}
-
-export async function suggestSchoolOfBreathInput(params: {
-  category: SchoolOfBreathCategory;
-  mode: SchoolOfBreathMode;
-  hookFamily: SchoolOfBreathHookFamily;
-  topicSeed?: string;
-}): Promise<SchoolOfBreathThumbnailSuggestion> {
-  const quick = getSchoolOfBreathQuickPicks(params.category, params.hookFamily);
-  const mainHook = quick.hooks[0] || 'DO IT THIS WAY';
-  const topLine = quick.topLines[0] || 'BREATH PROTOCOL';
-  const bottomStrip = quick.bottomStrips[0] || 'WATCH NOW';
-
-  const title = params.topicSeed?.trim()
-    ? `${params.topicSeed.trim()} | ${toTitleCase(mainHook)} Breath Method`
-    : buildSeoTitle({
-        hook: mainHook,
-        category: params.category,
-        mode: params.mode,
-      });
-
-  return {
-    title,
-    mainHook,
-    topLine,
-    bottomStrip,
-  };
-}
-
-export async function generateSchoolOfBreathThumbnailPlan(
-  input: SchoolOfBreathThumbnailInput
-): Promise<ThumbnailDraft> {
-  const validation = validateSchoolOfBreathInput(input);
-
-  if (!validation.isValid) {
-    throw new Error(validation.errors.join('\n'));
-  }
-
-  const normalized = validation.normalized;
-
-  return {
-    id: crypto.randomUUID(),
-    status: 'draft',
-    prompt: buildDraftPrompt(normalized),
-    baseImages: [],
-    canvaSpec: buildCanvaSpec(normalized),
-    createdAt: new Date(),
-    generationPrompts: buildSchoolOfBreathVariantPrompts(normalized),
-    templateId: `sob-${normalized.mode}-v1`,
-    validationSummary: validation.warnings,
-  };
-}
-
 export async function generateSchoolOfBreathThumbnailImages(
   plan: ThumbnailDraft
 ): Promise<ThumbnailDraft> {
@@ -350,25 +403,23 @@ export async function generateSchoolOfBreathThumbnailImages(
   }
 
   const shouldUseCharacterReferences = plan.prompt.schoolOfBreath?.mode === 'with_character';
-  const referenceParts = shouldUseCharacterReferences
-    ? await getAbhiReferenceInlineParts()
-    : [];
+  const referenceParts = shouldUseCharacterReferences ? await getAbhiReferenceInlineParts() : [];
 
   const rawImages = await Promise.all(
-    prompts.map(async (variantPrompt) => {
+    prompts.map(async (prompt) => {
       const contents =
         referenceParts.length > 0
           ? [
               {
                 text:
-                  'Use the attached Abhi reference images to preserve face identity, expression style, and teacher presence. Do not invent a different person.',
+                  'Use attached Abhi references only. Preserve Abhi face identity, body realism, cinematic lighting, and natural scene integration. No sticker/cutout look. No white frame or mockup border.',
               },
               ...referenceParts,
-              { text: variantPrompt },
+              { text: prompt },
             ]
-          : variantPrompt;
+          : prompt;
 
-      const imageResponse = await ai.models.generateContent({
+      const response = await ai.models.generateContent({
         model: IMAGE_MODEL,
         contents,
         config: {
@@ -377,24 +428,26 @@ export async function generateSchoolOfBreathThumbnailImages(
         },
       });
 
-      const imageDataUrl = extractImageFromResponse(imageResponse);
-      if (!imageDataUrl) throw new Error('Image generation returned no inline image data.');
+      const imageDataUrl = extractImageFromResponse(response);
+      if (!imageDataUrl) {
+        throw new Error('Image generation returned no inline image data.');
+      }
       return imageDataUrl;
     })
   );
 
-  const normalized = await Promise.all(rawImages.map((img) => normalizeThumbnailToCanvas(img)));
+  const normalizedImages = await Promise.all(rawImages.map((image) => normalizeThumbnailToCanvas(image)));
 
   return {
     ...plan,
     status: 'ready',
-    baseImages: normalized,
+    baseImages: normalizedImages,
     validationSummary: [
       ...(plan.validationSummary ?? []),
       ...(referenceParts.length > 0
-        ? [`Character lock: used ${referenceParts.length} Abhi reference images from docs/resources/images.`]
-        : []),
-      ...normalized.map((_, index) => `Variant ${index + 1}: normalized to 1280x720.`),
+        ? [`Character lock: used ${referenceParts.length} approved Abhi references.`]
+        : ['No-character mode: confirmed no reference person images used.']),
+      ...normalizedImages.map((_, index) => `Variant ${index + 1}: normalized to 1280x720.`),
     ],
     errorMessage: undefined,
   };

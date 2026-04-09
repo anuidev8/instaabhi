@@ -1,0 +1,37 @@
+{
+  "brand": "The School of Breath",
+  "layout": {
+    "withCharacter": "full-bleed cinematic background, text blocks 55-60% on one side, character 40-45% on opposite side",
+    "withoutCharacter": "same geometry as with-character, but the character side 40-45% must remain empty background zone"
+  },
+  "template": {
+    "topBar": "dark charcoal bar near top, white uppercase context text, spanning 70-100% width",
+    "mainBlock": "bright yellow rectangular hook block with ultra-bold black condensed uppercase text",
+    "bottomBar": "red urgency strip with white uppercase CTA text attached under hook block",
+    "icon": "single circular support icon with white ring near the lower junction of text blocks"
+  },
+  "text": {
+    "maxWords": 4,
+    "fontStyle": "bold condensed",
+    "mobilePriority": true,
+    "mainIdeaOnly": true
+  },
+  "colors": {
+    "core": ["#FFD400", "#000000", "#FFFFFF"],
+    "accents": {
+      "urgency": "#FF3B30",
+      "science": "#2563EB",
+      "heat": "#FF7A00",
+      "healing": "#16A34A"
+    }
+  },
+  "characterRules": {
+    "mode": "approved_abhi_only",
+    "preserveIdentity": true,
+    "forbidGenericPeople": true
+  },
+  "noCharacterRules": {
+    "forbidPeople": true,
+    "singleSupportVisual": true
+  }
+}
