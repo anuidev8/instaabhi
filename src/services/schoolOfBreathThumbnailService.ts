@@ -5,8 +5,8 @@ import {
   getSobDefaultMode,
   getSobDefaultTopic,
   getSobHookOptions,
+  isSobHookChannelProven,
   getSobPromptContext,
-  getSobStyle,
   getSobTopics,
   getSobVariantPrompts,
   getSobTopicConfig,
@@ -24,7 +24,7 @@ const IMAGE_MODEL =
   (process.env.GEMINI_IMAGE_MODEL as string | undefined)?.trim() ||
   'gemini-3.1-flash-image-preview';
 
-const MAX_ABHI_REFERENCE_IMAGES = 8;
+const MAX_ABHI_REFERENCE_IMAGES = 4;
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 type InlineImagePart = {
@@ -86,6 +86,10 @@ export function getSchoolOfBreathHookOptions(topic: SobTopicKey): [string, strin
   return getSobHookOptions(topic);
 }
 
+export function isSchoolOfBreathHookChannelProven(hook: string): boolean {
+  return isSobHookChannelProven(hook);
+}
+
 export function getSchoolOfBreathTopicMeta(topic: SobTopicKey) {
   const config = getSobTopicConfig(topic);
   return {
@@ -94,8 +98,10 @@ export function getSchoolOfBreathTopicMeta(topic: SobTopicKey) {
     topLine: config.topLine,
     cta: config.cta,
     supportVisual: config.supportVisual,
-    backgroundScene: config.backgroundScene,
-    cinematicTone: config.cinematicTone,
+    backgroundTheme: config.backgroundTheme,
+    visualBadgeType: config.visualBadgeType,
+    arrowAllowed: config.arrowAllowed,
+    characterPose: config.characterPose,
     accent: config.accent,
     textSide: config.textSide,
     characterSide: config.characterSide,
@@ -122,6 +128,10 @@ export function getSchoolOfBreathQuickPickSet(topic: SobTopicKey) {
     topLine: meta.topLine,
     cta: meta.cta,
     supportVisual: meta.supportVisual,
+    backgroundTheme: meta.backgroundTheme,
+    visualBadgeType: meta.visualBadgeType,
+    arrowAllowed: meta.arrowAllowed,
+    characterPose: meta.characterPose,
     accent: meta.accent,
     textSide: meta.textSide,
     characterSide: meta.characterSide,
@@ -215,11 +225,10 @@ function buildThumbnailPrompt(input: SchoolOfBreathThumbnailInput): ThumbnailPro
       bottomStrip: topic.cta,
       supportVisual: topic.supportVisual,
       colorEmphasis: topic.accent,
-      backgroundStyle: `${
-        input.mode === 'without_character'
-          ? `empty-${topic.characterSide}-character-zone`
-          : 'split-subject-text'
-      } | ${topic.backgroundScene} | ${topic.cinematicTone}`,
+      backgroundStyle: `${topic.backgroundTheme} | ${topic.textSide}-text-${topic.characterSide}-visual`,
+      visualBadgeType: topic.visualBadgeType,
+      arrowAllowed: topic.arrowAllowed,
+      characterPose: topic.characterPose,
     },
   };
 }
@@ -275,8 +284,10 @@ export async function generateSchoolOfBreathThumbnailPlan(
     validationSummary: [
       ...validation.warnings,
       `Flow: topic=${normalizedInput.topic} mode=${normalizedInput.mode} hook=${normalizedInput.hook}`,
-      `Background: ${context.topic.backgroundScene}`,
-      `Cinematic tone: ${context.topic.cinematicTone}`,
+      `Background theme: ${context.topic.backgroundTheme}`,
+      `Support visual: ${context.topic.supportVisual}`,
+      `Character pose: ${context.topic.characterPose}`,
+      `Visual badge: ${context.topic.visualBadgeType}`,
     ],
   };
 }
@@ -412,7 +423,7 @@ export async function generateSchoolOfBreathThumbnailImages(
           ? [
               {
                 text:
-                  'Use attached Abhi references only. Preserve Abhi face identity, body realism, cinematic lighting, and natural scene integration. No sticker/cutout look. No white frame or mockup border.',
+                  'Use only attached Abhi references. Do not invent another person. Preserve exact Abhi face identity and mature Indian male teacher appearance. Keep Abhi in seated or breath-teaching pose. Match real School of Breath thumbnail style, not portrait-photography ad style. No sticker/cutout look. No white frame or mockup border.',
               },
               ...referenceParts,
               { text: prompt },

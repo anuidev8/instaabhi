@@ -262,6 +262,9 @@ export interface SchoolOfBreathSettings {
   supportVisual?: string;
   colorEmphasis?: string;
   backgroundStyle?: string;
+  visualBadgeType?: string;
+  arrowAllowed?: boolean;
+  characterPose?: string;
 }
 
 export type IntentKey =

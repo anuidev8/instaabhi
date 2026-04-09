@@ -19,6 +19,11 @@
       "MOST PEOPLE MISS THIS"
     ]
   },
+  "channelProven": {
+    "safe": ["BREATHE THIS WAY", "SLEEP BETTER FAST", "CALM YOUR MIND"],
+    "aggressive": ["10X GUT RESET", "NEVER GET SICK AGAIN", "FIX YOUR STRESS"],
+    "curiosity": ["NO ONE TALKS ABOUT THIS", "MOST PEOPLE MISS THIS", "DO IT THIS WAY"]
+  },
   "patterns": [
     "NEVER [PROBLEM] AGAIN",
     "[VERB] YOUR [RESULT]",

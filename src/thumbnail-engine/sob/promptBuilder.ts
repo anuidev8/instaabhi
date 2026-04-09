@@ -1,85 +1,173 @@
 import { SobPromptContext, SobPromptInput, SobVariant } from './types';
 
-export function buildSobBasePrompt(input: SobPromptInput, context: SobPromptContext): string {
-  const cinematicCharacterBlock =
-    input.mode === 'with_character'
-      ? [
-          `Character must occupy the ${context.topic.characterSide} side only, around 35-45% width.`,
-          'Character rendering must be realistic and cinematic, fully integrated with the background (not sticker/cutout).',
-          'Use only approved Abhi references; preserve face identity, hairline, skin tone, and recognizable teacher presence.',
-          'Framing: seated or medium-close hero framing with natural body proportions and clear silhouette.',
-          'Lighting: strong key light + rim light + atmospheric depth; high local contrast on face and torso.',
-          'No pasted-face look, no rough cutout edges, no cloned faces, no mismatched neck/skin tones.',
-          `Character styling and pose should fit this tone: ${context.topic.cinematicTone}.`,
-        ]
-      : [
-          `The ${context.topic.characterSide} side must stay EMPTY as reserved character zone (background only).`,
-          'Do NOT place any person, face, silhouette, body part, or character illustration in frame.',
-          `Keep cinematic background mood only: ${context.topic.cinematicTone}.`,
-        ];
+interface SobRenderSlots {
+  brand: string;
+  topic: string;
+  mode: SobPromptInput['mode'];
+  topLine: string;
+  mainHook: string;
+  cta: string;
+  supportVisual: string;
+  characterSide: 'left' | 'right';
+  textSide: 'left' | 'right';
+  backgroundTheme: string;
+  accentColor: string;
+  visualBadgeType: string;
+  arrowAllowed: boolean;
+  characterPose: string;
+}
 
-  const modeBlock =
-    input.mode === 'with_character'
-      ? [
-          'Mode: WITH CHARACTER.',
-          `Split layout: ${context.style.layout.withCharacter}.`,
-          `Text blocks must be on the ${context.topic.textSide} side only.`,
-        ]
-      : [
-          'Mode: WITHOUT CHARACTER.',
-          `Split layout: ${context.style.layout.withoutCharacter}.`,
-          `Text blocks must be on the ${context.topic.textSide} side only.`,
-          `The ${context.topic.characterSide} 40-45% zone must stay EMPTY (no text, no icons).`,
-        ];
+function getBackgroundMatchRules(backgroundTheme: string): string[] {
+  const theme = backgroundTheme.toLowerCase();
 
-  const architectureRules = [
-    'Use full-bleed 1280x720 frame (no white margins, no app card frame, no mockup border).',
-    'Visual architecture is mandatory and should match classic high-CTR School of Breath style:',
-    `1) TOP BAR: ${context.style.template.topBar}.`,
-    `2) MAIN BLOCK: ${context.style.template.mainBlock}.`,
-    `3) BOTTOM BAR: ${context.style.template.bottomBar}.`,
-    `4) ICON: ${context.style.template.icon}.`,
-    'Top bar should be near top edge and visually connected to the main yellow hook block.',
-    'Main yellow hook block should be dominant and consume roughly 45-60% of full canvas area.',
-    'Bottom red CTA strip should be clearly visible and separated from yellow block by hard edges.',
-    'Circular icon should be small and secondary; never larger than hook text height.',
-  ];
+  if (theme.includes('forest')) {
+    return [
+      '- Match a lush forest-river scene: mossy rocks, flowing water, mist depth, rich greens.',
+      '- Keep dramatic contrast and cinematic atmosphere, not a flat wallpaper look.',
+    ];
+  }
 
-  const textRules = [
-    `Top context text (small): "${context.topic.topLine}".`,
-    `Main hook text (largest): "${input.hook}".`,
-    `Bottom CTA strip text: "${context.topic.cta}".`,
-    'Typography must be ultra-bold condensed uppercase (Impact/Anton style feel).',
-    'Main hook must be readable at mobile size and dominate all other text.',
-    'Never use thin fonts, script fonts, serif fonts, or decorative calligraphy.',
-  ];
+  if (theme.includes('cosmic')) {
+    return [
+      '- Match a deep cosmic scene: blue/purple star field, nebula glow, layered depth.',
+      '- Keep the space atmosphere dramatic and textured, not a simple gradient fill.',
+    ];
+  }
 
-  const antiDriftRules = [
-    'Do not output minimalist/editorial poster style.',
-    'Do not output soft pastel wellness aesthetic.',
-    'Do not output fantasy religious art, temple scenes, deity halos, or devotional imagery.',
-    'Do not add extra random words, subtitles, or paragraph text.',
-    'No clutter: one dominant promise, one support visual, one character zone.',
-  ];
+  if (theme.includes('fire')) {
+    return [
+      '- Match a volcanic fire scene: flame walls, lava heat, dark rock contrast.',
+      '- Keep orange/red heat intensity high and clearly visible behind the subject/visual zone.',
+    ];
+  }
+
+  if (theme.includes('warm_studio')) {
+    return [
+      '- Match a warm studio atmosphere: golden light, subtle haze, cinematic depth.',
+      '- Keep it textured and dramatic, not plain white or flat beige.',
+    ];
+  }
+
+  if (theme.includes('cool_blue_sleep_field')) {
+    return [
+      '- Match a cool blue sleep field: moon-tone blue atmosphere, calm light bloom, depth layers.',
+      '- Keep it immersive and cinematic, not minimal or empty.',
+    ];
+  }
 
   return [
-    `Create a YouTube thumbnail for ${context.style.brand}, 1280x720, 16:9.`,
-    ...modeBlock,
-    'Target style: EXACTLY match aggressive high-CTR School of Breath thumbnails.',
-    ...architectureRules,
-    ...textRules,
-    `Support visual: ${context.topic.supportVisual}.`,
-    `Background scene direction: ${context.topic.backgroundScene}.`,
-    'Background should feel cinematic and textured, with dramatic depth and saturated contrast.',
-    'Keep subject/background separation strong so text stays legible.',
-    ...cinematicCharacterBlock,
-    `Color system: Yellow (#FFD400) + Black + White, with accent ${context.topic.accent}.`,
-    ...antiDriftRules,
-    input.specialNote?.trim() ? `Special note: ${input.specialNote.trim()}.` : null,
-    'Final check: thumbnail must look like a real YouTube CTR thumbnail, not a clean design mockup.',
-  ]
-    .filter(Boolean)
-    .join('\n');
+    '- Keep a textured, cinematic, high-contrast environment that matches proven School of Breath style.',
+    '- Avoid plain or empty backdrops.',
+  ];
+}
+
+function toSlots(input: SobPromptInput, context: SobPromptContext): SobRenderSlots {
+  return {
+    brand: context.style.brand,
+    topic: context.topic.label,
+    mode: input.mode,
+    topLine: context.topic.topLine,
+    mainHook: input.hook,
+    cta: context.topic.cta,
+    supportVisual: context.topic.supportVisual,
+    characterSide: context.topic.characterSide,
+    textSide: context.topic.textSide,
+    backgroundTheme: context.topic.backgroundTheme,
+    accentColor: context.topic.accent,
+    visualBadgeType: context.topic.visualBadgeType,
+    arrowAllowed: context.topic.arrowAllowed,
+    characterPose: context.topic.characterPose,
+  };
+}
+
+function buildSobRenderPrompt(slots: SobRenderSlots): string {
+  const backgroundMatchRules = getBackgroundMatchRules(slots.backgroundTheme);
+  const modeRules =
+    slots.mode === 'with_character'
+      ? [
+          'MODE RULES:',
+          '- WITH CHARACTER mode.',
+          '- Use only attached Abhi reference images.',
+          '- Do not invent another person.',
+          '- Preserve exact Abhi face identity.',
+          '- Preserve mature Indian male teacher appearance.',
+          '- Keep Abhi in a seated or breath-teaching pose.',
+          `- Required pose guidance: ${slots.characterPose}.`,
+          `- Place Abhi on the ${slots.characterSide} 40-45% zone with natural body proportions.`,
+          '- No fashion portrait look, no generic guru look, no ad-poster portrait style.',
+        ]
+      : [
+          'MODE RULES:',
+          '- WITHOUT CHARACTER mode.',
+          '- No human subject, no face, no silhouette, no body parts.',
+          `- The ${slots.characterSide} 40-45% zone is a SUPPORT VISUAL ZONE (not empty).`,
+          '- Place exactly one strong support visual in that zone.',
+          '- Integrate that support visual into the scene background naturally.',
+          '- Never leave the support visual zone as plain background-only space.',
+          '- No extra text in the support visual zone.',
+          '- No secondary icons beyond the one support visual and one badge.',
+        ];
+
+  return [
+    'Create a 1280x720 School of Breath YouTube thumbnail.',
+    'This is an assembly instruction, not a creative brief.',
+    '',
+    'REQUIRED SLOTS:',
+    `- brand: ${slots.brand}`,
+    `- topic: ${slots.topic}`,
+    `- mode: ${slots.mode}`,
+    `- topLine: ${slots.topLine}`,
+    `- mainHook: ${slots.mainHook}`,
+    `- cta: ${slots.cta}`,
+    `- supportVisual: ${slots.supportVisual}`,
+    `- characterSide: ${slots.characterSide}`,
+    `- textSide: ${slots.textSide}`,
+    `- backgroundTheme: ${slots.backgroundTheme}`,
+    `- accentColor: ${slots.accentColor}`,
+    '',
+    'LOCKED LAYOUT:',
+    '- Full-bleed frame. No borders, no white frame, no mockup card.',
+    `- Text stack occupies ${slots.textSide} 55-60% in rigid stacked rectangles.`,
+    `- Character/support-visual zone occupies ${slots.characterSide} 40-45%.`,
+    '- No floating text.',
+    '- Top strip is full width across text zone, dark charcoal/black, white uppercase compact text.',
+    '- Main block is huge yellow rectangle with ultra-bold condensed uppercase dark text.',
+    '- CTA block is red rectangle directly below main block with white uppercase text.',
+    '- One circular support badge only near lower boundary between text stack and right zone.',
+    `- Support badge style: ${slots.visualBadgeType}.`,
+    slots.arrowAllowed ? '- One directional arrow is allowed only if it improves support visual clarity.' : '- No arrows.',
+    '',
+    'TEXT RULES:',
+    '- Use only three text elements: topLine, mainHook, cta.',
+    '- Main hook is the largest text and dominates left stack.',
+    '- Typography is ultra-bold condensed uppercase.',
+    '- Mobile readability is mandatory.',
+    '',
+    'BACKGROUND RULES:',
+    '- Background is mandatory and must fill the full frame.',
+    '- No plain solid-color background and no generic empty gradient.',
+    '- Keep background busy but controlled, dramatic depth, high contrast.',
+    '- Match proven School of Breath channel atmosphere for this theme.',
+    `- Background theme: ${slots.backgroundTheme}.`,
+    ...backgroundMatchRules,
+    '',
+    ...modeRules,
+    '',
+    'ANTI-DRIFT RULES:',
+    '- Do not output minimalist flat design.',
+    '- Do not output soft pastel wellness style.',
+    '- Do not add random extra words, subtitles, or paragraph text.',
+    '- Keep one dominant promise, one support visual, one badge.',
+    '- Final result must feel native to aggressive School of Breath channel thumbnails.',
+  ].join('\n');
+}
+
+export function buildSobBasePrompt(input: SobPromptInput, context: SobPromptContext): string {
+  const slots = toSlots(input, context);
+  const basePrompt = buildSobRenderPrompt(slots);
+  const specialNote = input.specialNote?.trim();
+
+  return [basePrompt, specialNote ? `SPECIAL NOTE: ${specialNote}` : null].filter(Boolean).join('\n');
 }
 
 export function buildSobPromptVariants(
@@ -89,25 +177,32 @@ export function buildSobPromptVariants(
 ): SobVariant[] {
   const basePrompt = buildSobBasePrompt(input, context);
 
-  const balanced: SobVariant = {
+  const channelMatch: SobVariant = {
     id: 'A',
-    label: 'Balanced',
+    label: 'Exact Channel Match',
     prompt: [
       basePrompt,
-      'Variant profile: reference-match and mobile-legible.',
-      'Prioritize exact block geometry, high contrast, and aggressive readability at small size.',
+      'VARIANT A: Exact Channel Match.',
+      '- Keep standard proven channel composition.',
+      '- Keep hard text stack geometry exact.',
+      '- Keep one clear support visual and one support badge.',
+      '- Prioritize resemblance to proven School of Breath thumbnails.',
     ].join('\n'),
   };
 
-  const aggressive: SobVariant = {
+  const hookPush: SobVariant = {
     id: 'B',
-    label: 'Aggressive',
+    label: 'Hook Push',
     prompt: [
       basePrompt,
-      'Variant profile: stronger contrast, bigger hook, higher urgency.',
-      'Still keep readability and avoid clutter.',
+      'VARIANT B: Hook Push.',
+      '- Make main hook block slightly larger than Variant A.',
+      '- Keep top strip slightly tighter.',
+      '- Make CTA block more dominant and urgent.',
+      '- Make support badge and support visual more obvious.',
+      '- Push contrast harder while preserving legibility.',
     ].join('\n'),
   };
 
-  return variantCount <= 1 ? [balanced] : [balanced, aggressive];
+  return variantCount <= 1 ? [channelMatch] : [channelMatch, hookPush];
 }

@@ -25,6 +25,7 @@ import {
   getSchoolOfBreathDefaultInput,
   getSchoolOfBreathHookOptions,
   getSchoolOfBreathTopicMeta,
+  isSchoolOfBreathHookChannelProven,
   isSchoolOfBreathTopic,
   SchoolOfBreathThumbnailInput,
   SOB_THUMBNAIL_TOPICS,
@@ -62,7 +63,8 @@ function HookPreview({
   accent,
   mode,
   characterSide,
-  backgroundScene,
+  backgroundTheme,
+  supportVisual,
 }: {
   topLine: string;
   hook: string;
@@ -70,9 +72,10 @@ function HookPreview({
   accent: string;
   mode: SchoolOfBreathMode;
   characterSide: 'left' | 'right';
-  backgroundScene: string;
+  backgroundTheme: string;
+  supportVisual: string;
 }) {
-  const cinematicBackground = getCinematicSceneStyle(backgroundScene, accent);
+  const cinematicBackground = getCinematicSceneStyle(backgroundTheme, accent);
 
   const textPanel = (
     <div className="flex flex-col h-full">
@@ -97,14 +100,19 @@ function HookPreview({
     <div className="h-full relative" style={cinematicBackground}>
       {mode === 'without_character' ? (
         <div className="absolute inset-0 border-2 border-dashed border-white/35 flex items-center justify-center">
-          <span className="text-[10px] font-bold tracking-wider text-white/75 uppercase text-center px-2">
-            Empty Character Zone
-          </span>
+          <div className="text-center px-2 space-y-1">
+            <span className="block text-[10px] font-bold tracking-wider text-white/85 uppercase">
+              Support Visual Zone
+            </span>
+            <span className="block text-[9px] font-semibold tracking-wide text-white/70 uppercase">
+              {supportVisual || 'Support Visual'}
+            </span>
+          </div>
         </div>
       ) : (
         <div className="absolute inset-0 flex items-center justify-center">
           <span className="text-[10px] font-bold tracking-wider text-white/70 uppercase text-center px-2">
-            Cinematic Character Zone
+            Abhi Character Zone
           </span>
         </div>
       )}
@@ -113,7 +121,7 @@ function HookPreview({
         style={{ backgroundColor: accent || '#FF3B30' }}
       />
       <span className="absolute top-2 left-2 text-[9px] text-white/80 font-semibold uppercase tracking-wide">
-        Cinematic BG
+        {backgroundTheme.replace(/_/g, ' ')}
       </span>
     </div>
   );
@@ -137,10 +145,10 @@ function HookPreview({
   );
 }
 
-function getCinematicSceneStyle(backgroundScene: string, accent: string): React.CSSProperties {
-  const scene = backgroundScene.toLowerCase();
+function getCinematicSceneStyle(backgroundTheme: string, accent: string): React.CSSProperties {
+  const scene = backgroundTheme.toLowerCase();
 
-  if (/(volcanic|lava|fire|flame|smoke)/.test(scene)) {
+  if (/(fire|heat|lava|volcanic)/.test(scene)) {
     return {
       background:
         'radial-gradient(circle at 78% 22%, rgba(255,132,0,0.62), transparent 38%), radial-gradient(circle at 18% 82%, rgba(255,70,0,0.38), transparent 40%), linear-gradient(140deg, #1a0a05 0%, #3f1407 45%, #0c0c0e 100%)',
@@ -148,7 +156,7 @@ function getCinematicSceneStyle(backgroundScene: string, accent: string): React.
     };
   }
 
-  if (/(forest|river|nature|waterfall|jungle|moss)/.test(scene)) {
+  if (/(forest|nature)/.test(scene)) {
     return {
       background:
         'radial-gradient(circle at 72% 18%, rgba(132,255,209,0.45), transparent 42%), radial-gradient(circle at 18% 86%, rgba(88,164,255,0.35), transparent 44%), linear-gradient(140deg, #07120c 0%, #0d3324 52%, #071019 100%)',
@@ -156,7 +164,7 @@ function getCinematicSceneStyle(backgroundScene: string, accent: string): React.
     };
   }
 
-  if (/(cosmic|nebula|night|stars|galaxy|chakra)/.test(scene)) {
+  if (/(cosmic|chakra)/.test(scene)) {
     return {
       background:
         'radial-gradient(circle at 75% 20%, rgba(117,173,255,0.5), transparent 42%), radial-gradient(circle at 20% 80%, rgba(187,123,255,0.42), transparent 44%), linear-gradient(140deg, #060a1f 0%, #131e49 54%, #080818 100%)',
@@ -164,11 +172,19 @@ function getCinematicSceneStyle(backgroundScene: string, accent: string): React.
     };
   }
 
-  if (/(sunrise|morning|sun|golden)/.test(scene)) {
+  if (/(warm_studio|sunrise|morning)/.test(scene)) {
     return {
       background:
         'radial-gradient(circle at 78% 22%, rgba(255,225,133,0.68), transparent 42%), radial-gradient(circle at 18% 78%, rgba(255,142,69,0.46), transparent 42%), linear-gradient(140deg, #2a1406 0%, #7a3305 54%, #140a0f 100%)',
       boxShadow: `inset 0 0 72px ${accent}40`,
+    };
+  }
+
+  if (/(cool_blue_sleep_field|sleep|night)/.test(scene)) {
+    return {
+      background:
+        'radial-gradient(circle at 80% 18%, rgba(150,190,255,0.52), transparent 40%), radial-gradient(circle at 20% 82%, rgba(96,130,255,0.34), transparent 42%), linear-gradient(140deg, #040a1b 0%, #152d67 56%, #060d22 100%)',
+      boxShadow: `inset 0 0 72px ${accent}35`,
     };
   }
 
@@ -199,7 +215,10 @@ function buildSpecText(draft: ThumbnailDraft): string {
     `HOOK: ${draft.canvaSpec.hookWord}`,
     `TOP LINE: ${sob?.topLine ?? ''}`,
     `SUPPORT VISUAL: ${sob?.supportVisual ?? ''}`,
+    `VISUAL BADGE: ${sob?.visualBadgeType ?? ''}`,
+    `CHARACTER POSE: ${sob?.characterPose ?? ''}`,
     `ACCENT: ${sob?.colorEmphasis ?? ''}`,
+    `BACKGROUND STYLE: ${sob?.backgroundStyle ?? ''}`,
     `SEO TITLE: ${draft.canvaSpec.seoTitle ?? ''}`,
   ].join('\n');
 }
@@ -412,7 +431,7 @@ export default function SchoolOfBreathThumbnailsTab({
             The School of Breath Thumbnails
           </h2>
           <p className="text-sm text-stone-500 mt-0.5">
-            Lightweight flow: Topic, Mode, 3 Hooks, Generate.
+            Lightweight flow: Topic, Mode, Approved Hooks, Generate.
           </p>
         </div>
         <button
@@ -455,7 +474,7 @@ export default function SchoolOfBreathThumbnailsTab({
           </div>
           <h3 className="mt-4 text-lg font-semibold text-stone-900">No School of Breath drafts yet</h3>
           <p className="mt-2 text-sm text-stone-500 max-w-xl mx-auto">
-            Start with topic, pick one of three hooks, and generate.
+            Start with topic, pick an approved hook, then generate.
           </p>
         </div>
       ) : (
@@ -572,7 +591,8 @@ export default function SchoolOfBreathThumbnailsTab({
                         accent={accent}
                         mode={mode}
                         characterSide={draftTopicMeta.characterSide}
-                        backgroundScene={draftTopicMeta.backgroundScene}
+                        backgroundTheme={draftTopicMeta.backgroundTheme}
+                        supportVisual={sob?.supportVisual ?? draftTopicMeta.supportVisual}
                       />
                       <div className="space-y-1.5 text-sm text-stone-600">
                         <p>
@@ -582,6 +602,10 @@ export default function SchoolOfBreathThumbnailsTab({
                         <p>
                           <span className="font-semibold text-stone-900">Top Line:</span>{' '}
                           {sob?.topLine || 'Pending'}
+                        </p>
+                        <p>
+                          <span className="font-semibold text-stone-900">Support Visual:</span>{' '}
+                          {sob?.supportVisual || draftTopicMeta.supportVisual || 'Pending'}
                         </p>
                         <p>
                           <span className="font-semibold text-stone-900">SEO Title:</span>{' '}
@@ -666,7 +690,7 @@ export default function SchoolOfBreathThumbnailsTab({
                     </h3>
                     <p className="text-sm text-stone-500 mt-1">
                       {modalStep === 'form'
-                        ? 'Topic → Mode → Hook → Generate'
+                        ? 'Topic → Mode → Approved Hook → Generate'
                         : 'Review prompt and generate.'}
                     </p>
                   </div>
@@ -736,25 +760,28 @@ export default function SchoolOfBreathThumbnailsTab({
                           <button
                             key={hook}
                             onClick={() => setInput((prev) => ({ ...prev, hook }))}
-                            className={`px-3 py-2 rounded-xl text-xs font-semibold tracking-wide transition-colors ${
+                            className={`px-3 py-2 rounded-xl text-left transition-colors ${
                               input.hook === hook
                                 ? 'bg-amber-600 text-white'
                                 : 'bg-white border border-stone-200 text-stone-700 hover:border-amber-300'
                             }`}
                           >
-                            {hook}
+                            <span className="block text-xs font-semibold tracking-wide">{hook}</span>
+                            {isSchoolOfBreathHookChannelProven(hook) && (
+                              <span
+                                className={`mt-1 inline-flex text-[10px] font-semibold uppercase tracking-wide ${
+                                  input.hook === hook ? 'text-amber-100' : 'text-emerald-700'
+                                }`}
+                              >
+                                Channel-Proven
+                              </span>
+                            )}
                           </button>
                         ))}
                       </div>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-sm font-medium text-stone-800">Selected Hook</label>
-                      <input
-                        value={input.hook}
-                        onChange={(e) => setInput((prev) => ({ ...prev, hook: e.target.value.toUpperCase() }))}
-                        className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 font-bold uppercase focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400"
-                      />
+                      <p className="text-xs text-stone-500">
+                        Selected hook: <span className="font-semibold text-stone-700">{input.hook}</span>
+                      </p>
                     </div>
 
                     <HookPreview
@@ -764,7 +791,8 @@ export default function SchoolOfBreathThumbnailsTab({
                       accent={topicMeta.accent}
                       mode={input.mode}
                       characterSide={topicMeta.characterSide}
-                      backgroundScene={topicMeta.backgroundScene}
+                      backgroundTheme={topicMeta.backgroundTheme}
+                      supportVisual={topicMeta.supportVisual}
                     />
 
                     <div className="space-y-2">
@@ -812,6 +840,26 @@ export default function SchoolOfBreathThumbnailsTab({
                         className="w-full px-4 py-3 rounded-xl border border-stone-200 bg-white text-stone-800 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400"
                       />
                     </div>
+
+                    <details className="group">
+                      <summary className="text-sm font-medium text-stone-500 cursor-pointer hover:text-stone-700 transition-colors">
+                        Advanced overrides
+                      </summary>
+                      <div className="mt-2 space-y-1.5">
+                        <label className="text-sm font-medium text-stone-800">Custom Hook Override</label>
+                        <input
+                          value={input.hook}
+                          onChange={(e) =>
+                            setInput((prev) => ({ ...prev, hook: e.target.value.toUpperCase() }))
+                          }
+                          placeholder="Use only if approved hooks do not fit"
+                          className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 font-bold uppercase focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400"
+                        />
+                        <p className="text-xs text-stone-500">
+                          Approved hooks above are primary. Override only when needed.
+                        </p>
+                      </div>
+                    </details>
 
                     <details className="group">
                       <summary className="text-sm font-medium text-stone-500 cursor-pointer hover:text-stone-700 transition-colors">
@@ -891,15 +939,31 @@ export default function SchoolOfBreathThumbnailsTab({
                                   ).characterSide
                                 : topicMeta.characterSide
                             }
-                            backgroundScene={
+                            backgroundTheme={
                               previewPlan.prompt.schoolOfBreath?.category &&
                               isSchoolOfBreathTopic(previewPlan.prompt.schoolOfBreath.category)
                                 ? getSchoolOfBreathTopicMeta(
                                     previewPlan.prompt.schoolOfBreath.category
-                                  ).backgroundScene
-                                : topicMeta.backgroundScene
+                                  ).backgroundTheme
+                                : topicMeta.backgroundTheme
+                            }
+                            supportVisual={
+                              previewPlan.prompt.schoolOfBreath?.supportVisual ?? topicMeta.supportVisual
                             }
                           />
+                          <div className="space-y-1.5 text-sm text-stone-700">
+                            <p>
+                              <span className="font-semibold text-stone-900">Support Visual:</span>{' '}
+                              {previewPlan.prompt.schoolOfBreath?.supportVisual ?? topicMeta.supportVisual}
+                            </p>
+                            <p>
+                              <span className="font-semibold text-stone-900">Background Theme:</span>{' '}
+                              {(
+                                previewPlan.prompt.schoolOfBreath?.backgroundStyle ??
+                                topicMeta.backgroundTheme
+                              ).replace(/_/g, ' ')}
+                            </p>
+                          </div>
                         </div>
 
                         {previewPlan.generationPrompts?.map((prompt, index) => (

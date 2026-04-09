@@ -23,6 +23,11 @@ const hooks = hooksData as {
     aggressive: string[];
     curiosity: string[];
   };
+  channelProven?: {
+    safe?: string[];
+    aggressive?: string[];
+    curiosity?: string[];
+  };
 };
 
 export type { SobMode, SobPromptContext, SobPromptInput, SobTopicConfig, SobTopicKey, SobVariant };
@@ -55,6 +60,13 @@ export function getSobHookOptions(topic: SobTopicKey): [string, string, string] 
   ] as [string, string, string];
 
   return result;
+}
+
+export function isSobHookChannelProven(hook: string): boolean {
+  const normalized = hook.trim().toUpperCase();
+  const channelProven = hooks.channelProven ?? {};
+  const values = Object.values(channelProven).flatMap((family) => family ?? []);
+  return values.some((item) => item.trim().toUpperCase() === normalized);
 }
 
 export function getSobDefaultMode(topic: SobTopicKey): SobMode {

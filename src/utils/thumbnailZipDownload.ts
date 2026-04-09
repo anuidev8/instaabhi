@@ -58,8 +58,9 @@ export async function downloadThumbnailDraftAsZip(draft: ThumbnailDraft): Promis
           '',
           'LAYOUT NOTES:',
           '- Keep one dominant message readable at mobile size.',
-          '- With character mode: Abhi left 40-50%, text right 50-60%.',
-          '- Without character mode: text-first + one support visual only.',
+          '- Text stack is left 55-60% with hard stacked rectangles.',
+          '- With character mode: Abhi on right 40-45% in seated/breath-teaching pose.',
+          '- Without character mode: right zone is support visual zone, never empty.',
           '- Keep high contrast and avoid mystical/deity styling.',
         ]
       : [

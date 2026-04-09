@@ -22,7 +22,15 @@ export function validateSobInput(input: SobPromptInput, context: SobPromptContex
   }
 
   if (input.mode === 'without_character' && context.topic.characterSide !== 'left' && context.topic.characterSide !== 'right') {
-    errors.push('Without-character mode requires a fixed empty character zone side.');
+    errors.push('Without-character mode requires a fixed support-visual zone side.');
+  }
+
+  if (input.mode === 'without_character' && !context.topic.supportVisual.trim()) {
+    errors.push('Without-character mode requires one explicit support visual.');
+  }
+
+  if (input.mode === 'without_character' && !context.style.noCharacterRules.singleSupportVisual) {
+    errors.push('Without-character mode must enforce a single support visual.');
   }
 
   if (input.mode === 'with_character' && !context.style.characterRules.preserveIdentity) {

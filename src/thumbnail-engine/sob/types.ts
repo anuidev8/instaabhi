@@ -19,8 +19,10 @@ export interface SobTopicConfig {
   topLine: string;
   cta: string;
   supportVisual: string;
-  backgroundScene: string;
-  cinematicTone: string;
+  backgroundTheme: string;
+  visualBadgeType: string;
+  arrowAllowed: boolean;
+  characterPose: string;
   accent: string;
   textSide: 'left' | 'right';
   characterSide: 'left' | 'right';
@@ -30,14 +32,18 @@ export interface SobTopicConfig {
 export interface SobStyleConfig {
   brand: string;
   layout: {
-    withCharacter: string;
-    withoutCharacter: string;
+    textZoneWidth: string;
+    characterZoneWidth: string;
+    textSide: 'left' | 'right';
+    characterSide: 'left' | 'right';
+    textStack: string;
+    noFloatingText: boolean;
   };
   template: {
-    topBar: string;
+    topStrip: string;
     mainBlock: string;
-    bottomBar: string;
-    icon: string;
+    ctaBlock: string;
+    supportBadge: string;
   };
   text: {
     maxWords: number;
@@ -57,6 +63,11 @@ export interface SobStyleConfig {
   noCharacterRules: {
     forbidPeople: boolean;
     singleSupportVisual: boolean;
+    forbidExtraTextInVisualZone: boolean;
+  };
+  variantSystem: {
+    A: string;
+    B: string;
   };
 }
 

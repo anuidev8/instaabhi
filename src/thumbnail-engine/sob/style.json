@@ -1,14 +1,18 @@
 {
   "brand": "The School of Breath",
   "layout": {
-    "withCharacter": "full-bleed cinematic background, text blocks 55-60% on one side, character 40-45% on opposite side",
-    "withoutCharacter": "same geometry as with-character, but the character side 40-45% must remain empty background zone"
+    "textZoneWidth": "55-60%",
+    "characterZoneWidth": "40-45%",
+    "textSide": "left",
+    "characterSide": "right",
+    "textStack": "rigid stacked rectangles only",
+    "noFloatingText": true
   },
   "template": {
-    "topBar": "dark charcoal bar near top, white uppercase context text, spanning 70-100% width",
+    "topStrip": "dark charcoal strip, full width across text zone, compact white uppercase context text",
     "mainBlock": "bright yellow rectangular hook block with ultra-bold black condensed uppercase text",
-    "bottomBar": "red urgency strip with white uppercase CTA text attached under hook block",
-    "icon": "single circular support icon with white ring near the lower junction of text blocks"
+    "ctaBlock": "red urgency strip directly below main block with short white uppercase CTA text",
+    "supportBadge": "single circular badge near lower boundary between text zone and character/support-visual zone"
   },
   "text": {
     "maxWords": 4,
@@ -32,6 +36,11 @@
   },
   "noCharacterRules": {
     "forbidPeople": true,
-    "singleSupportVisual": true
+    "singleSupportVisual": true,
+    "forbidExtraTextInVisualZone": true
+  },
+  "variantSystem": {
+    "A": "Exact Channel Match: hard text stack, standard channel composition, one support visual, closest to proven thumbnails.",
+    "B": "Hook Push: bigger main hook, tighter top strip, stronger CTA block, more visible support badge, more aggressive contrast."
   }
 }
