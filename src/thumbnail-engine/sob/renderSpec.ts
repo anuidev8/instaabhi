@@ -102,6 +102,13 @@ export function buildSobRenderSpec(
   const supportIconPlacement: 'bridge' | 'lower_left' =
     layoutStyle === 'giant_hook_left' ? 'lower_left' : 'bridge';
 
+  // Side placement must follow selected layout family (not topic defaults),
+  // otherwise switching layout in the UI won't move the title/subject zones.
+  const textSide: 'left' | 'right' =
+    layoutStyle === 'balanced_subject_right' ? 'right' : 'left';
+  const subjectSide: 'left' | 'right' =
+    layoutStyle === 'balanced_subject_right' ? 'left' : 'right';
+
   return {
     layoutPreset: 'sob-channel-hard-stack',
     layoutStyle,
@@ -117,8 +124,8 @@ export function buildSobRenderSpec(
     backgroundRole: 'support_only',
     ctaPlacement,
     supportIconPlacement,
-    textSide: context.topic.textSide,
-    subjectSide: context.topic.characterSide,
+    textSide,
+    subjectSide,
     supportVisual: context.topic.supportVisual,
     visualBadgeType: context.topic.visualBadgeType,
     arrowAllowed: context.topic.arrowAllowed,

@@ -190,6 +190,15 @@ function HookPreview({
   );
 }
 
+function getCharacterSideForLayout(
+  layoutStyle: 'giant_hook_left' | 'balanced_subject_right' | 'centered_cosmic_hero' | undefined,
+  fallback: 'left' | 'right'
+): 'left' | 'right' {
+  if (layoutStyle === 'balanced_subject_right') return 'left';
+  if (layoutStyle === 'giant_hook_left') return 'right';
+  return fallback;
+}
+
 function getCinematicSceneStyle(backgroundTheme: string, accent: string): React.CSSProperties {
   const scene = backgroundTheme.toLowerCase();
 
@@ -997,7 +1006,7 @@ export default function SchoolOfBreathThumbnailsTab({
                       cta={effectiveCta}
                       accent={topicMeta.accent}
                       mode={input.mode}
-                      characterSide={topicMeta.characterSide}
+                      characterSide={getCharacterSideForLayout(input.layoutStyle, topicMeta.characterSide)}
                       backgroundTheme={topicMeta.backgroundTheme}
                       supportVisual={topicMeta.supportVisual}
                       layoutStyle={input.layoutStyle}
@@ -1153,14 +1162,14 @@ export default function SchoolOfBreathThumbnailsTab({
                                 ? 'without_character'
                                 : 'with_character'
                             }
-                            characterSide={
+                            characterSide={getCharacterSideForLayout(
+                              previewPlan.canvaSpec.layoutStyle ?? previewPlan.prompt.schoolOfBreath?.layoutStyle,
                               previewPlan.prompt.schoolOfBreath?.category &&
-                              isSchoolOfBreathTopic(previewPlan.prompt.schoolOfBreath.category)
-                                ? getSchoolOfBreathTopicMeta(
-                                    previewPlan.prompt.schoolOfBreath.category
-                                  ).characterSide
+                                isSchoolOfBreathTopic(previewPlan.prompt.schoolOfBreath.category)
+                                ? getSchoolOfBreathTopicMeta(previewPlan.prompt.schoolOfBreath.category)
+                                    .characterSide
                                 : topicMeta.characterSide
-                            }
+                            )}
                             backgroundTheme={
                               previewPlan.prompt.schoolOfBreath?.category &&
                               isSchoolOfBreathTopic(previewPlan.prompt.schoolOfBreath.category)
