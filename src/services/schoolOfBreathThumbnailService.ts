@@ -29,6 +29,10 @@ const IMAGE_MODEL =
   (process.env.GEMINI_IMAGE_MODEL as string | undefined)?.trim() ||
   'gemini-3.1-flash-image-preview';
 
+const IMAGE_MODEL_CANDIDATES = Array.from(
+  new Set([IMAGE_MODEL, 'gemini-3.1-flash-image-preview', 'gemini-3-pro-image-preview'])
+);
+const IMAGE_GENERATION_MAX_ATTEMPTS = 2;
 const MAX_ABHI_REFERENCE_IMAGES = 4;
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
@@ -41,6 +45,8 @@ type InlineImagePart = {
 
 let cachedAbhiReferenceParts: InlineImagePart[] | null = null;
 let cachedAbhiReferencePromise: Promise<InlineImagePart[]> | null = null;
+const cachedCompositionReferenceParts = new Map<string, InlineImagePart>();
+const cachedCompositionReferencePromises = new Map<string, Promise<InlineImagePart | null>>();
 
 export interface SchoolOfBreathThumbnailInput {
   title: string;
@@ -374,6 +380,11 @@ function extractImageFromResponse(response: unknown): string | null {
   return null;
 }
 
+function errorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  return String(error);
+}
+
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const image = new Image();
@@ -460,6 +471,60 @@ async function getAbhiReferenceInlineParts(): Promise<InlineImagePart[]> {
   return cachedAbhiReferencePromise;
 }
 
+async function getCompositionReferenceInlinePart(url?: string): Promise<InlineImagePart | null> {
+  if (!url) return null;
+  const cached = cachedCompositionReferenceParts.get(url);
+  if (cached) return cached;
+
+  const pending = cachedCompositionReferencePromises.get(url);
+  if (pending) return pending;
+
+  const promise = imageUrlToInlinePart(url)
+    .then((part) => {
+      cachedCompositionReferenceParts.set(url, part);
+      return part;
+    })
+    .catch(() => null)
+    .finally(() => {
+      cachedCompositionReferencePromises.delete(url);
+    });
+
+  cachedCompositionReferencePromises.set(url, promise);
+  return promise;
+}
+
+async function generateImageDataUrlWithFallback(
+  contents: string | Array<{ text: string } | InlineImagePart>
+): Promise<{ imageDataUrl: string; model: string }> {
+  const failures: string[] = [];
+
+  for (const model of IMAGE_MODEL_CANDIDATES) {
+    for (let attempt = 1; attempt <= IMAGE_GENERATION_MAX_ATTEMPTS; attempt += 1) {
+      try {
+        const response = await ai.models.generateContent({
+          model,
+          contents,
+          config: {
+            responseModalities: ['IMAGE'],
+            imageConfig: { aspectRatio: '16:9', imageSize: '1K' },
+          },
+        });
+
+        const imageDataUrl = extractImageFromResponse(response);
+        if (!imageDataUrl) {
+          throw new Error('Image generation returned no inline image data.');
+        }
+
+        return { imageDataUrl, model };
+      } catch (error) {
+        failures.push(`[${model} attempt ${attempt}] ${errorMessage(error)}`);
+      }
+    }
+  }
+
+  throw new Error(`Image generation failed across all model candidates.\n${failures.join('\n')}`);
+}
+
 export async function generateSchoolOfBreathThumbnailImages(
   plan: ThumbnailDraft
 ): Promise<ThumbnailDraft> {
@@ -477,56 +542,99 @@ export async function generateSchoolOfBreathThumbnailImages(
 
   const layoutStyle = plan.prompt.schoolOfBreath?.layoutStyle;
   const compositionRefUrl = layoutStyle ? getLayoutCompositionReferenceUrl(layoutStyle) : undefined;
-  let compositionRefPart: InlineImagePart | null = null;
-  if (compositionRefUrl) {
-    try {
-      compositionRefPart = await imageUrlToInlinePart(compositionRefUrl);
-    } catch {
-      compositionRefPart = null;
-    }
-  }
+  const compositionRefPart = await getCompositionReferenceInlinePart(compositionRefUrl);
 
-  const rawImages = await Promise.all(
+  const twoStackedHookLock =
+    plan.canvaSpec?.hookLine1 && plan.canvaSpec.hookLine2
+      ? 'STACKED HOOK IN ONE GOLD BAR ONLY: Line 1 + Line 2 **identical size/weight**, **center-aligned**, **50/50 vertical split** inside the **same** yellow rectangle — **FORBIDDEN:** repeating line 2 twice (e.g. RESET left and right of face), floating hook words outside the bar, or spelling the hook again elsewhere. '
+      : '';
+
+  const ctaTextForSizing = (
+    plan.prompt.schoolOfBreath?.bottomStrip ||
+    plan.canvaSpec?.ctaText ||
+    ''
+  ).trim();
+  const ctaWordCount = ctaTextForSizing.split(/\s+/).filter(Boolean).length;
+  const centeredCtaSizingLockText =
+    ctaWordCount <= 1
+      ? 'CTA size lock (one-word): use an oversized red tag at right-mid (~22–32% frame width, ~13–19% frame height) with very large condensed white caps (~68–100px intent @720h), single line.'
+      : 'CTA size lock (multi-word): widen/tall the red tag at right-mid (~26–40% frame width, ~13–20% frame height). For 2 words keep one line when possible (~56–86px intent); for 3+ words allow two compact lines with equal weight.';
+
+  const generationResults = await Promise.allSettled(
     prompts.map(async (prompt) => {
       const characterLockText =
-        'Use only attached Abhi references. Do not invent another person. Preserve exact Abhi face identity and mature Indian male teacher appearance. Keep Abhi in seated or breath-teaching pose. Eyes must be clearly open (never closed). Match real School of Breath thumbnail style, not portrait-photography ad style. No sticker/cutout look. No white frame or mockup border.';
+        'Use only attached Abhi references. Do not invent another person. Preserve exact Abhi face identity and mature Indian male teacher appearance. Keep core facial structure consistent with references: hairline/temple shape, eyebrow thickness, eye spacing and eye shape, straight nose bridge, jawline, and skin tone. Keep Abhi in seated or breath-teaching pose. Expression lock: calm-alert teacher intensity, closed mouth, focused gaze (no stock-photo smile). Eyes must be clearly open with visible catchlights (never closed). Do not beautify/de-age or change ethnicity. Match real School of Breath thumbnail style, not portrait-photography ad style. No sticker/cutout look. No white frame or mockup border.';
 
       const compositionLockText =
         plan.prompt.schoolOfBreath?.mode === 'without_character'
-          ? 'Attached image = LAYOUT/COMPOSITION REFERENCE (not face identity). Match tag colors and strip order exactly. 3-zone composition lock: LEFT visual hook 30-35%, CENTER anchor slot 25-30%, RIGHT text mass 35-45%. Text lock: top strip ~10-12% height; **main yellow-gold title bar must be taller (~30-36% frame height)** with giant black condensed headline in upper-middle right; CTA red tag at right mid-level. 1280x720 intent ratios: top strip ~72-86px, headline intent ~180-240px, CTA ~180-240x70-95. Strong size lock for BOTH modes: hook text should fill ~94–98% of hook-bar width; CTA tag should be ~45–70% larger than baseline but still below hook in hierarchy. Without character in this render: keep lower-center open cosmic space for a future Abhi composite; put the proof/support graphic bottom-left, modest size (not a huge centered circle). Red CTA mid-right. Keep this centered frame clean: no corner symbols/emblems unless explicitly requested. Do NOT draw any center placeholder box/panel/column/mask. All wording from the prompt below.'
-          : 'Attached image = LAYOUT/COMPOSITION REFERENCE only (not face identity). Match: white-on-dark top strip, **black-on-yellow-gold gradient main hook bar** (thin black outline, premium gold — not flat neon) behind the subject’s shoulders, white-on-red CTA on the right torso, circular proof graphic bottom-left, curved arrow from the hook bar toward that circle, and corner symbols in top corners following topic/reference style. Keep hook bar shape consistent with channel style: clean rectangular bar only (no ribbon tails, banner flags, fishtails, notched/angled ends). Text lock: top strip ~10-12%; **hook bar ~30-36% frame height** and largest readable cluster; CTA right mid-level. Use 1280x720 intent ratios: top strip ~72-86px, headline intent ~180-240px, CTA ~180-240x70-95. Strong size lock for with-character: hook text fills ~94–98% of bar width; CTA tag ~45–70% larger than baseline while remaining secondary to hook. Reproduce tag colors (white / gold hook / black text / red CTA). All wording must come from the prompt below — do not copy letters from the reference if they differ.';
+          ? `Attached image = LAYOUT/COMPOSITION REFERENCE (not face identity). Match tag colors and strip order exactly. 3-zone composition lock: LEFT visual hook 30-35%, CENTER anchor slot 25-30%, RIGHT text mass 35-45%. **Top category strip:** nearly **full frame width** (not a short mini-pill), bold white caps with **minimum ~40–54px cap height at 720h** — do NOT shrink it when the main hook or red CTA is long; if CTA is long, grow the red box (or two lines inside red) instead. **Gold hook bar = FIXED TEMPLATE (same footprint as ZEN MODE):** **~34–40% frame height** (~246–292px at 720h) AND **~82–92% frame width** (~1050–1180px at 1280w), centered — **identical for every hook**; gold bar must NOT be narrower than the dark top strip. Longer hook = stacked lines **inside this same box** (HOOK LINE BREAK); **FORBIDDEN:** shorter/narrower bar for longer text. 1280x720 intent: single-line caps ~190–240px; **each** stacked line ~105–135px. ${centeredCtaSizingLockText} Hook ~94–98% of bar width **per line**. Strong size lock for BOTH modes. Without character: open lower-center cosmic for future Abhi; support graphic bottom-left. No corner symbols unless requested. No center placeholder box. All wording from the prompt below.`
+          : `Attached image = LAYOUT/COMPOSITION REFERENCE only (not face identity). Match: **full-width** white-on-dark top strip (category text **never micro-sized** because hook/CTA is long — min ~40–54px caps at 720h), **black-on-yellow-gold main hook bar** (thin black outline, premium gold) behind shoulders — **FIXED TEMPLATE:** **~34–40% frame height** (~246–292px at 720h), **~82–92% width** (~1050–1180px at 1280w), **same for every hook**; bar **≥ width of** full top strip; never a narrow gold chip. Longer phrases → two stacked lines in one bar (HOOK LINE BREAK), not a smaller bar. White-on-red CTA on torso; long CTA → bigger red or 2 lines inside red. Proof bottom-left, arrow, corner symbols per topic. 1280x720 intent: stacked lines ~105–135px each, single line ~190–240px. ${centeredCtaSizingLockText} Hook ~94–98% bar width per line. Reproduce colors (white / gold hook / black / red CTA). All wording from the prompt below — do not copy letters from the reference if they differ.`;
 
       const parts: Array<{ text: string } | InlineImagePart> = [];
       if (referenceParts.length > 0) {
         parts.push({ text: characterLockText });
-        parts.push(...referenceParts);
+        const identityAnchorParts = referenceParts.slice(0, 2);
+        const secondaryReferenceParts = referenceParts.slice(2);
+        parts.push({
+          text: 'Identity anchor priority: the first two attached photos are strict face anchors. Match the same person exactly.',
+        });
+        parts.push(...identityAnchorParts);
+        if (secondaryReferenceParts.length > 0) {
+          parts.push({
+            text: 'Secondary references are for pose/wardrobe support only. Never override face identity anchors.',
+          });
+          parts.push(...secondaryReferenceParts);
+        }
       }
       if (compositionRefPart) {
-        parts.push({ text: compositionLockText });
+        parts.push({ text: twoStackedHookLock + compositionLockText });
         parts.push(compositionRefPart);
       }
       parts.push({ text: prompt });
 
       const contents = parts.length > 1 ? parts : prompt;
-
-      const response = await ai.models.generateContent({
-        model: IMAGE_MODEL,
-        contents,
-        config: {
-          responseModalities: ['TEXT', 'IMAGE'],
-          imageConfig: { aspectRatio: '16:9', imageSize: '1K' },
-        },
-      });
-
-      const imageDataUrl = extractImageFromResponse(response);
-      if (!imageDataUrl) {
-        throw new Error('Image generation returned no inline image data.');
-      }
-      return imageDataUrl;
+      return generateImageDataUrlWithFallback(contents);
     })
   );
 
-  const normalizedImages = await Promise.all(rawImages.map((image) => normalizeThumbnailToCanvas(image)));
+  const successfulVariants: Array<{ variant: number; model: string; imageDataUrl: string }> = [];
+  const failedVariants: Array<{ variant: number; reason: string }> = [];
+
+  generationResults.forEach((result, index) => {
+    const variant = index + 1;
+    if (result.status === 'fulfilled') {
+      successfulVariants.push({
+        variant,
+        model: result.value.model,
+        imageDataUrl: result.value.imageDataUrl,
+      });
+      return;
+    }
+    failedVariants.push({
+      variant,
+      reason: errorMessage(result.reason),
+    });
+  });
+
+  if (successfulVariants.length === 0) {
+    throw new Error(
+      [
+        'All thumbnail variants failed.',
+        ...failedVariants.map(
+          (failure) => `Variant ${failure.variant} failed: ${failure.reason}`
+        ),
+      ].join('\n')
+    );
+  }
+
+  const normalizedVariantResults = await Promise.all(
+    successfulVariants.map(async (variant) => ({
+      ...variant,
+      normalizedImage: await normalizeThumbnailToCanvas(variant.imageDataUrl),
+    }))
+  );
+  const normalizedImages = normalizedVariantResults.map((item) => item.normalizedImage);
+  const usedModels = Array.from(new Set(normalizedVariantResults.map((item) => item.model)));
 
   return {
     ...plan,
@@ -540,7 +648,14 @@ export async function generateSchoolOfBreathThumbnailImages(
       ...(compositionRefPart
         ? [`Layout composition reference: centered cosmic hero (bundled PNG) attached for Gemini.`]
         : []),
-      ...normalizedImages.map((_, index) => `Variant ${index + 1}: normalized to 1280x720.`),
+      `Gemini image models used: ${usedModels.join(', ')}.`,
+      ...normalizedVariantResults.map(
+        (variant) =>
+          `Variant ${variant.variant}: generated with ${variant.model} and normalized to 1280x720.`
+      ),
+      ...failedVariants.map(
+        (failure) => `Variant ${failure.variant}: generation failed (${failure.reason}).`
+      ),
     ],
     errorMessage: undefined,
   };

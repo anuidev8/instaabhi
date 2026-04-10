@@ -34,6 +34,7 @@ import {
 } from '../../services/schoolOfBreathThumbnailService';
 import { SchoolOfBreathMode, ThumbnailDraft } from '../../types';
 import { downloadThumbnailDraftAsZip } from '../../utils/thumbnailZipDownload';
+import { deriveHookLineBreak } from '../../thumbnail-engine/sob/renderSpec';
 
 interface SchoolOfBreathThumbnailsTabProps {
   thumbnailDrafts: ThumbnailDraft[];
@@ -92,13 +93,15 @@ function HookPreview({
         {topLine || 'PRANAYAMA SEQUENCE'}
       </div>
       <div
-        className={`px-3 flex-1 flex items-center border border-stone-950 ${isGiant ? 'py-3' : 'py-2'}`}
+        className={`px-3 flex-1 flex items-center border border-stone-950 ${isGiant ? 'py-3' : 'py-2'} ${isCenteredCosmic ? 'justify-center' : ''}`}
         style={{
           background: 'linear-gradient(90deg, #ffd84a 0%, #ffcc33 38%, #e8a010 72%, #d99a0b 100%)',
         }}
       >
         {hookLine1 && hookLine2 ? (
-          <span className={`font-black leading-[0.90] tracking-tight uppercase text-stone-900 flex flex-col ${isGiant ? 'text-[30px] sm:text-[38px]' : 'text-[26px] sm:text-[32px]'}`}>
+          <span
+            className={`font-black leading-[0.90] tracking-tight uppercase text-stone-900 flex flex-col ${isCenteredCosmic ? 'items-center text-center w-full' : ''} ${isGiant ? 'text-[30px] sm:text-[38px]' : 'text-[26px] sm:text-[32px]'}`}
+          >
             <span>{hookLine1}</span>
             <span>{hookLine2}</span>
           </span>
@@ -341,10 +344,15 @@ export default function SchoolOfBreathThumbnailsTab({
   const effectiveTopStrip = (input.topStripOverride?.trim() || topicMeta.topLine).toUpperCase();
   const effectiveCta = (input.ctaOverride?.trim() || topicMeta.cta).toUpperCase();
 
-  // Derive hook line split for live HookPreview
-  const hookWords = input.hook.trim().toUpperCase().split(/\s+/).filter(Boolean);
-  const formHookLine1 = hookWords.length > 2 ? hookWords[0] : undefined;
-  const formHookLine2 = hookWords.length > 2 ? hookWords.slice(1).join(' ') : undefined;
+  // Match engine hook breaks (e.g. centered two-word hooks stack for huge type)
+  const hookPreviewBreak = useMemo(
+    () => deriveHookLineBreak(input.hook, { layoutStyle: input.layoutStyle }),
+    [input.hook, input.layoutStyle]
+  );
+  const formHookLine1 =
+    hookPreviewBreak.hookLineBreakMode === 'two_line_split' ? hookPreviewBreak.hookLine1 : undefined;
+  const formHookLine2 =
+    hookPreviewBreak.hookLineBreakMode === 'two_line_split' ? hookPreviewBreak.hookLine2 : undefined;
 
   useEffect(() => {
     if (!initialPrompt) return;

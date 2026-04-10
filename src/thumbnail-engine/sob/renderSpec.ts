@@ -55,12 +55,25 @@ export function deriveDefaultLayoutStyle(topic: SobTopicKey): SobLayoutStyle {
   return 'balanced_subject_right';
 }
 
-export function deriveHookLineBreak(hook: string): {
+export function deriveHookLineBreak(
+  hook: string,
+  options?: { layoutStyle?: SobLayoutStyle }
+): {
   hookLineBreakMode: 'single_line' | 'two_line_split';
   hookLine1?: string;
   hookLine2?: string;
 } {
   const words = hook.trim().split(/\s+/).filter(Boolean);
+
+  // Centered cosmic: two-word hooks must stack (line / line) so type stays huge like single-word PRANAYAMA.
+  if (options?.layoutStyle === 'centered_cosmic_hero' && words.length === 2) {
+    return {
+      hookLineBreakMode: 'two_line_split',
+      hookLine1: words[0],
+      hookLine2: words[1],
+    };
+  }
+
   if (words.length <= 2) return { hookLineBreakMode: 'single_line' };
 
   // Split at 'OF' if present mid-phrase (e.g. BREATH OF FIRE → BREATH / OF FIRE)
@@ -91,7 +104,7 @@ export function buildSobRenderSpec(
   const mainHookText = input.hook.trim().toUpperCase();
 
   const layoutStyle = input.layoutStyle ?? deriveDefaultLayoutStyle(input.topic);
-  const hookBreak = deriveHookLineBreak(mainHookText);
+  const hookBreak = deriveHookLineBreak(mainHookText, { layoutStyle });
 
   const titleDominance: 'max' | 'high' =
     layoutStyle === 'giant_hook_left' ? 'max' : 'high';

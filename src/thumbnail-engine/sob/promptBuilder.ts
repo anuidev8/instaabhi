@@ -66,10 +66,10 @@ function getLayoutGeometryRules(spec: SobRenderSpec): string[] {
   if (spec.layoutStyle === 'centered_cosmic_hero' && spec.subjectType === 'abhi') {
     return [
       'LAYOUT FAMILY: Centered Cosmic Hero (channel reference A — with character).',
-      '- Symmetrical poster: Abhi centered; depth order = cosmic background → wide yellow-gold hook ribbon **behind** shoulders & head → Abhi + halo in front → red CTA tag **on the right side of the torso** (chest/heart band), not orphaned under the yellow corner.',
+      '- Symmetrical poster: Abhi centered; depth order = cosmic background → **fixed-size** wide yellow-gold hook bar (~82–92% frame width, ~34–40% frame height) **behind** shoulders & head → Abhi + halo in front → red CTA tag **on the right side of the torso** (chest/heart band), not orphaned under the yellow corner.',
       '- Top strip: **white on near-black** (#0a0a0a–#1a1a1a), bold condensed sans, full width — matches channel “LIVE BETTER / STRESS RELIEF” style.',
-      '- Main hook bar: **black text** on **yellow→gold gradient ribbon** with thin black outline (premium, not flat neon); bar sits mid-frame and **intersects** the subject’s head — not a thin strip floating above a separate empty area.',
-      '- Red CTA tag: **white text on #E60000–#FF2D20**, optional thin **white keyline**; position = **right-of-center on the body** (overlapping robe). WRONG: tiny tag only under the bottom-right corner of the yellow bar with no connection to the torso.',
+      '- Main hook bar: **black text** on **yellow→gold gradient** with thin black outline (premium, not flat neon); **same bar dimensions for every hook** (see FIXED TEMPLATE rules). Bar sits mid-frame and **intersects** the subject’s head.',
+      '- Red CTA tag: **white text on #E60000–#FF2D20**, optional thin **white keyline**; position = **right-of-center on the body** (overlapping robe). Target footprint for centered family: **~18–28% frame width** (~230–360px @1280w) and **~12–17% frame height** (~86–122px @720h) with bold condensed text. WRONG: tiny tag only under the bottom-right corner of the yellow bar with no connection to the torso.',
       '- Circular proof inset (sprout/brain): **bottom-LEFT quadrant** (viewer left), gold rim — NOT solo bottom-center. Arrow from **left side of yellow bar** curves down toward that circle.',
       '- Corner symbols (required): top-left + top-right circular chakra/emblem badges. Colors/symbol style must follow the current topic + reference image (not fixed blue/green for all topics).',
     ];
@@ -77,10 +77,10 @@ function getLayoutGeometryRules(spec: SobRenderSpec): string[] {
   if (spec.layoutStyle === 'centered_cosmic_hero') {
     return [
       'LAYOUT FAMILY: Centered Cosmic Hero (without character — **character-ready** for later composite).',
-      '- Same text stack as channel: cosmic background → thin dark top strip → wide **yellow-gold** hook bar (black text, thin black keyline) → red CTA with white text + optional white keyline.',
+      '- Same text stack as channel: cosmic background → thin dark top strip → **fixed-template** wide **yellow-gold** hook bar (~82–92% width, ~34–40% height; black text, thin black keyline) → red CTA with white text + optional white keyline.',
       '- **Reserve lower-center “teacher zone”:** keep the **vertical center column** of the lower half (~35–45% frame width) as **mostly open cosmic background** (subtle vignette/glow OK) — this is where Abhi will be placed later. Do **not** cover this zone with a huge centered sprout/brain/moon graphic.',
       '- Support visual: one proof graphic **bottom-LEFT** or lower-left (smaller circular inset), gold rim — secondary, not the dominant lower focal point.',
-      '- Red CTA: float **mid-right in the lower third** (where a torso would sit), **not** only tucked under the yellow bar’s corner.',
+      '- Red CTA: float **mid-right in the lower third** (where a torso would sit), **not** only tucked under the yellow bar’s corner. Keep a strong centered-family CTA footprint (~18–28% frame width, ~12–17% frame height).',
       '- Yellow-gold hook bar may hang low; leave vertical room beneath it so a seated figure could align under it later.',
       '- Corner symbols (required): top-left + top-right circular chakra/emblem badges, matching current topic/reference style and scale in the top corners.',
     ];
@@ -189,7 +189,7 @@ function getLockedFrameRules(spec: SobRenderSpec): string[] {
       'LOCKED FRAME (CENTERED COSMIC HERO):',
       '- Full-bleed 1280x720. No device mockup, no outer white frame.',
       '- Background: cosmic/nebula/starfield across entire canvas — never a blank white or flat grey left column.',
-      '- Top: dark strip + wide yellow-gold hook bar span most of the frame width; they sit in the upper-mid vertically.',
+      '- Top: dark strip + yellow-gold hook bar — bar ~82–92% frame width and ~34–40% frame height (fixed template); they sit in the upper-mid vertically.',
       hookBarLine,
       lowerZone,
       '- Do NOT use a 55/45 left-right column split; that is a different layout family.',
@@ -235,10 +235,26 @@ function getVariantAExactPositioning(spec: SobRenderSpec): string[] {
 }
 
 function getHookLineBreakRule(spec: SobRenderSpec): string | null {
-  if (spec.hookLineBreakMode === 'two_line_split' && spec.hookLine1 && spec.hookLine2) {
-    return `HOOK LINE BREAK: Render hook as exactly two stacked lines — Line 1: "${spec.hookLine1}" / Line 2: "${spec.hookLine2}". Do not reflow into one line. Do not reinterpret wrapping.`;
+  if (spec.hookLineBreakMode !== 'two_line_split' || !spec.hookLine1 || !spec.hookLine2) {
+    return null;
   }
-  return null;
+  const lines = [
+    `HOOK LINE BREAK: Render the hook as exactly two stacked lines inside the **one** gold bar —`,
+    `  Line 1 (upper): "${spec.hookLine1}"`,
+    `  Line 2 (lower): "${spec.hookLine2}"`,
+    'Do not reflow into one line. Do not change or reorder words.',
+  ];
+  if (spec.layoutStyle === 'centered_cosmic_hero') {
+    lines.push(
+      'CENTERED STACK TYPOGRAPHY (critical):',
+      '- **Both lines: identical font size, weight, and cap height** — Line 2 must NOT be smaller, thinner, or “subtitle” vs Line 1.',
+      '- **Horizontally center-align both lines** in the gold bar (shared vertical center axis). FORBIDDEN: Line 2 hugging the right edge, ragged-right only on line 2, or asymmetric placement.',
+      '- **Vertical balance:** split the bar interior ~50/50 between the two lines with **even** top/middle/bottom padding (like ZEN MODE / PRANAYAMA two-line references).',
+      '- Each line should span **~92–98% of bar width** when short words; longer words still centered as a block.',
+      '- **NO DUPLICATION:** each hook word appears **exactly once**. Line 2 must NOT be repeated (e.g. never “RESET RESET”), mirrored left/right of Abhi, or painted as floating text outside the gold bar.',
+    );
+  }
+  return lines.join('\n');
 }
 
 function getTopicCharacterWardrobeRule(spec: SobRenderSpec): string {
@@ -263,6 +279,44 @@ function getTopicCharacterWardrobeRule(spec: SobRenderSpec): string {
     default:
       return '- Wardrobe color by topic: align robe color with topic energy and channel precedent.';
   }
+}
+
+function getCenteredTopStripBalanceRules(spec: SobRenderSpec): string[] {
+  if (spec.layoutStyle !== 'centered_cosmic_hero') return [];
+  const categoryMin =
+    spec.hookLineBreakMode === 'two_line_split'
+      ? '**minimum cap height ~46–62px at 720h** (slightly larger than single-line hooks so “LIVE BETTER” balances a two-line gold headline)'
+      : '**minimum cap height ~40–54px at 720h** (~55–72% of one line of gold-hook cap height)';
+  return [
+    'TOP STRIP BALANCE LOCK (centered family — category line vs hook/CTA):',
+    '- Dark category strip spans **nearly full frame width** (same band as the gold hook below), never a tiny short pill floating with microscopic type.',
+    `- Category (“LIVE BETTER”, etc.) size is **independent** of red CTA length: bold condensed ALL CAPS with ${categoryMin}.`,
+    '- Long red CTA copy must **not** shrink the top strip: widen/tall the red tag or use two compact lines **inside the red box**; do not reduce category text to “balance” a long CTA.',
+    '- Tight vertical rhythm: small gap between top strip and gold bar — avoid a tall empty gutter that makes the category feel disconnected.',
+  ];
+}
+
+function getCenteredHookNoDuplicationRules(spec: SobRenderSpec): string[] {
+  if (spec.layoutStyle !== 'centered_cosmic_hero') return [];
+  return [
+    'HOOK TEXT — NO ECHO / NO SPLIT (centered family):',
+    '- The **entire** main hook (one line or two stacked lines) renders **only** inside the **single** yellow-gold rectangle. **Every** hook word appears **once** in the whole image.',
+    '- FORBIDDEN: duplicating the second line beside Abhi’s head (left and right), mirrored hook words, “stereo” text, or printing the full hook string **and** the split lines as separate copies.',
+    '- LEFT zone = sprout/icon/arrow only — **no** hook headline letters there. RIGHT zone = red CTA **only** — **no** hook words except inside the gold bar above.',
+  ];
+}
+
+function getCenteredGoldBarFixedTemplateRules(spec: SobRenderSpec): string[] {
+  if (spec.layoutStyle !== 'centered_cosmic_hero') return [];
+  return [
+    'GOLD HOOK BAR — FIXED TEMPLATE (centered family; match ZEN MODE / single-word PRANAYAMA mass):',
+    '- The gold rectangle is a **constant billboard** — **same width and height** whether the hook is 1 word, 2 words, or stacked lines. Longer copy = more lines **inside** the box, **not** a smaller box.',
+    '- **Height lock: ~34–40% of frame** (~246–292px at 720h). Do not compress this band for long phrases.',
+    '- **Width lock: ~82–92% of frame** (~1050–1180px at 1280w), centered. Gold bar must be **at least as wide as** the dark top strip above — **FORBIDDEN**: gold bar narrower than the “LIVE BETTER” band.',
+    '- Multi-word / long hooks: **two stacked lines** in one bar when HOOK LINE BREAK says so — **equal cap height on both lines** (~46–50% of bar interior height **each**), **center-aligned**, **50/50 vertical split**; never a small second line shoved to the right.',
+    '- Single-word hook: one line uses ~88–94% of the bar interior height.',
+    '- FORBIDDEN: one shrunken horizontal line cramming all words; short/narrow gold “chip”; shorter bar for 2+ words vs 1 word.',
+  ];
 }
 
 function getTopicIntentVisualRules(spec: SobRenderSpec): string[] {
@@ -303,16 +357,39 @@ function getTopicIntentVisualRules(spec: SobRenderSpec): string[] {
   }
 }
 
+function getCenteredCtaWordCountRules(spec: SobRenderSpec): string[] {
+  if (spec.layoutStyle !== 'centered_cosmic_hero') return [];
+
+  const ctaWords = spec.ctaText.trim().split(/\s+/).filter(Boolean).length;
+
+  if (ctaWords <= 1) {
+    return [
+      'CTA SCALE LOCK (centered family, ONE-WORD CTA):',
+      '- One-word CTA must be an oversized red tag (not a tiny badge): target **~22–32% frame width** (~282–410px @1280w) and **~13–19% frame height** (~94–137px @720h).',
+      '- Keep CTA on a **single line** with extra-bold condensed caps; cap-height intent ~68–100px at 720h.',
+      '- Keep strong white keyline and tight inner padding; maintain hierarchy under the main hook.',
+    ];
+  }
+
+  return [
+    'CTA SCALE LOCK (centered family, MULTI-WORD CTA):',
+    '- Multi-word CTA needs a wider/taller red tag for readability: target **~26–40% frame width** (~333–512px @1280w) and **~13–20% frame height** (~94–144px @720h).',
+    '- For 2 words: keep one line when possible with large condensed caps (~56–86px at 720h).',
+    '- For 3+ words: allow two compact lines inside the same red box with equal weight (not tiny second line).',
+    '- Never shrink category or hook to fit CTA; grow CTA box first.',
+  ];
+}
+
 function getCenteredHierarchyScaleRules(spec: SobRenderSpec): string[] {
   if (spec.layoutStyle !== 'centered_cosmic_hero') return [];
   return [
     'MOBILE HIERARCHY LOCK (centered family):',
     '- Main hook text must be the primary anchor at mobile size in BOTH modes (with-character and without-character).',
     '- Aggressive size lock: hook text visual weight ≈ 2.6x–3.2x top-strip text.',
-    '- Hook text must occupy about 94–98% of the yellow bar width (with safe margins) before wrapping.',
-    '- Main hook line should target ~180–240px cap-height intent on a 720px canvas (very large, condensed, black text).',
+    '- Hook text must occupy about 94–98% of the yellow bar width **per line** (with safe margins).',
+    '- Single-line hook: ~190–240px cap-height intent at 720h. Two-line hook: **both lines same size** — ~108–132px caps **each** at 720h (within 5% of each other); **centered** in the bar; combined fill uses the **same fixed gold bar** as single-line.',
     '- Hook bar block should feel dominant and headline-led; reject under-sized headline treatment.',
-    '- CTA tag must also scale up strongly: increase CTA text and box size by roughly 45–70% vs baseline, with stronger white keyline.',
+    '- CTA tag must also scale up aggressively for mobile with stronger white keyline and heavier condensed caps.',
     '- Keep hierarchy order: HOOK largest, CTA second, top strip third.',
     '- Keep readability first: no over-stylized effects that reduce letter clarity.',
   ];
@@ -323,9 +400,9 @@ function getCenteredCompositionProportionRules(spec: SobRenderSpec): string[] {
   return [
     'COMPOSITION PROPORTION LOCK (based on sob-centered-cosmic-hero reference):',
     '- Top strip occupies roughly 10–12% of frame height.',
-    '- Main hook bar occupies roughly 30–36% of frame height and is visually dominant (must read as a tall gold title band).',
-    '- Lower composition zone occupies roughly 40–46% for subject or reserved character slot.',
-    '- CTA anchor sits in right-lower third (not detached corner micro-tag), with a noticeably larger red tag footprint.',
+    '- Main hook bar occupies roughly **34–40% of frame height** — **identical** template for all hooks (1 word, 2 words, stacked).',
+    '- Lower composition zone occupies roughly 36–44% for subject or reserved character slot (gold bar steals height from lower zone, not the reverse).',
+    '- CTA anchor sits in right-lower third (not detached corner micro-tag), with a noticeably larger red tag footprint driven by CTA word count rules.',
     '- Support inset stays in left-lower quadrant with clear relation to hook/arrow where allowed.',
   ];
 }
@@ -346,12 +423,13 @@ function getCenteredTextReplicationRules(spec: SobRenderSpec): string[] {
   if (spec.layoutStyle !== 'centered_cosmic_hero') return [];
   return [
     'TEXT REPLICATION LOCK (follow channel reference structure):',
-    '- 3-zone reading flow: LEFT visual hook (30-35%) → CENTER subject anchor (25-30%) → RIGHT text mass (35-45%).',
-    '- Top strip text (category label): top-center full width, about 10-12% frame height (~72-86px on 720h), bold condensed ALL CAPS, medium weight (not dominant).',
-    '- Main hook text block: upper-middle RIGHT, visually occupying about 60-75% width of canvas and 24-32% frame height.',
-    '- Main hook typography: ultra-bold condensed ALL CAPS, black fill with bright yellow-gold bar support, with strong black edge presence (~5-8px perceived stroke/outline effect) and subtle glow. Use ~180-240px headline intent on 720h canvas.',
+    '- 3-zone **visual** flow (do **not** scatter hook letters across zones): LEFT = proof icon / sprout / arrow **only** → CENTER = Abhi → RIGHT = **red CTA tag only**. **All** hook words (line 1 + line 2) stay **only** inside the **one** gold bar — never floating next to cheeks/ears or duplicated on both sides of the face.',
+    '- Top strip text (category label): **full-width** dark band, about 10-12% frame height (~72-86px on 720h), bold condensed ALL CAPS — readable at mobile size even when hook or CTA text is long (do not micro-size the category).',
+    '- Main hook **gold bar**: upper-middle, **~82–92% of canvas width**, **~34–40% of frame height** — same footprint as high-CTR references (e.g. ZEN MODE).',
+    '- Main hook typography: ultra-bold condensed ALL CAPS, black fill on gold, strong black edge (~5-8px perceived stroke) and subtle glow. One or two stacked lines **inside** this fixed rectangle only.',
+    '- **Two-line hooks:** both lines **same type size**; **center each line** horizontally; **no** right-aligned or “tagalong” second line; **no** smaller subtitle on line 2.',
     '- Main hook must be the largest readable word cluster on screen (mobile-first).',
-    '- CTA tag (red button style): right mid-level, rounded rectangle, width about 14-20% of frame (~180-240px), height about 70-95px, red #FF3B30 with white bold text and tight padding.',
+    '- CTA tag (red button style): right mid-level, rounded rectangle, red #FF3B30 with white extra-bold condensed text and tight padding. Size must follow CTA word-count lock.',
     '- CTA text options remain short urgency phrases (e.g., TRY NOW / DO THIS DAILY / WATCH NOW).',
     '- Text depth: allow slight overlap of headline layer into subject zone for depth, while preserving legibility.',
     '- Keep spacing tight and clean: no large dead zones between top strip, hook block, and CTA.',
@@ -378,8 +456,11 @@ function buildSobRenderPrompt(spec: SobRenderSpec): string {
             `- Required pose guidance: ${spec.characterPose || 'seated breath teacher pose'}.`,
             '- Place Abhi CENTERED in the lower half of the frame (horizontal center), not in a side column.',
             '- Lower-edge anchor: subject sits just above bottom safe margin; torso large enough for mobile.',
+            '- FACE ID LOCK: keep Abhi facial structure from references (hairline/temple shape, brow thickness, eye spacing/shape, straight nose bridge, jawline, skin tone).',
             getTopicCharacterWardrobeRule(spec),
-            '- Eyes must be clearly OPEN with a calm, alert gaze. Never closed eyes.',
+            '- Expression lock: calm-alert teacher intensity, closed mouth, focused gaze. Avoid stock-photo smile or generic model expression.',
+            '- Eyes must be clearly OPEN with a calm, alert gaze and visible catchlights. Never closed eyes.',
+            '- Do not beautify/de-age, do not change ethnicity, and avoid plastic skin smoothing.',
             '- Show a clear, lit face (no anonymous silhouette).',
             '- Not a fashion portrait, not a sticker cutout, not a generic guru.',
           ]
@@ -393,8 +474,11 @@ function buildSobRenderPrompt(spec: SobRenderSpec): string {
             '- Keep Abhi in a seated or breath-teaching pose.',
             `- Required pose guidance: ${spec.characterPose || 'seated breath teacher pose'}.`,
             `- Place Abhi on the ${spec.subjectSide} 40-45% zone with natural body proportions.`,
+            '- FACE ID LOCK: keep Abhi facial structure from references (hairline/temple shape, brow thickness, eye spacing/shape, straight nose bridge, jawline, skin tone).',
             getTopicCharacterWardrobeRule(spec),
-            '- Eyes must be clearly OPEN with a calm, alert gaze. Never closed eyes.',
+            '- Expression lock: calm-alert teacher intensity, closed mouth, focused gaze. Avoid stock-photo smile or generic model expression.',
+            '- Eyes must be clearly OPEN with a calm, alert gaze and visible catchlights. Never closed eyes.',
+            '- Do not beautify/de-age, do not change ethnicity, and avoid plastic skin smoothing.',
             '- Not a fashion portrait, not a sticker cutout, not a generic guru.',
           ]
       : spec.layoutStyle === 'centered_cosmic_hero'
@@ -430,13 +514,22 @@ function buildSobRenderPrompt(spec: SobRenderSpec): string {
     ...layoutGeometryRules,
     '',
     ...getChannelStripColorLock(spec),
+    ...getCenteredTopStripBalanceRules(spec),
+    ...getCenteredHookNoDuplicationRules(spec),
+    ...getCenteredGoldBarFixedTemplateRules(spec),
     ...getCenteredHierarchyScaleRules(spec),
+    ...getCenteredCtaWordCountRules(spec),
     ...getCenteredCompositionProportionRules(spec),
     ...getCenteredTextReplicationRules(spec),
     '',
     'TEXT SLOTS:',
     `- Top strip text: "${spec.topStripText}"`,
-    `- Main hook text: "${spec.mainHookText}"`,
+    spec.layoutStyle === 'centered_cosmic_hero' &&
+      spec.hookLineBreakMode === 'two_line_split' &&
+      spec.hookLine1 &&
+      spec.hookLine2
+      ? `- Main hook: **only** these two lines inside the **one** gold bar (each word once in the entire image): upper "${spec.hookLine1}" / lower "${spec.hookLine2}". Do NOT also spell the full "${spec.mainHookText}" as separate floating text.`
+      : `- Main hook text: "${spec.mainHookText}"`,
     hookLineBreakRule,
     `- CTA text: "${spec.ctaText}"`,
     `- CTA placement: ${spec.ctaPlacement.replace('_', '-')}.`,
@@ -496,7 +589,7 @@ export function buildSobPromptVariantsFromRenderSpec(
     spec.layoutStyle === 'giant_hook_left'
       ? '- Push hook block to near-maximum height — almost the full text-column height.'
       : spec.layoutStyle === 'centered_cosmic_hero'
-        ? '- Make the centered yellow hook bar slightly taller and wider than Variant A (still one block).'
+        ? '- Keep the **same fixed gold bar template** as Variant A (~34–40% height, ~82–92% width); add punch only via gradient/sheen, stroke, and glow — do not change bar footprint.'
         : '- Make main hook block slightly larger than Variant A.';
 
   const hookPush: SobVariant = {
@@ -513,7 +606,7 @@ export function buildSobPromptVariantsFromRenderSpec(
             '- WITH CHARACTER: Keep Abhi fully present and centered in both variants — same person, same face identity. Do NOT remove Abhi, do NOT replace with silhouette-only, do NOT make the sprout the only focal subject.',
           ]
         : []),
-      '- Make the red CTA box slightly larger or heavier than A; keep white border + white text on red; **stay on the right torso** — do NOT park the CTA to the left of the sprout or only under the yellow bar’s corner.',
+      '- Make the red CTA box **25–40% larger/heavier** than A with bigger text; keep white border + white text on red; **stay on the right torso** — do NOT park the CTA to the left of the sprout or only under the yellow bar’s corner.',
       '- Make sprout inset and corner chakras slightly more prominent (glow, scale) — sprout stays **bottom-left**, not centered alone.',
       '- Push overall contrast while keeping hook text legible.',
     ].join('\n'),
