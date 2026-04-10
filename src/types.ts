@@ -258,6 +258,7 @@ export interface SchoolOfBreathSettings {
   category: SchoolOfBreathCategory;
   hookFamily: SchoolOfBreathHookFamily;
   layoutPreset?: 'sob-channel-hard-stack';
+  layoutStyle?: 'giant_hook_left' | 'balanced_subject_right' | 'centered_cosmic_hero';
   subjectType?: 'abhi' | 'support_visual';
   textSide?: 'left' | 'right';
   subjectSide?: 'left' | 'right';
@@ -332,6 +333,9 @@ export interface ThumbnailCanvaSpec {
   visualBadgeType?: string;
   characterPose?: string;
   subjectType?: 'abhi' | 'support_visual';
+  layoutStyle?: 'giant_hook_left' | 'balanced_subject_right' | 'centered_cosmic_hero';
+  hookLine1?: string;
+  hookLine2?: string;
 }
 
 export type ThumbnailDraftStatus = 'draft' | 'generating' | 'ready' | 'error';

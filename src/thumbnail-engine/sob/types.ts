@@ -1,3 +1,5 @@
+export type SobLayoutStyle = 'giant_hook_left' | 'balanced_subject_right' | 'centered_cosmic_hero';
+
 export type SobMode = 'with_character' | 'without_character';
 
 export type SobTopicKey =
@@ -67,7 +69,7 @@ export interface SobStyleConfig {
   };
   variantSystem: {
     A: string;
-    B: string;
+    B?: string;
   };
 }
 
@@ -79,6 +81,7 @@ export interface SobPromptInput {
   topStripOverride?: string;
   ctaOverride?: string;
   specialNote?: string;
+  layoutStyle?: SobLayoutStyle;
 }
 
 export interface SobPromptContext {

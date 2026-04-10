@@ -1,3 +1,4 @@
+import { buildSobRenderSpec } from './renderSpec';
 import { SobPromptContext, SobPromptInput, SobValidationResult } from './types';
 
 function words(text: string): string[] {
@@ -57,6 +58,45 @@ export function validateSobInput(input: SobPromptInput, context: SobPromptContex
 
   if (!context.topic.cta.trim()) {
     warnings.push('Topic CTA strip is empty; style may not match channel thumbnails.');
+  }
+
+  // Derive render spec to validate layout-layer fields
+  const spec = buildSobRenderSpec(input, context, { isChannelProvenHook: false });
+
+  if (!spec.layoutStyle) {
+    errors.push('Layout style is required.');
+  }
+
+  if (!spec.hookLineBreakMode) {
+    errors.push('Hook line break mode could not be determined.');
+  }
+
+  if (spec.backgroundRole !== 'support_only') {
+    errors.push('Background role must be support_only.');
+  }
+
+  if (!spec.titleDominance) {
+    errors.push('Title dominance setting is required.');
+  }
+
+  if (!spec.ctaPlacement) {
+    errors.push('CTA placement setting is required.');
+  }
+
+  if (!spec.supportIconPlacement) {
+    errors.push('Support icon placement setting is required.');
+  }
+
+  // Warn if hook is too long for giant_hook_left
+  if (spec.layoutStyle === 'giant_hook_left' && hookWords.length > 4) {
+    warnings.push('Hook has more than 4 words. Giant Hook Left layout works best with ≤4 words.');
+  }
+
+  // Warn if custom hook is not channel-proven
+  if (input.hook.trim() && !context.topic.hooks?.some(
+    (h) => h.trim().toUpperCase() === input.hook.trim().toUpperCase()
+  )) {
+    warnings.push('Hook is not from the approved hook list. Verify it fits the channel style.');
   }
 
   return {

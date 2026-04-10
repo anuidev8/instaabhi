@@ -23,6 +23,7 @@ import {
   generateSchoolOfBreathThumbnailImages,
   generateSchoolOfBreathThumbnailPlan,
   getSchoolOfBreathDefaultInput,
+  getSchoolOfBreathDefaultLayoutStyle,
   getSchoolOfBreathHookOptions,
   getSchoolOfBreathTopicMeta,
   isSchoolOfBreathHookChannelProven,
@@ -65,6 +66,9 @@ function HookPreview({
   characterSide,
   backgroundTheme,
   supportVisual,
+  layoutStyle,
+  hookLine1,
+  hookLine2,
 }: {
   topLine: string;
   hook: string;
@@ -74,27 +78,68 @@ function HookPreview({
   characterSide: 'left' | 'right';
   backgroundTheme: string;
   supportVisual: string;
+  layoutStyle?: 'giant_hook_left' | 'balanced_subject_right' | 'centered_cosmic_hero';
+  hookLine1?: string;
+  hookLine2?: string;
 }) {
   const cinematicBackground = getCinematicSceneStyle(backgroundTheme, accent);
+  const isGiant = layoutStyle === 'giant_hook_left';
+  const isCenteredCosmic = layoutStyle === 'centered_cosmic_hero';
 
   const textPanel = (
     <div className="flex flex-col h-full">
-      <div className="bg-stone-800 px-3 py-1.5 text-[11px] font-extrabold tracking-wide text-white uppercase leading-tight">
+      <div className={`bg-stone-800 px-3 text-[11px] font-extrabold tracking-wide text-white uppercase leading-tight ${isGiant ? 'py-1' : 'py-1.5'}`}>
         {topLine || 'PRANAYAMA SEQUENCE'}
       </div>
-      <div className="bg-yellow-400 px-3 py-2 flex-1 flex items-center">
-        <span className="text-[28px] sm:text-[34px] font-black leading-[0.95] tracking-tight uppercase text-stone-900">
-          {hook || 'DO IT THIS WAY'}
-        </span>
+      <div
+        className={`px-3 flex-1 flex items-center border border-stone-950 ${isGiant ? 'py-3' : 'py-2'}`}
+        style={{
+          background: 'linear-gradient(90deg, #ffd84a 0%, #ffcc33 38%, #e8a010 72%, #d99a0b 100%)',
+        }}
+      >
+        {hookLine1 && hookLine2 ? (
+          <span className={`font-black leading-[0.90] tracking-tight uppercase text-stone-900 flex flex-col ${isGiant ? 'text-[30px] sm:text-[38px]' : 'text-[26px] sm:text-[32px]'}`}>
+            <span>{hookLine1}</span>
+            <span>{hookLine2}</span>
+          </span>
+        ) : (
+          <span className={`font-black leading-[0.95] tracking-tight uppercase text-stone-900 ${isGiant ? 'text-[30px] sm:text-[38px]' : 'text-[26px] sm:text-[32px]'}`}>
+            {hook || 'DO IT THIS WAY'}
+          </span>
+        )}
       </div>
       <div
-        className="px-3 py-2 text-[12px] sm:text-[13px] font-extrabold tracking-wide text-white uppercase leading-tight"
+        className={`px-3 text-[12px] sm:text-[13px] font-extrabold tracking-wide text-white uppercase leading-tight ${isGiant ? 'py-1.5' : 'py-2'}`}
         style={{ backgroundColor: '#E21313' }}
       >
         {cta || 'WATCH NOW'}
       </div>
     </div>
   );
+
+  if (isCenteredCosmic) {
+    return (
+      <div
+        className="rounded-xl overflow-hidden border border-stone-300 min-h-[140px] relative flex flex-col"
+        style={cinematicBackground}
+      >
+        <div className="relative z-10 flex flex-col flex-1 min-h-[140px] px-2 pt-2 pb-2">
+          <div className="w-[92%] max-w-[520px] mx-auto flex-shrink-0 shadow-md rounded-sm overflow-hidden border border-black/10 h-[92px]">
+            {textPanel}
+          </div>
+          <div className="flex-1 flex items-end justify-center pb-1">
+            <span className="text-[9px] font-bold tracking-wider text-white/90 uppercase text-center px-2">
+              {mode === 'without_character'
+                ? 'Center reserved for Abhi · support inset left'
+                : 'Abhi · centered lower frame'}
+            </span>
+          </div>
+        </div>
+        <span className="absolute top-1 left-2 text-[8px] text-white/75 font-semibold uppercase">chakra</span>
+        <span className="absolute top-1 right-2 text-[8px] text-white/75 font-semibold uppercase">chakra</span>
+      </div>
+    );
+  }
 
   const characterPanel = (
     <div className="h-full relative" style={cinematicBackground}>
@@ -229,6 +274,32 @@ const MODE_OPTIONS: Array<{ key: SchoolOfBreathMode; label: string }> = [
   { key: 'without_character', label: 'Without Character' },
 ];
 
+const LAYOUT_OPTIONS: Array<{
+  key: 'giant_hook_left' | 'balanced_subject_right' | 'centered_cosmic_hero';
+  label: string;
+  description: string;
+}> = [
+  {
+    key: 'centered_cosmic_hero',
+    label: 'Centered Cosmic Hero',
+    description: 'Reference A: wide centered strips, subject bottom-center, CTA lower-right (e.g. Pranayama).',
+  },
+  {
+    key: 'giant_hook_left',
+    label: 'Giant Hook Left',
+    description: 'Reference B: text column left, huge hook, fire/split energy topics.',
+  },
+  {
+    key: 'balanced_subject_right',
+    label: 'Balanced Subject Right',
+    description: 'Classic left-text / right-subject grid without max hook dominance.',
+  },
+];
+
+const VARIANT_LABELS: Array<{ id: string; label: string; description: string }> = [
+  { id: 'A', label: 'Channel Match', description: 'On-channel layout & colors' },
+];
+
 export default function SchoolOfBreathThumbnailsTab({
   thumbnailDrafts,
   setThumbnailDrafts,
@@ -236,8 +307,9 @@ export default function SchoolOfBreathThumbnailsTab({
   onInitialPromptConsumed,
 }: SchoolOfBreathThumbnailsTabProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalStep, setModalStep] = useState<'form' | 'preview'>('form');
+  const [modalStep, setModalStep] = useState<'form' | 'preview' | 'variant_select'>('form');
   const [previewPlan, setPreviewPlan] = useState<ThumbnailDraft | null>(null);
+  const [pendingGeneratedDraft, setPendingGeneratedDraft] = useState<ThumbnailDraft | null>(null);
   const [isPlanning, setIsPlanning] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSuggestingInput, setIsSuggestingInput] = useState(false);
@@ -259,6 +331,11 @@ export default function SchoolOfBreathThumbnailsTab({
   const hookOptions = useMemo(() => getSchoolOfBreathHookOptions(input.topic), [input.topic]);
   const effectiveTopStrip = (input.topStripOverride?.trim() || topicMeta.topLine).toUpperCase();
   const effectiveCta = (input.ctaOverride?.trim() || topicMeta.cta).toUpperCase();
+
+  // Derive hook line split for live HookPreview
+  const hookWords = input.hook.trim().toUpperCase().split(/\s+/).filter(Boolean);
+  const formHookLine1 = hookWords.length > 2 ? hookWords[0] : undefined;
+  const formHookLine2 = hookWords.length > 2 ? hookWords.slice(1).join(' ') : undefined;
 
   useEffect(() => {
     if (!initialPrompt) return;
@@ -314,6 +391,7 @@ export default function SchoolOfBreathThumbnailsTab({
     setSuggestionRefreshKey(0);
     setModalStep('form');
     setPreviewPlan(null);
+    setPendingGeneratedDraft(null);
     setLockUserText(false);
     setTitleTouched(false);
   };
@@ -338,26 +416,40 @@ export default function SchoolOfBreathThumbnailsTab({
     if (!previewPlan) return;
     setModalError(null);
     setIsGenerating(true);
-    setThumbnailDrafts((prev) => [{ ...previewPlan, status: 'generating' }, ...prev]);
 
     try {
       const completed = await generateSchoolOfBreathThumbnailImages(previewPlan);
-      setThumbnailDrafts((prev) =>
-        prev.map((d) => (d.id === previewPlan.id ? completed : d))
-      );
-      setIsModalOpen(false);
-      resetModal();
+      if (completed.baseImages.length <= 1) {
+        setThumbnailDrafts((prev) => [completed, ...prev]);
+        setIsModalOpen(false);
+        resetModal();
+      } else {
+        setPendingGeneratedDraft(completed);
+        setModalStep('variant_select');
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to generate thumbnail.';
       setModalError(message);
-      setThumbnailDrafts((prev) =>
-        prev.map((d) =>
-          d.id === previewPlan.id ? { ...d, status: 'error', errorMessage: message } : d
-        )
-      );
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const handlePickVariant = (variantIndex: number) => {
+    if (!pendingGeneratedDraft) return;
+    const pickedImage = pendingGeneratedDraft.baseImages[variantIndex];
+    const variantLabel = VARIANT_LABELS[variantIndex];
+    const finalDraft: ThumbnailDraft = {
+      ...pendingGeneratedDraft,
+      baseImages: [pickedImage],
+      validationSummary: [
+        ...(pendingGeneratedDraft.validationSummary ?? []),
+        `Selected: ${variantLabel ? `${variantLabel.label} — ${variantLabel.description}` : `Variant ${variantIndex + 1}`}`,
+      ],
+    };
+    setThumbnailDrafts((prev) => [finalDraft, ...prev]);
+    setIsModalOpen(false);
+    resetModal();
   };
 
   const handleRegenerate = async (draft: ThumbnailDraft) => {
@@ -574,7 +666,7 @@ export default function SchoolOfBreathThumbnailsTab({
                               />
                             </div>
                             <div className="px-3 py-2 text-xs text-stone-500 border-t border-stone-200">
-                              Variant {index + 1}
+                              {VARIANT_LABELS[index]?.label ?? `Image ${index + 1}`}
                             </div>
                           </div>
                         ))}
@@ -603,6 +695,9 @@ export default function SchoolOfBreathThumbnailsTab({
                         characterSide={draftTopicMeta.characterSide}
                         backgroundTheme={draftTopicMeta.backgroundTheme}
                         supportVisual={sob?.supportVisual ?? draftTopicMeta.supportVisual}
+                        layoutStyle={draft.canvaSpec.layoutStyle ?? sob?.layoutStyle}
+                        hookLine1={draft.canvaSpec.hookLine1}
+                        hookLine2={draft.canvaSpec.hookLine2}
                       />
                       <div className="space-y-1.5 text-sm text-stone-600">
                         <p>
@@ -695,11 +790,11 @@ export default function SchoolOfBreathThumbnailsTab({
             >
               <div className="px-5 py-4 border-b border-stone-100 flex items-start justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  {modalStep === 'preview' && (
+                  {(modalStep === 'preview' || modalStep === 'variant_select') && (
                     <button
                       onClick={() => {
                         if (isGenerating) return;
-                        setModalStep('form');
+                        setModalStep(modalStep === 'variant_select' ? 'preview' : 'form');
                         setModalError(null);
                       }}
                       className="p-2 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-600 transition-colors"
@@ -711,12 +806,16 @@ export default function SchoolOfBreathThumbnailsTab({
                     <h3 className="text-lg sm:text-xl font-bold text-stone-900">
                       {modalStep === 'form'
                         ? 'New School of Breath Thumbnail'
-                        : 'Review Generation Plan'}
+                        : modalStep === 'preview'
+                        ? 'Review Generation Plan'
+                        : 'Choose Your Variant'}
                     </h3>
                     <p className="text-sm text-stone-500 mt-1">
                       {modalStep === 'form'
                         ? 'Topic → Mode → Approved Hook → Generate'
-                        : 'Review prompt and generate.'}
+                        : modalStep === 'preview'
+                        ? 'Review prompt and generate.'
+                        : 'Pick the variant that best fits your message.'}
                     </p>
                   </div>
                 </div>
@@ -731,7 +830,65 @@ export default function SchoolOfBreathThumbnailsTab({
                 </button>
               </div>
 
-              {modalStep === 'form' ? (
+              {modalStep === 'variant_select' ? (
+                <>
+                  <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
+                    <p className="text-sm text-stone-500">
+                      Both variants have been generated. Click one to save it to your collection.
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {pendingGeneratedDraft?.baseImages.map((image, index) => {
+                        const vl = VARIANT_LABELS[index];
+                        return (
+                          <div key={index} className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-black uppercase tracking-widest bg-stone-900 text-white px-2 py-0.5 rounded">
+                                {vl?.id ?? String(index + 1)}
+                              </span>
+                              <span className="text-sm font-semibold text-stone-700">
+                                {vl?.description ?? `Variant ${index + 1}`}
+                              </span>
+                            </div>
+                            <div className="relative w-full overflow-hidden rounded-xl border border-stone-200" style={{ paddingBottom: '56.25%' }}>
+                              <img
+                                src={image}
+                                alt={vl ? `${vl.label} — ${vl.description}` : `Variant ${index + 1}`}
+                                className="absolute inset-0 w-full h-full object-cover"
+                              />
+                            </div>
+                            <button
+                              onClick={() => handlePickVariant(index)}
+                              className="w-full px-4 py-2.5 rounded-xl border-2 border-stone-200 hover:border-amber-500 hover:bg-amber-50 text-sm font-semibold text-stone-700 hover:text-amber-800 transition-colors min-h-[44px]"
+                            >
+                              Choose {vl?.label ?? `Variant ${index + 1}`}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {modalError && (
+                      <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                        <div className="flex items-start gap-2">
+                          <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                          <p className="whitespace-pre-line">{modalError}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="px-5 py-4 border-t border-stone-100 flex items-center justify-between gap-3">
+                    <p className="text-xs text-stone-400">Choose one variant to save.</p>
+                    <button
+                      onClick={() => {
+                        setModalStep('preview');
+                        setModalError(null);
+                      }}
+                      className="px-4 py-2 rounded-lg border border-stone-200 hover:bg-stone-50 text-sm font-medium text-stone-700 transition-colors min-h-[44px]"
+                    >
+                      Back to Plan
+                    </button>
+                  </div>
+                </>
+              ) : modalStep === 'form' ? (
                 <>
                   <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto">
                     <div className="space-y-2">
@@ -747,6 +904,7 @@ export default function SchoolOfBreathThumbnailsTab({
                             topic,
                             mode: prev.mode,
                             hook: hooks[0],
+                            layoutStyle: getSchoolOfBreathDefaultLayoutStyle(topic),
                             topStripOverride: '',
                             ctaOverride: '',
                           }));
@@ -775,6 +933,28 @@ export default function SchoolOfBreathThumbnailsTab({
                             }`}
                           >
                             {mode.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-stone-800">Layout Family</label>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        {LAYOUT_OPTIONS.map((opt) => (
+                          <button
+                            key={opt.key}
+                            onClick={() => setInput((prev: SchoolOfBreathThumbnailInput) => ({ ...prev, layoutStyle: opt.key }))}
+                            className={`px-3 py-2.5 rounded-xl text-left transition-colors border ${
+                              input.layoutStyle === opt.key
+                                ? 'bg-stone-900 text-white border-stone-900'
+                                : 'bg-white border-stone-200 text-stone-700 hover:border-stone-400'
+                            }`}
+                          >
+                            <span className="block text-xs font-bold">{opt.label}</span>
+                            <span className={`block text-[11px] mt-0.5 ${input.layoutStyle === opt.key ? 'text-stone-300' : 'text-stone-500'}`}>
+                              {opt.description}
+                            </span>
                           </button>
                         ))}
                       </div>
@@ -820,11 +1000,14 @@ export default function SchoolOfBreathThumbnailsTab({
                       characterSide={topicMeta.characterSide}
                       backgroundTheme={topicMeta.backgroundTheme}
                       supportVisual={topicMeta.supportVisual}
+                      layoutStyle={input.layoutStyle}
+                      hookLine1={formHookLine1}
+                      hookLine2={formHookLine2}
                     />
 
                     <div className="space-y-2">
                       <div className="flex items-center justify-between gap-3">
-                        <label className="text-sm font-medium text-stone-800">Title Suggestion</label>
+                        <label className="text-sm font-medium text-stone-800">Youtube title</label>
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => setLockUserText((v) => !v)}
@@ -868,9 +1051,9 @@ export default function SchoolOfBreathThumbnailsTab({
                       />
                     </div>
 
-                    <details className="group">
+                    <details className="group" open>
                       <summary className="text-sm font-medium text-stone-500 cursor-pointer hover:text-stone-700 transition-colors">
-                        Advanced overrides
+                        Edit Texts Thumbnail
                       </summary>
                       <div className="mt-2 space-y-1.5">
                         <label className="text-sm font-medium text-stone-800">Custom Hook Override</label>
@@ -911,19 +1094,6 @@ export default function SchoolOfBreathThumbnailsTab({
                           Leave blank to use topic defaults.
                         </p>
                       </div>
-                    </details>
-
-                    <details className="group">
-                      <summary className="text-sm font-medium text-stone-500 cursor-pointer hover:text-stone-700 transition-colors">
-                        Optional note
-                      </summary>
-                      <textarea
-                        value={input.specialNote ?? ''}
-                        onChange={(e) => setInput((prev) => ({ ...prev, specialNote: e.target.value }))}
-                        placeholder="Optional instruction..."
-                        rows={2}
-                        className="mt-2 w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 resize-none"
-                      />
                     </details>
 
                     {modalError && (
@@ -1002,6 +1172,9 @@ export default function SchoolOfBreathThumbnailsTab({
                             supportVisual={
                               previewPlan.prompt.schoolOfBreath?.supportVisual ?? topicMeta.supportVisual
                             }
+                            layoutStyle={previewPlan.canvaSpec.layoutStyle ?? previewPlan.prompt.schoolOfBreath?.layoutStyle}
+                            hookLine1={previewPlan.canvaSpec.hookLine1}
+                            hookLine2={previewPlan.canvaSpec.hookLine2}
                           />
                           <div className="space-y-1.5 text-sm text-stone-700">
                             <p>
@@ -1030,6 +1203,16 @@ export default function SchoolOfBreathThumbnailsTab({
                               ).replace(/_/g, ' ')}
                             </p>
                             <p>
+                              <span className="font-semibold text-stone-900">Layout Family:</span>{' '}
+                              {previewPlan.canvaSpec.layoutStyle === 'giant_hook_left'
+                                ? 'Giant Hook Left'
+                                : previewPlan.canvaSpec.layoutStyle === 'balanced_subject_right'
+                                ? 'Balanced Subject Right'
+                                : previewPlan.canvaSpec.layoutStyle === 'centered_cosmic_hero'
+                                ? 'Centered Cosmic Hero'
+                                : '—'}
+                            </p>
+                            <p>
                               <span className="font-semibold text-stone-900">Character Pose:</span>{' '}
                               {previewPlan.prompt.schoolOfBreath?.characterPose ||
                                 'n/a (support visual mode)'}
@@ -1037,13 +1220,24 @@ export default function SchoolOfBreathThumbnailsTab({
                           </div>
                         </div>
 
-                        {previewPlan.generationPrompts?.map((prompt, index) => (
+                        {previewPlan.generationPrompts?.map((prompt, index) => {
+                          const vl = VARIANT_LABELS[index];
+                          return (
                           <div
                             key={index}
                             className="rounded-2xl border border-stone-200 bg-stone-50 p-4 space-y-2"
                           >
                             <div className="flex items-center justify-between">
-                              <p className="text-sm font-semibold text-stone-900">Image Prompt</p>
+                              <div className="flex items-center gap-2">
+                                {vl && (
+                                  <span className="text-xs font-black uppercase tracking-widest bg-stone-900 text-white px-2 py-0.5 rounded">
+                                    {vl.id}
+                                  </span>
+                                )}
+                                <p className="text-sm font-semibold text-stone-900">
+                                  {vl ? vl.description : `Image Prompt ${index + 1}`}
+                                </p>
+                              </div>
                               <button
                                 onClick={() => navigator.clipboard.writeText(prompt)}
                                 className="inline-flex items-center gap-1.5 text-xs font-medium text-stone-500 hover:text-stone-700 transition-colors"
@@ -1063,7 +1257,8 @@ export default function SchoolOfBreathThumbnailsTab({
                               className="w-full text-xs leading-relaxed text-stone-600 bg-white border border-stone-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 resize-y"
                             />
                           </div>
-                        ))}
+                          );
+                        })}
                       </>
                     )}
                   </div>

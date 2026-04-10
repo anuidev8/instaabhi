@@ -1,9 +1,10 @@
 import hooksData from './hooks.json';
-import { buildSobRenderSpec } from './renderSpec';
+import { buildSobRenderSpec, deriveDefaultLayoutStyle } from './renderSpec';
 import type { SobRenderSpec } from './renderSpec';
 import styleData from './style.json';
 import topicsData from './topics.json';
 import { getAbhiReferenceImageUrls, ABHI_REFERENCE_IMAGES, filterAbhiReferencesByTags } from './abhiReferences';
+import { getLayoutCompositionReferenceUrl } from './layoutReferenceImages';
 import {
   buildSobBasePrompt,
   buildSobBasePromptFromRenderSpec,
@@ -13,6 +14,7 @@ import {
 import { DEFAULT_SOB_VARIANT_COUNT, getSobVariantPrompts } from './variants';
 import { validateSobInput } from './validator';
 import {
+  SobLayoutStyle,
   SobMode,
   SobPromptContext,
   SobPromptInput,
@@ -38,6 +40,7 @@ const hooks = hooksData as {
 };
 
 export type {
+  SobLayoutStyle,
   SobMode,
   SobPromptContext,
   SobPromptInput,
@@ -90,6 +93,10 @@ export function getSobDefaultMode(topic: SobTopicKey): SobMode {
   return 'with_character';
 }
 
+export function getSobDefaultLayoutStyle(topic: SobTopicKey): SobLayoutStyle {
+  return deriveDefaultLayoutStyle(topic);
+}
+
 export function getSobPromptContext(topic: SobTopicKey): SobPromptContext {
   return {
     style,
@@ -103,6 +110,7 @@ export {
   buildSobPromptVariantsFromRenderSpec,
   buildSobRenderSpec,
   getAbhiReferenceImageUrls,
+  getLayoutCompositionReferenceUrl,
   filterAbhiReferencesByTags,
   buildSobBasePrompt,
   buildSobPromptVariants,

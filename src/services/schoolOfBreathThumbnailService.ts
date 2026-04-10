@@ -4,13 +4,16 @@ import {
   buildSobPromptVariantsFromRenderSpec,
   buildSobRenderSpec,
   getAbhiReferenceImageUrls,
+  getLayoutCompositionReferenceUrl,
   getSobDefaultMode,
+  getSobDefaultLayoutStyle,
   getSobDefaultTopic,
   getSobHookOptions,
   isSobHookChannelProven,
   getSobPromptContext,
   getSobTopics,
   getSobTopicConfig,
+  SobLayoutStyle,
   SobMode,
   SobTopicKey,
   validateSobInput,
@@ -44,6 +47,7 @@ export interface SchoolOfBreathThumbnailInput {
   topic: SobTopicKey;
   mode: SobMode;
   hook: string;
+  layoutStyle?: SobLayoutStyle;
   topStripOverride?: string;
   ctaOverride?: string;
   specialNote?: string;
@@ -121,10 +125,15 @@ export function getSchoolOfBreathDefaultInput(): SchoolOfBreathThumbnailInput {
     topic,
     mode: getSobDefaultMode(topic),
     hook: hooks[0],
+    layoutStyle: getSobDefaultLayoutStyle(topic),
     topStripOverride: '',
     ctaOverride: '',
     specialNote: '',
   };
+}
+
+export function getSchoolOfBreathDefaultLayoutStyle(topic: SobTopicKey): SobLayoutStyle {
+  return getSobDefaultLayoutStyle(topic);
 }
 
 export function getSchoolOfBreathQuickPickSet(topic: SobTopicKey) {
@@ -197,6 +206,7 @@ function buildRenderSpec(
       topic: input.topic,
       mode: input.mode,
       hook: input.hook,
+      layoutStyle: input.layoutStyle,
       topStripOverride: input.topStripOverride,
       ctaOverride: input.ctaOverride,
       specialNote: input.specialNote,
@@ -239,6 +249,9 @@ function buildCanvaSpec(
     visualBadgeType: renderSpec.visualBadgeType,
     characterPose: renderSpec.characterPose,
     subjectType: renderSpec.subjectType,
+    layoutStyle: renderSpec.layoutStyle,
+    hookLine1: renderSpec.hookLine1,
+    hookLine2: renderSpec.hookLine2,
   };
 }
 
@@ -269,6 +282,7 @@ function buildThumbnailPrompt(input: SchoolOfBreathThumbnailInput, renderSpec: S
       arrowAllowed: renderSpec.arrowAllowed,
       characterPose: renderSpec.characterPose,
       isChannelProvenHook: renderSpec.isChannelProvenHook,
+      layoutStyle: renderSpec.layoutStyle,
     },
   };
 }
@@ -281,6 +295,7 @@ export async function generateSchoolOfBreathThumbnailPlan(
     topic: input.topic,
     mode: input.mode,
     hook: input.hook.trim().toUpperCase(),
+    layoutStyle: input.layoutStyle,
     topStripOverride: input.topStripOverride?.trim() || undefined,
     ctaOverride: input.ctaOverride?.trim() || undefined,
     specialNote: input.specialNote?.trim() || undefined,
@@ -322,6 +337,8 @@ export async function generateSchoolOfBreathThumbnailPlan(
     validationSummary: [
       ...validation.warnings,
       `Flow: topic=${normalizedInput.topic} mode=${normalizedInput.mode} hook=${normalizedInput.hook}`,
+      `Layout family: ${renderSpec.layoutStyle} / Title dominance: ${renderSpec.titleDominance}`,
+      `Hook break: ${renderSpec.hookLineBreakMode}${renderSpec.hookLine1 ? ` ("${renderSpec.hookLine1}" / "${renderSpec.hookLine2}")` : ''}`,
       `Render spec: preset=${renderSpec.layoutPreset} subjectType=${renderSpec.subjectType}`,
       `Top strip: ${renderSpec.topStripText}`,
       `CTA: ${renderSpec.ctaText}`,
@@ -458,19 +475,39 @@ export async function generateSchoolOfBreathThumbnailImages(
   const shouldUseCharacterReferences = plan.prompt.schoolOfBreath?.mode === 'with_character';
   const referenceParts = shouldUseCharacterReferences ? await getAbhiReferenceInlineParts() : [];
 
+  const layoutStyle = plan.prompt.schoolOfBreath?.layoutStyle;
+  const compositionRefUrl = layoutStyle ? getLayoutCompositionReferenceUrl(layoutStyle) : undefined;
+  let compositionRefPart: InlineImagePart | null = null;
+  if (compositionRefUrl) {
+    try {
+      compositionRefPart = await imageUrlToInlinePart(compositionRefUrl);
+    } catch {
+      compositionRefPart = null;
+    }
+  }
+
   const rawImages = await Promise.all(
     prompts.map(async (prompt) => {
-      const contents =
-        referenceParts.length > 0
-          ? [
-              {
-                text:
-                  'Use only attached Abhi references. Do not invent another person. Preserve exact Abhi face identity and mature Indian male teacher appearance. Keep Abhi in seated or breath-teaching pose. Match real School of Breath thumbnail style, not portrait-photography ad style. No sticker/cutout look. No white frame or mockup border.',
-              },
-              ...referenceParts,
-              { text: prompt },
-            ]
-          : prompt;
+      const characterLockText =
+        'Use only attached Abhi references. Do not invent another person. Preserve exact Abhi face identity and mature Indian male teacher appearance. Keep Abhi in seated or breath-teaching pose. Match real School of Breath thumbnail style, not portrait-photography ad style. No sticker/cutout look. No white frame or mockup border.';
+
+      const compositionLockText =
+        plan.prompt.schoolOfBreath?.mode === 'without_character'
+          ? 'Attached image = LAYOUT/COMPOSITION REFERENCE (not face identity). Match tag colors and strip order. **Without character in this render:** keep **lower-center** mostly open cosmic space for a **future Abhi composite** — put the proof/support graphic **bottom-left**, modest size — not a huge centered circle. Red CTA mid-right. If the prompt says WITH CHARACTER, ignore this reserve and follow the prompt’s subject rules. All wording from the prompt below.'
+          : 'Attached image = LAYOUT/COMPOSITION REFERENCE only (not face identity). Match: white-on-dark top strip, **black-on-yellow-gold gradient** main hook bar (thin black outline, premium gold — not flat neon) behind the subject’s shoulders, white-on-red CTA on the right torso, circular proof graphic bottom-left, curved arrow from the hook bar toward that circle, chakras top corners. Reproduce tag colors (white / gold hook / black text / red CTA). All wording must come from the prompt below — do not copy letters from the reference if they differ.';
+
+      const parts: Array<{ text: string } | InlineImagePart> = [];
+      if (referenceParts.length > 0) {
+        parts.push({ text: characterLockText });
+        parts.push(...referenceParts);
+      }
+      if (compositionRefPart) {
+        parts.push({ text: compositionLockText });
+        parts.push(compositionRefPart);
+      }
+      parts.push({ text: prompt });
+
+      const contents = parts.length > 1 ? parts : prompt;
 
       const response = await ai.models.generateContent({
         model: IMAGE_MODEL,
@@ -500,6 +537,9 @@ export async function generateSchoolOfBreathThumbnailImages(
       ...(referenceParts.length > 0
         ? [`Character lock: used ${referenceParts.length} approved Abhi references.`]
         : ['No-character mode: confirmed no reference person images used.']),
+      ...(compositionRefPart
+        ? [`Layout composition reference: centered cosmic hero (bundled PNG) attached for Gemini.`]
+        : []),
       ...normalizedImages.map((_, index) => `Variant ${index + 1}: normalized to 1280x720.`),
     ],
     errorMessage: undefined,

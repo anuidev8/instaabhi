@@ -10,7 +10,7 @@
   },
   "template": {
     "topStrip": "dark charcoal strip, full width across text zone, compact white uppercase context text",
-    "mainBlock": "bright yellow rectangular hook block with ultra-bold black condensed uppercase text",
+    "mainBlock": "premium yellow-to-gold gradient hook bar, thin black keyline, ultra-bold black condensed uppercase text (not flat neon yellow)",
     "ctaBlock": "red urgency strip directly below main block with short white uppercase CTA text",
     "supportBadge": "single circular badge near lower boundary between text zone and character/support-visual zone"
   },
@@ -21,7 +21,7 @@
     "mainIdeaOnly": true
   },
   "colors": {
-    "core": ["#FFD400", "#000000", "#FFFFFF"],
+    "core": ["#FFCC33", "#E8A010", "#000000", "#FFFFFF"],
     "accents": {
       "urgency": "#FF3B30",
       "science": "#2563EB",
@@ -40,7 +40,6 @@
     "forbidExtraTextInVisualZone": true
   },
   "variantSystem": {
-    "A": "Exact Channel Match: hard text stack, standard channel composition, one support visual, closest to proven thumbnails.",
-    "B": "Hook Push: bigger main hook, tighter top strip, stronger CTA block, more visible support badge, more aggressive contrast."
+    "A": "Channel Match only: same dark / yellow-gold / red strip system as real uploads; standard composition for this layout family."
   }
 }
