@@ -128,13 +128,17 @@ function getChannelStripColorLock(spec: SobRenderSpec): string[] {
             '- Layering (no character in this render): dark strip → yellow-gold hook bar → **open center-lower background reserved** → red CTA mid-right; support inset **left** only.',
             '- This frame must stay **character-ready**: center-bottom stays clear for a future Abhi composite — no full-bleed centered icon blocking that slot.',
           ];
+    const cornerRule =
+      spec.subjectType === 'abhi'
+        ? '- Chakra corner symbols are required in centered family with character: both top corners must include circular emblems; use topic/reference-appropriate colors and glyph style.'
+        : '- Keep this character-ready centered frame clean: no corner symbols/emblems in without-character mode unless explicitly requested.';
     return [
       ...shared,
       'CENTERED COSMIC HERO — tag colors + corner symbols must match uploads (not generic UI):',
       '- Top tag: **white (#FFFFFF) text** on **dark charcoal/black** strip — never grey-on-grey.',
       '- Hook tag: **black text** on the **yellow-gold gradient bar** above (not yellow text on black).',
       '- CTA tag: **white text** on **saturated red**; optional white outline on the red box — never pink/orange substitute.',
-      '- Chakra corner symbols are mandatory in centered family: both top corners must include circular emblems; use topic/reference-appropriate colors and glyph style.',
+      cornerRule,
       ...characterLayering,
     ];
   }
