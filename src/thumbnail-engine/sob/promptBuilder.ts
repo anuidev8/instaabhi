@@ -71,7 +71,7 @@ function getLayoutGeometryRules(spec: SobRenderSpec): string[] {
       '- Main hook bar: **black text** on **yellow→gold gradient ribbon** with thin black outline (premium, not flat neon); bar sits mid-frame and **intersects** the subject’s head — not a thin strip floating above a separate empty area.',
       '- Red CTA tag: **white text on #E60000–#FF2D20**, optional thin **white keyline**; position = **right-of-center on the body** (overlapping robe). WRONG: tiny tag only under the bottom-right corner of the yellow bar with no connection to the torso.',
       '- Circular proof inset (sprout/brain): **bottom-LEFT quadrant** (viewer left), gold rim — NOT solo bottom-center. Arrow from **left side of yellow bar** curves down toward that circle.',
-      '- Corner chakra mini-disks: top-left + top-right; colored disks with light symbol — subtle.',
+      '- Corner chakra badges (required): top-left = cool blue chakra disk with glowing symbol (Ajna-like), top-right = green chakra disk with glowing symbol (heart-like). Match reference corner colors and circular emblem style.',
     ];
   }
   if (spec.layoutStyle === 'centered_cosmic_hero') {
@@ -82,7 +82,7 @@ function getLayoutGeometryRules(spec: SobRenderSpec): string[] {
       '- Support visual: one proof graphic **bottom-LEFT** or lower-left (smaller circular inset), gold rim — secondary, not the dominant lower focal point.',
       '- Red CTA: float **mid-right in the lower third** (where a torso would sit), **not** only tucked under the yellow bar’s corner.',
       '- Yellow-gold hook bar may hang low; leave vertical room beneath it so a seated figure could align under it later.',
-      '- Corner chakra mini-disks: top-left + top-right; subtle.',
+      '- Corner chakra badges (required): top-left blue emblem + top-right green emblem, matching reference style/scale in the top corners.',
     ];
   }
   return [
@@ -130,10 +130,11 @@ function getChannelStripColorLock(spec: SobRenderSpec): string[] {
           ];
     return [
       ...shared,
-      'CENTERED COSMIC HERO — tag colors must match uploads (not generic UI):',
+      'CENTERED COSMIC HERO — tag colors + corner symbols must match uploads (not generic UI):',
       '- Top tag: **white (#FFFFFF) text** on **dark charcoal/black** strip — never grey-on-grey.',
       '- Hook tag: **black text** on the **yellow-gold gradient bar** above (not yellow text on black).',
       '- CTA tag: **white text** on **saturated red**; optional white outline on the red box — never pink/orange substitute.',
+      '- Chakra corner symbols are mandatory in centered family: left corner blue disk + right corner green disk, both circular with subtle glow and symbol mark.',
       ...characterLayering,
     ];
   }
@@ -151,7 +152,7 @@ function getBackgroundSuppressionRules(spec: SobRenderSpec): string[] {
       ? [
           spec.subjectType === 'abhi'
             ? 'LAYERING (centered cosmic): cosmic/nebula fills the full frame behind text and subject. Stars or a soft galaxy band in the lower half behind Abhi is OK if it stays darker than the yellow-gold hook bar.'
-            : 'LAYERING (centered cosmic, no character): cosmic fills the frame; **keep lower-center atmospheric** (darker, readable) so a teacher plate can be added later — support graphic stays left, not centered.',
+            : 'LAYERING (centered cosmic, no character): cosmic fills the frame; keep lower-center atmospheric so a teacher plate can be added later — support graphic stays left, not centered. Do not add any center placeholder box/panel/column.',
         ]
       : [];
   return [
@@ -174,7 +175,7 @@ function getLockedFrameRules(spec: SobRenderSpec): string[] {
     const lowerZone =
       spec.subjectType === 'abhi'
         ? '- Abhi centered horizontally; seated; waist-up; head and halo may overlap the yellow-gold bar (not “all text above, all person below” as separate slices).'
-        : '- Lower half: **character-ready** — reserve **center-bottom** (~center 35–45% width) for a future seated Abhi composite: keep it **mostly empty cosmic** (soft glow OK). Place the support visual **bottom-left**, modest size — not a giant hero circle dead center.';
+        : '- Lower half: character-ready — reserve center-bottom (~center 35–45% width) for a future seated Abhi composite using natural cosmic background only (soft glow OK). Place the support visual bottom-left, modest size — not a giant hero circle dead center. No box/panel/column placeholders.';
     const hookBarLine =
       spec.subjectType === 'abhi'
         ? '- Yellow-gold hook bar may extend low enough to intersect Abhi’s head — correct channel look.'
@@ -210,7 +211,7 @@ function getVariantAExactPositioning(spec: SobRenderSpec): string[] {
   if (spec.layoutStyle === 'centered_cosmic_hero') {
     return [
       'VARIANT A — POSITION EXACT (no character, character-ready):',
-      '- Match channel text stack; support visual **bottom-left**; **clear center-lower** for future Abhi.',
+      '- Match channel text stack; support visual **bottom-left**; **clear center-lower** for future Abhi with no placeholder shape.',
       '- Red CTA mid-right lower third; corner chakras + arrow per VISUAL SLOTS only.',
     ];
   }
@@ -274,7 +275,8 @@ function buildSobRenderPrompt(spec: SobRenderSpec): string {
             'MODE RULES:',
             '- WITHOUT CHARACTER mode (this image has no person).',
             '- No human subject, no face, no silhouette, no body parts.',
-            '- **Layout must stay character-ready:** reserve **lower-center** for a future Abhi composite — keep that band mostly **open background**.',
+            '- Layout must stay character-ready: reserve lower-center for a future Abhi composite — keep that band open natural background.',
+            '- Forbidden in reserved center area: placeholder box, panel, rectangular gradient column, mask, or framed cutout.',
             '- Place **one** support visual (from VISUAL SLOTS) **bottom-left** or lower-left, **smaller inset** scale — not a massive centered graphic.',
             '- Integrate support visual into the cosmic scene; red CTA floats **mid-right** where a torso would be.',
             '- No text in the support visual zone.',
