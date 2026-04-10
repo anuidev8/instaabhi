@@ -71,7 +71,7 @@ function getLayoutGeometryRules(spec: SobRenderSpec): string[] {
       '- Main hook bar: **black text** on **yellow→gold gradient ribbon** with thin black outline (premium, not flat neon); bar sits mid-frame and **intersects** the subject’s head — not a thin strip floating above a separate empty area.',
       '- Red CTA tag: **white text on #E60000–#FF2D20**, optional thin **white keyline**; position = **right-of-center on the body** (overlapping robe). WRONG: tiny tag only under the bottom-right corner of the yellow bar with no connection to the torso.',
       '- Circular proof inset (sprout/brain): **bottom-LEFT quadrant** (viewer left), gold rim — NOT solo bottom-center. Arrow from **left side of yellow bar** curves down toward that circle.',
-      '- Corner chakra badges (required): top-left = cool blue chakra disk with glowing symbol (Ajna-like), top-right = green chakra disk with glowing symbol (heart-like). Match reference corner colors and circular emblem style.',
+      '- Corner symbols (required): top-left + top-right circular chakra/emblem badges. Colors/symbol style must follow the current topic + reference image (not fixed blue/green for all topics).',
     ];
   }
   if (spec.layoutStyle === 'centered_cosmic_hero') {
@@ -82,7 +82,7 @@ function getLayoutGeometryRules(spec: SobRenderSpec): string[] {
       '- Support visual: one proof graphic **bottom-LEFT** or lower-left (smaller circular inset), gold rim — secondary, not the dominant lower focal point.',
       '- Red CTA: float **mid-right in the lower third** (where a torso would sit), **not** only tucked under the yellow bar’s corner.',
       '- Yellow-gold hook bar may hang low; leave vertical room beneath it so a seated figure could align under it later.',
-      '- Corner chakra badges (required): top-left blue emblem + top-right green emblem, matching reference style/scale in the top corners.',
+      '- Corner symbols (required): top-left + top-right circular chakra/emblem badges, matching current topic/reference style and scale in the top corners.',
     ];
   }
   return [
@@ -134,7 +134,7 @@ function getChannelStripColorLock(spec: SobRenderSpec): string[] {
       '- Top tag: **white (#FFFFFF) text** on **dark charcoal/black** strip — never grey-on-grey.',
       '- Hook tag: **black text** on the **yellow-gold gradient bar** above (not yellow text on black).',
       '- CTA tag: **white text** on **saturated red**; optional white outline on the red box — never pink/orange substitute.',
-      '- Chakra corner symbols are mandatory in centered family: left corner blue disk + right corner green disk, both circular with subtle glow and symbol mark.',
+      '- Chakra corner symbols are mandatory in centered family: both top corners must include circular emblems; use topic/reference-appropriate colors and glyph style.',
       ...characterLayering,
     ];
   }
