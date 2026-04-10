@@ -15,7 +15,7 @@
     "supportBadge": "single circular badge near lower boundary between text zone and character/support-visual zone"
   },
   "text": {
-    "maxWords": 4,
+    "maxWords": 5,
     "fontStyle": "bold condensed",
     "mobilePriority": true,
     "mainIdeaOnly": true

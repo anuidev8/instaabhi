@@ -14,8 +14,8 @@ export function validateSobInput(input: SobPromptInput, context: SobPromptContex
   }
 
   const hookWords = words(input.hook);
-  if (hookWords.length < 2 || hookWords.length > context.style.text.maxWords) {
-    errors.push(`Hook must be between 2 and ${context.style.text.maxWords} words.`);
+  if (hookWords.length < 1 || hookWords.length > context.style.text.maxWords) {
+    errors.push(`Hook must be between 1 and ${context.style.text.maxWords} words.`);
   }
 
   if (input.topStripOverride?.trim()) {
@@ -88,8 +88,8 @@ export function validateSobInput(input: SobPromptInput, context: SobPromptContex
   }
 
   // Warn if hook is too long for giant_hook_left
-  if (spec.layoutStyle === 'giant_hook_left' && hookWords.length > 4) {
-    warnings.push('Hook has more than 4 words. Giant Hook Left layout works best with ≤4 words.');
+  if (spec.layoutStyle === 'giant_hook_left' && hookWords.length > 5) {
+    warnings.push('Hook has more than 5 words. Giant Hook Left layout works best with ≤5 words.');
   }
 
   // Warn if custom hook is not channel-proven

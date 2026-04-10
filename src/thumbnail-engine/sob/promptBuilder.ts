@@ -103,6 +103,7 @@ function getMainHookBarGoldRules(): string[] {
     '- ONE contiguous horizontal bar; **black (#0f0f0f–#1a1a1a) ultra-bold uppercase** hook text inside.',
     '- Fill: **rich yellow→gold horizontal gradient** — bright lemon-gold on the left (#FFD84A–#FFCC33) shifting to warm amber/gold on the right (#F5B014–#D99A0B); optional subtle **top sheen/highlight** for a luxury foil feel.',
     '- Edge: **thin black keyline** (~1–2px, #0a0a0a) around the whole bar, like premium channel uploads — not a borderless neon slab.',
+    '- Shape lock: keep the same clean rectangular hook bar style across all topics/layouts (no banners, ribbons, fishtails, notched ends, angled flags, or ornamental tails).',
     '- FORBIDDEN: flat #FFFF00 neon, plastic highlighter yellow with no depth. The gold should **harmonize** with orange/gold glows in cosmic or warm backgrounds.',
     '- Hook may be one or two lines inside this single block — do NOT put each word in a separate box.',
   ];
@@ -240,10 +241,128 @@ function getHookLineBreakRule(spec: SobRenderSpec): string | null {
   return null;
 }
 
+function getTopicCharacterWardrobeRule(spec: SobRenderSpec): string {
+  switch (spec.topic) {
+    case 'sleep':
+    case 'anxiety_relief':
+    case 'humming':
+    case 'nitric_oxide':
+      return '- Wardrobe color by topic: use blue/cool robes (royal blue, indigo, or deep navy tones).';
+    case 'digestion':
+    case 'tummo':
+    case 'energy':
+    case 'immunity':
+      return '- Wardrobe color by topic: use warm robes (orange, saffron, maroon, or heat-aligned tones).';
+    case 'morning_routine':
+    case 'beginner_breathing':
+      return '- Wardrobe color by topic: use warm-light robes (white, cream, or light saffron).';
+    case 'chakra_balance':
+      return '- Wardrobe color by topic: use balanced spiritual tones (violet, indigo, or deep blue-violet).';
+    case 'pranayama':
+      return '- Wardrobe color by topic: use the proven channel look for this topic (green/teal or deep blue robe depending on the chosen top strip/hook style).';
+    default:
+      return '- Wardrobe color by topic: align robe color with topic energy and channel precedent.';
+  }
+}
+
+function getTopicIntentVisualRules(spec: SobRenderSpec): string[] {
+  switch (spec.topic) {
+    case 'sleep':
+    case 'anxiety_relief':
+      return [
+        '- Topic intent = calm relief: cooler blue/cyan highlights, softer glow, cleaner background falloff.',
+        '- Support icon style: calm-wave / moon / nervous-system motif with soft bloom (not aggressive fire glow).',
+      ];
+    case 'nitric_oxide':
+    case 'humming':
+      return [
+        '- Topic intent = science/biohack: crisp technical icon treatment, higher edge contrast, cleaner lines.',
+        '- Support icon style: resonance/wave/pulse motifs with precise glow and controlled neon accents.',
+      ];
+    case 'digestion':
+    case 'tummo':
+    case 'energy':
+    case 'immunity':
+      return [
+        '- Topic intent = activation/power: warmer accents, stronger contrast, brighter energy flares.',
+        '- Support icon style: heat/core/body-energy motifs with punchier glow and urgency.',
+      ];
+    case 'pranayama':
+      return [
+        '- Topic intent = transformational daily practice: cosmic depth + premium clarity with strong mobile readability.',
+        '- Support icon style: growth/inner-energy cue (sprout/seedling or breath-energy emblem) with clean gold rim.',
+      ];
+    case 'chakra_balance':
+      return [
+        '- Topic intent = alignment/spiritual energy: balanced purple-indigo accents and symmetric energy cues.',
+      ];
+    default:
+      return [
+        '- Topic intent: adapt icon and glow style to the emotional promise while preserving brand blocks.',
+      ];
+  }
+}
+
+function getCenteredHierarchyScaleRules(spec: SobRenderSpec): string[] {
+  if (spec.layoutStyle !== 'centered_cosmic_hero') return [];
+  return [
+    'MOBILE HIERARCHY LOCK (centered family):',
+    '- Main hook text must be the primary anchor at mobile size in BOTH modes (with-character and without-character).',
+    '- Aggressive size lock: hook text visual weight ≈ 2.6x–3.2x top-strip text.',
+    '- Hook text must occupy about 94–98% of the yellow bar width (with safe margins) before wrapping.',
+    '- Main hook line should target ~180–240px cap-height intent on a 720px canvas (very large, condensed, black text).',
+    '- Hook bar block should feel dominant and headline-led; reject under-sized headline treatment.',
+    '- CTA tag must also scale up strongly: increase CTA text and box size by roughly 45–70% vs baseline, with stronger white keyline.',
+    '- Keep hierarchy order: HOOK largest, CTA second, top strip third.',
+    '- Keep readability first: no over-stylized effects that reduce letter clarity.',
+  ];
+}
+
+function getCenteredCompositionProportionRules(spec: SobRenderSpec): string[] {
+  if (spec.layoutStyle !== 'centered_cosmic_hero') return [];
+  return [
+    'COMPOSITION PROPORTION LOCK (based on sob-centered-cosmic-hero reference):',
+    '- Top strip occupies roughly 10–12% of frame height.',
+    '- Main hook bar occupies roughly 30–36% of frame height and is visually dominant (must read as a tall gold title band).',
+    '- Lower composition zone occupies roughly 40–46% for subject or reserved character slot.',
+    '- CTA anchor sits in right-lower third (not detached corner micro-tag), with a noticeably larger red tag footprint.',
+    '- Support inset stays in left-lower quadrant with clear relation to hook/arrow where allowed.',
+  ];
+}
+
+function getCenteredMissingElementChecklist(spec: SobRenderSpec): string[] {
+  if (spec.layoutStyle !== 'centered_cosmic_hero') return [];
+  return [
+    'REFERENCE CHECKLIST (must include where topic/mode allows):',
+    '- Corner symbol treatment in top corners according to mode/topic rules.',
+    '- Support inset and arrow relationship (only when arrows are allowed).',
+    '- Subject or reserved center slot with clear depth separation from background.',
+    '- Background depth layers (star field + nebula + falloff), not flat wallpaper.',
+    '- Controlled aura/glow effects around key focal elements without text legibility loss.',
+  ];
+}
+
+function getCenteredTextReplicationRules(spec: SobRenderSpec): string[] {
+  if (spec.layoutStyle !== 'centered_cosmic_hero') return [];
+  return [
+    'TEXT REPLICATION LOCK (follow channel reference structure):',
+    '- 3-zone reading flow: LEFT visual hook (30-35%) → CENTER subject anchor (25-30%) → RIGHT text mass (35-45%).',
+    '- Top strip text (category label): top-center full width, about 10-12% frame height (~72-86px on 720h), bold condensed ALL CAPS, medium weight (not dominant).',
+    '- Main hook text block: upper-middle RIGHT, visually occupying about 60-75% width of canvas and 24-32% frame height.',
+    '- Main hook typography: ultra-bold condensed ALL CAPS, black fill with bright yellow-gold bar support, with strong black edge presence (~5-8px perceived stroke/outline effect) and subtle glow. Use ~180-240px headline intent on 720h canvas.',
+    '- Main hook must be the largest readable word cluster on screen (mobile-first).',
+    '- CTA tag (red button style): right mid-level, rounded rectangle, width about 14-20% of frame (~180-240px), height about 70-95px, red #FF3B30 with white bold text and tight padding.',
+    '- CTA text options remain short urgency phrases (e.g., TRY NOW / DO THIS DAILY / WATCH NOW).',
+    '- Text depth: allow slight overlap of headline layer into subject zone for depth, while preserving legibility.',
+    '- Keep spacing tight and clean: no large dead zones between top strip, hook block, and CTA.',
+  ];
+}
+
 function buildSobRenderPrompt(spec: SobRenderSpec): string {
   const layoutGeometryRules = getLayoutGeometryRules(spec);
   const backgroundSuppressionRules = getBackgroundSuppressionRules(spec);
   const hookLineBreakRule = getHookLineBreakRule(spec);
+  const topicIntentRules = getTopicIntentVisualRules(spec);
 
   const modeRules =
     spec.subjectType === 'abhi'
@@ -259,6 +378,8 @@ function buildSobRenderPrompt(spec: SobRenderSpec): string {
             `- Required pose guidance: ${spec.characterPose || 'seated breath teacher pose'}.`,
             '- Place Abhi CENTERED in the lower half of the frame (horizontal center), not in a side column.',
             '- Lower-edge anchor: subject sits just above bottom safe margin; torso large enough for mobile.',
+            getTopicCharacterWardrobeRule(spec),
+            '- Eyes must be clearly OPEN with a calm, alert gaze. Never closed eyes.',
             '- Show a clear, lit face (no anonymous silhouette).',
             '- Not a fashion portrait, not a sticker cutout, not a generic guru.',
           ]
@@ -272,6 +393,8 @@ function buildSobRenderPrompt(spec: SobRenderSpec): string {
             '- Keep Abhi in a seated or breath-teaching pose.',
             `- Required pose guidance: ${spec.characterPose || 'seated breath teacher pose'}.`,
             `- Place Abhi on the ${spec.subjectSide} 40-45% zone with natural body proportions.`,
+            getTopicCharacterWardrobeRule(spec),
+            '- Eyes must be clearly OPEN with a calm, alert gaze. Never closed eyes.',
             '- Not a fashion portrait, not a sticker cutout, not a generic guru.',
           ]
       : spec.layoutStyle === 'centered_cosmic_hero'
@@ -307,6 +430,9 @@ function buildSobRenderPrompt(spec: SobRenderSpec): string {
     ...layoutGeometryRules,
     '',
     ...getChannelStripColorLock(spec),
+    ...getCenteredHierarchyScaleRules(spec),
+    ...getCenteredCompositionProportionRules(spec),
+    ...getCenteredTextReplicationRules(spec),
     '',
     'TEXT SLOTS:',
     `- Top strip text: "${spec.topStripText}"`,
@@ -324,6 +450,8 @@ function buildSobRenderPrompt(spec: SobRenderSpec): string {
       : '- Arrow: not allowed.',
     '',
     ...backgroundSuppressionRules,
+    ...topicIntentRules,
+    ...getCenteredMissingElementChecklist(spec),
     '',
     ...modeRules,
     '',
