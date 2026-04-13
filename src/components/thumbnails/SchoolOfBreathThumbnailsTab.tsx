@@ -312,6 +312,8 @@ const VARIANT_LABELS: Array<{ id: string; label: string; description: string }> 
   { id: 'A', label: 'Channel Match', description: 'On-channel layout & colors' },
 ];
 
+const CUSTOM_TOPIC_VALUE = '__custom_topic__';
+
 export default function SchoolOfBreathThumbnailsTab({
   thumbnailDrafts,
   setThumbnailDrafts,
@@ -332,6 +334,8 @@ export default function SchoolOfBreathThumbnailsTab({
   const [suggestionRefreshKey, setSuggestionRefreshKey] = useState(0);
   const [lockUserText, setLockUserText] = useState(false);
   const [titleTouched, setTitleTouched] = useState(false);
+  const [isCustomTopicEnabled, setIsCustomTopicEnabled] = useState(false);
+  const [customTopicText, setCustomTopicText] = useState('');
 
   const [input, setInput] = useState<SchoolOfBreathThumbnailInput>(() =>
     getSchoolOfBreathDefaultInput()
@@ -370,7 +374,7 @@ export default function SchoolOfBreathThumbnailsTab({
     suggestSchoolOfBreathInput({
       topic: input.topic,
       mode: input.mode,
-      topicSeed: initialPrompt?.trim() || undefined,
+      topicSeed: customTopicText.trim() || initialPrompt?.trim() || undefined,
     })
       .then((suggestion) => {
         if (cancelled) return;
@@ -399,6 +403,7 @@ export default function SchoolOfBreathThumbnailsTab({
     suggestionRefreshKey,
     lockUserText,
     titleTouched,
+    customTopicText,
     hookOptions,
   ]);
 
@@ -411,6 +416,8 @@ export default function SchoolOfBreathThumbnailsTab({
     setPendingGeneratedDraft(null);
     setLockUserText(false);
     setTitleTouched(false);
+    setIsCustomTopicEnabled(false);
+    setCustomTopicText('');
   };
 
   const handleGeneratePlan = async () => {
@@ -418,7 +425,17 @@ export default function SchoolOfBreathThumbnailsTab({
     setIsPlanning(true);
 
     try {
-      const plan = await generateSchoolOfBreathThumbnailPlan(input);
+      const trimmedCustomTopic = customTopicText.trim();
+      const customTopicNote = trimmedCustomTopic
+        ? `CUSTOM TOPIC FOCUS: ${trimmedCustomTopic}`
+        : '';
+      const mergedSpecialNote = [input.specialNote?.trim() || '', customTopicNote]
+        .filter(Boolean)
+        .join(' | ');
+      const plan = await generateSchoolOfBreathThumbnailPlan({
+        ...input,
+        specialNote: mergedSpecialNote || input.specialNote,
+      });
       setPreviewPlan(plan);
       setModalStep('preview');
     } catch (error) {
@@ -911,10 +928,15 @@ export default function SchoolOfBreathThumbnailsTab({
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-stone-800">Topic</label>
                       <select
-                        value={input.topic}
+                        value={isCustomTopicEnabled ? CUSTOM_TOPIC_VALUE : input.topic}
                         onChange={(e) => {
                           const topic = e.target.value;
+                          if (topic === CUSTOM_TOPIC_VALUE) {
+                            setIsCustomTopicEnabled(true);
+                            return;
+                          }
                           if (!isSchoolOfBreathTopic(topic)) return;
+                          setIsCustomTopicEnabled(false);
                           const hooks = getSchoolOfBreathHookOptions(topic);
                           setInput((prev) => ({
                             ...prev,
@@ -933,7 +955,16 @@ export default function SchoolOfBreathThumbnailsTab({
                             {topic.label}
                           </option>
                         ))}
+                        <option value={CUSTOM_TOPIC_VALUE}>Custom topic (write your own)</option>
                       </select>
+                      {isCustomTopicEnabled && (
+                        <input
+                          value={customTopicText}
+                          onChange={(e) => setCustomTopicText(e.target.value)}
+                          placeholder="Write your custom topic..."
+                          className="w-full mt-2 px-4 py-3 rounded-xl border border-stone-200 bg-white text-stone-800 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400"
+                        />
+                      )}
                     </div>
 
                     <div className="space-y-2">
