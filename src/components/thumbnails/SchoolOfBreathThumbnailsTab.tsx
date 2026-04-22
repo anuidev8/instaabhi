@@ -331,7 +331,6 @@ export default function SchoolOfBreathThumbnailsTab({
   const [exportingId, setExportingId] = useState<string | null>(null);
   const [copiedSpecId, setCopiedSpecId] = useState<string | null>(null);
   const [modalError, setModalError] = useState<string | null>(null);
-  const [suggestionRefreshKey, setSuggestionRefreshKey] = useState(0);
   const [lockUserText, setLockUserText] = useState(false);
   const [titleTouched, setTitleTouched] = useState(false);
   const [isCustomTopicEnabled, setIsCustomTopicEnabled] = useState(false);
@@ -375,13 +374,18 @@ export default function SchoolOfBreathThumbnailsTab({
       topic: input.topic,
       mode: input.mode,
       topicSeed: customTopicText.trim() || initialPrompt?.trim() || undefined,
+      generateIdeas: isCustomTopicEnabled,
     })
       .then((suggestion) => {
         if (cancelled) return;
         setInput((prev) => ({
           ...prev,
           title: suggestion.title,
-          hook: hookOptions.includes(prev.hook) ? prev.hook : suggestion.hooks[0],
+          hook:
+            suggestion.hookOverride ||
+            (hookOptions.includes(prev.hook) ? prev.hook : suggestion.hooks[0]),
+          topStripOverride: suggestion.topStripOverride ?? prev.topStripOverride ?? '',
+          ctaOverride: suggestion.ctaOverride ?? prev.ctaOverride ?? '',
         }));
       })
       .catch((error) => {
@@ -400,17 +404,16 @@ export default function SchoolOfBreathThumbnailsTab({
     input.topic,
     input.mode,
     initialPrompt,
-    suggestionRefreshKey,
     lockUserText,
     titleTouched,
     customTopicText,
+    isCustomTopicEnabled,
     hookOptions,
   ]);
 
   const resetModal = () => {
     setInput(getSchoolOfBreathDefaultInput());
     setModalError(null);
-    setSuggestionRefreshKey(0);
     setModalStep('form');
     setPreviewPlan(null);
     setPendingGeneratedDraft(null);
@@ -418,6 +421,32 @@ export default function SchoolOfBreathThumbnailsTab({
     setTitleTouched(false);
     setIsCustomTopicEnabled(false);
     setCustomTopicText('');
+  };
+
+  const handleGenerateIdeas = async () => {
+    setModalError(null);
+    setIsSuggestingInput(true);
+    try {
+      const suggestion = await suggestSchoolOfBreathInput({
+        topic: input.topic,
+        mode: input.mode,
+        topicSeed: customTopicText.trim() || initialPrompt?.trim() || undefined,
+        generateIdeas: true,
+      });
+      setInput((prev) => ({
+        ...prev,
+        title: suggestion.title || prev.title,
+        hook: suggestion.hookOverride || prev.hook,
+        topStripOverride: suggestion.topStripOverride ?? prev.topStripOverride ?? '',
+        ctaOverride: suggestion.ctaOverride ?? prev.ctaOverride ?? '',
+      }));
+    } catch (error) {
+      setModalError(
+        error instanceof Error ? error.message : 'Failed to generate School of Breath ideas.'
+      );
+    } finally {
+      setIsSuggestingInput(false);
+    }
   };
 
   const handleGeneratePlan = async () => {
@@ -1071,11 +1100,7 @@ export default function SchoolOfBreathThumbnailsTab({
                             {lockUserText ? 'Locked' : 'Auto'}
                           </button>
                           <button
-                            onClick={() => {
-                              setTitleTouched(false);
-                              setLockUserText(false);
-                              setSuggestionRefreshKey((v) => v + 1);
-                            }}
+                            onClick={handleGenerateIdeas}
                             disabled={isSuggestingInput}
                             className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-700 disabled:opacity-60"
                           >
@@ -1084,7 +1109,7 @@ export default function SchoolOfBreathThumbnailsTab({
                             ) : (
                               <Sparkles className="w-3.5 h-3.5" />
                             )}
-                            Refresh
+                            Generate ideas
                           </button>
                         </div>
                       </div>

@@ -11,13 +11,26 @@ const MODEL_CANDIDATES = [
 ].filter(Boolean) as string[];
 
 const REFERENCE_ANALYSIS_MODEL = 'gemini-2.5-flash';
-const MAX_REFERENCE_IMAGES_FOR_ANALYSIS = 6;
+const MAX_APP_UI_REFERENCE_IMAGES_FOR_ANALYSIS = 6;
+const MAX_CHARACTER_REFERENCE_IMAGES_FOR_ANALYSIS = 4;
 const DEFAULT_DURATION_SECONDS = 30;
 const MIN_DURATION_SECONDS = 20;
 const MAX_DURATION_SECONDS = 45;
 const SCENE_DURATION_SECONDS = 6;
 const MIN_SCENE_COUNT = 4;
 const MAX_SCENE_COUNT = 6;
+
+function getAppUiReferenceImages(input: AppMarketingVideoInput): string[] {
+  return (Array.isArray(input.referenceImages) ? input.referenceImages : [])
+    .map((image) => String(image || '').trim())
+    .filter(Boolean);
+}
+
+function getCharacterReferenceImages(input: AppMarketingVideoInput): string[] {
+  return (Array.isArray(input.characterReferenceImages) ? input.characterReferenceImages : [])
+    .map((image) => String(image || '').trim())
+    .filter(Boolean);
+}
 
 function isModelNotFoundError(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error);
@@ -141,6 +154,10 @@ function defaultNegativePrompt(): string {
     'wrong app logo',
     'invented app interface',
     'fantasy environment',
+    'beauty filter skin',
+    'face swap',
+    'different protagonist each scene',
+    'ai-generated glamour portrait look',
   ].join(', ');
 }
 
@@ -171,11 +188,15 @@ async function blobToBase64(blob: Blob): Promise<string> {
 async function analyzeAppReferences(input: AppMarketingVideoInput): Promise<string> {
   try {
     const realStories = summarizeRealStories(input.realUserStories);
+    const appUiReferences = getAppUiReferenceImages(input);
+    const characterReferences = getCharacterReferenceImages(input);
     const contents: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [
       {
         text: `Analyze these app marketing references and return concise plain text:
 - app value proposition in one sentence
 - most compelling UI moments
+- strict UI continuity constraints (if screenshot references exist)
+- strict character identity constraints (if character references exist)
 - emotional tone and pacing suggestions for a viral ~30s short
 - continuity constraints for consistent look
 - strongest CTA angle
@@ -190,9 +211,22 @@ ${realStories}`,
       },
     ];
 
-    if (input.referenceImages.length > 0) {
-      const imageParts = input.referenceImages
-        .slice(0, MAX_REFERENCE_IMAGES_FOR_ANALYSIS)
+    if (characterReferences.length > 0) {
+      contents.push({
+        text: `Character identity anchors (${characterReferences.length} image(s)): preserve the exact same person in every generated scene.`,
+      });
+      const imageParts = characterReferences
+        .slice(0, MAX_CHARACTER_REFERENCE_IMAGES_FOR_ANALYSIS)
+        .map(dataUrlToInlineDataPart);
+      contents.push(...imageParts);
+    }
+
+    if (appUiReferences.length > 0) {
+      contents.push({
+        text: `App UI anchors (${appUiReferences.length} screenshot(s)): preserve exact app structure and labels from these screenshots.`,
+      });
+      const imageParts = appUiReferences
+        .slice(0, MAX_APP_UI_REFERENCE_IMAGES_FOR_ANALYSIS)
         .map(dataUrlToInlineDataPart);
       contents.push(...imageParts);
     }
@@ -235,10 +269,32 @@ ${realStories}`,
 
 function getSourceInstructions(input: AppMarketingVideoInput, analysisSummary: string): string {
   const realStories = summarizeRealStories(input.realUserStories);
+  const appUiReferenceCount = getAppUiReferenceImages(input).length;
+  const characterReferenceCount = getCharacterReferenceImages(input).length;
+
+  const appUiRules = appUiReferenceCount > 0
+    ? [
+        `- Use the uploaded app screenshots as strict UI source material (${appUiReferenceCount} image(s)).`,
+        '- Preserve original layout, icon shapes, button labels, and navigation structure.',
+        '- Never redesign, rebrand, or invent a different UI.',
+      ]
+    : [
+        '- Keep product visuals grounded and realistic; avoid fake or invented UI details.',
+      ];
+
+  const characterRules = characterReferenceCount > 0
+    ? [
+        `- Character lock: use the provided character references as strict identity anchors (${characterReferenceCount} image(s)).`,
+        '- Keep the exact same face identity across all scenes: same facial structure, skin tone, age band, hairline, and overall look.',
+        '- No face swaps, no identity drift, no “new actor” in later scenes.',
+      ]
+    : [
+        '- Keep one coherent protagonist style across scenes with realistic human behavior.',
+      ];
+
   return `Use uploaded app assets as the source of truth.
 - App screenshots/video must drive UI details in scene prompts.
-- Use the app screenshots exactly as UI source material. Preserve original layout, icon shapes, button labels, and navigation structure.
-- Never redesign, rebrand, or invent a different UI.
+- Natural cinematic realism only: believable lighting, realistic skin texture, and grounded human movement.
 - Keep a consistent visual language across all scenes.
 - Video must feel native for Instagram Reels + YouTube Shorts.
 - Make transitions energetic but clean.
@@ -246,6 +302,7 @@ function getSourceInstructions(input: AppMarketingVideoInput, analysisSummary: s
 - Use ONLY the provided real user stories as narrative anchors.
 - Do not invent fictional names, fake testimonials, or unrealistic outcomes.
 - Structure story as: real problem -> real app usage b-roll -> real relief/result -> CTA.
+${[...appUiRules, ...characterRules].join('\n')}
 Real user stories (must be used):
 ${realStories}
 ${analysisSummary ? `\nReference analysis summary (must use):\n${analysisSummary}` : ''}`;
@@ -255,7 +312,9 @@ function normalizeScenes(
   rawScenes: unknown,
   sceneCount: number,
   appName: string,
-  hasReferenceVideo: boolean
+  hasReferenceVideo: boolean,
+  hasCharacterReferences: boolean,
+  hasAppUiReferences: boolean
 ): ReelScene[] {
   const list = Array.isArray(rawScenes) ? rawScenes : [];
   const scenes: ReelScene[] = [];
@@ -278,7 +337,15 @@ function normalizeScenes(
       narrative: String(raw.narrative || `Scene ${index + 1}: show a real user moment and app value in action.`).trim(),
       visualPrompt: String(
         raw.visualPrompt ||
-          `Vertical 9:16 documentary-style app marketing scene for ${appName}. Real human b-roll (hands/face/environment), real-world lighting, and natural motion blur. Show the actual app screenshots inside a real phone on camera; preserve UI layout and labels exactly.`
+          `Vertical 9:16 documentary-style app marketing scene for ${appName}. Real human b-roll (hands/face/environment), real-world lighting, and natural motion blur. ${
+            hasCharacterReferences
+              ? 'Use the exact same protagonist face identity from reference character images in every scene.'
+              : 'Keep one coherent protagonist look across scenes.'
+          } ${
+            hasAppUiReferences
+              ? 'Show the real app screenshots inside a real phone on camera; preserve UI layout and labels exactly.'
+              : 'Keep product interactions realistic and do not invent fake app UI.'
+          }`
       ).trim(),
       negativePrompt: String(raw.negativePrompt || defaultNegativePrompt()).trim(),
       sourceStart: hasReferenceVideo ? sourceStart : undefined,
@@ -337,6 +404,8 @@ export async function generateAppMarketingVideoPlan(input: AppMarketingVideoInpu
   const boundedDuration = clampDuration(input.targetDurationSeconds);
   const sceneCount = getSceneCount(boundedDuration);
   const normalizedDurationSeconds = getNormalizedDuration(sceneCount);
+  const hasCharacterReferences = getCharacterReferenceImages(input).length > 0;
+  const hasAppUiReferences = getAppUiReferenceImages(input).length > 0;
 
   const analysisSummary = await analyzeAppReferences(input);
   const sourceInstructions = getSourceInstructions(input, analysisSummary);
@@ -364,6 +433,11 @@ CREATIVE REQUIREMENTS
 - Include one strong hook in first 2 seconds and one clear CTA in final scene
 - Apply ethical marketing psychology: immediate benefit framing in the hook, progress cues in middle scenes, and social proof only from provided real cases
 - Human-first promotional style: include real people/hands interacting with the app in almost every scene
+- ${
+    hasCharacterReferences
+      ? 'Character continuity lock: preserve the exact same face identity in every scene from the provided character references'
+      : 'Character continuity: keep one protagonist identity and appearance across all scenes'
+  }
 - Camera choreography must vary by scene: push-in, over-shoulder, three-quarter angle, parallax pan, soft zoom out
 - Use minimal animated infographic micro-interactions (breath ring pulse, progress bar fill, card reveal, gentle tap ripple)
 - Keep text overlays short (2-6 words), elegant, and never cluttered
@@ -448,7 +522,9 @@ Return valid JSON only:
     data.scenes,
     sceneCount,
     input.appName,
-    Boolean(input.referenceVideoUrl?.trim())
+    Boolean(input.referenceVideoUrl?.trim()),
+    hasCharacterReferences,
+    hasAppUiReferences
   );
 
   return {

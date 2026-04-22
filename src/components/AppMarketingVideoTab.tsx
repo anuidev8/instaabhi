@@ -85,12 +85,14 @@ export default function AppMarketingVideoTab({
   const [language, setLanguage] = useState('en');
 
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
+  const [characterReferenceImages, setCharacterReferenceImages] = useState<string[]>([]);
   const [referenceVideoUrl, setReferenceVideoUrl] = useState('');
   const [referenceVideoKind, setReferenceVideoKind] = useState<VideoReferenceKind>('DIRECT_URL');
   const [uploadingReferenceVideo, setUploadingReferenceVideo] = useState(false);
   const [uploadedVideoName, setUploadedVideoName] = useState('');
 
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const characterImageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
   useWakeLock(isGeneratingPlan || !!generatingVideoId);
@@ -117,6 +119,7 @@ export default function AppMarketingVideoTab({
     setTargetDuration(30);
     setLanguage('en');
     setReferenceImages([]);
+    setCharacterReferenceImages([]);
     setReferenceVideoUrl('');
     setReferenceVideoKind('DIRECT_URL');
     setUploadedVideoName('');
@@ -152,6 +155,30 @@ export default function AppMarketingVideoTab({
       });
 
     if (imageInputRef.current) imageInputRef.current.value = '';
+  };
+
+  const handleCharacterReferenceImagesUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files) return;
+
+    const files: File[] = Array.from(event.target.files as FileList).slice(0, 4);
+    const readers = files.map(
+      (file) =>
+        new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        })
+    );
+
+    Promise.all(readers)
+      .then((images) => setCharacterReferenceImages(images))
+      .catch((error) => {
+        console.error('Failed to read character reference images:', error);
+        setModalError('Failed to process character reference images.');
+      });
+
+    if (characterImageInputRef.current) characterImageInputRef.current.value = '';
   };
 
   const handleReferenceVideoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -208,6 +235,7 @@ export default function AppMarketingVideoTab({
       targetDurationSeconds: targetDuration,
       language,
       referenceImages,
+      characterReferenceImages: characterReferenceImages.length > 0 ? characterReferenceImages : undefined,
       referenceVideoUrl: referenceVideoUrl.trim() || undefined,
       referenceVideoKind: referenceVideoUrl.trim() ? referenceVideoKind : undefined,
     };
@@ -227,6 +255,7 @@ export default function AppMarketingVideoTab({
         normalizedDurationSeconds: plan.normalizedDurationSeconds,
         sceneVideoProvider: 'gemini',
         referenceImages: input.referenceImages,
+        characterReferenceImages: input.characterReferenceImages,
         referenceVideoUrl: input.referenceVideoUrl,
         referenceVideoKind: input.referenceVideoKind,
         headline: plan.headline,
@@ -255,14 +284,26 @@ export default function AppMarketingVideoTab({
       prev.map((item) => (item.id === draft.id ? { ...item, status: 'generating', errorMessage: undefined } : item))
     );
 
+    const characterReferences = draft.characterReferenceImages ?? [];
+    const hasCharacterReferences = characterReferences.length > 0;
+    const referenceImageIntent: VideoReelInput['referenceImageIntent'] = draft.referenceVideoUrl
+      ? 'general'
+      : hasCharacterReferences
+        ? (draft.referenceImages.length > 0 ? 'app_ui_plus_character_face' : 'character_face_exact')
+        : 'app_ui_exact';
+
+    const primaryReferenceImages = hasCharacterReferences ? characterReferences : draft.referenceImages;
+
     const videoReelInput: VideoReelInput = {
       prompt: `${draft.appName}: ${draft.campaignGoal}\nReal user stories: ${draft.realUserStories || 'n/a'}`,
       mode: draft.referenceVideoUrl ? 'FROM_REFERENCE_VIDEO' : 'FROM_IMAGES',
       referenceVideoUrl: draft.referenceVideoUrl,
       referenceVideoKind: draft.referenceVideoKind,
       referenceVideoTitle: `${draft.appName} app demo`,
-      referenceImageIntent: draft.referenceVideoUrl ? 'general' : 'app_ui_exact',
-      referenceImages: draft.referenceImages,
+      referenceImageIntent,
+      referenceImages: primaryReferenceImages,
+      appUiReferenceImages: draft.referenceImages,
+      characterReferenceImages: characterReferences,
       targetDurationSeconds: draft.normalizedDurationSeconds || draft.targetDurationSeconds,
       language: draft.language,
     };
@@ -279,7 +320,11 @@ export default function AppMarketingVideoTab({
       cameraDirection:
         'Use varied cinematic angles per scene: push-in hook, over-shoulder interaction shot, three-quarter orbit, subtle parallax pan, and soft zoom-out CTA finish. Keep movement smooth and believable.',
       humanDirection:
-        `Human-first promo style based on provided real use-cases. Do not invent fictional personas or fake outcomes. Use realistic people/hands and daily-life behavior. Real user stories anchor: ${draft.realUserStories || 'none provided'}`,
+        `Human-first promo style based on provided real use-cases. Do not invent fictional personas or fake outcomes. Use realistic people/hands and daily-life behavior. ${
+          hasCharacterReferences
+            ? 'Character continuity lock: preserve the exact same face identity from uploaded character references in all scenes.'
+            : 'Maintain one coherent protagonist identity across scenes.'
+        } Real user stories anchor: ${draft.realUserStories || 'none provided'}`,
       microInteractionDirection:
         'Add subtle infographic/UI micro-interactions only: breathing ring pulse, progress fill, gentle card reveal, tap ripple. Keep motion minimal and elegant.',
     };
@@ -347,7 +392,7 @@ export default function AppMarketingVideoTab({
         <div>
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-stone-900">App Marketing Video Generation</h2>
           <p className="text-stone-500 mt-1 text-sm sm:text-base">
-            Upload app screenshots/video, let Gemini Vision plan the story, generate scenes with Gemini Veo, then join final video + voiceover with Fal.
+            Upload app screenshots/video, optionally add character face references for identity lock, let Gemini Vision plan the story, then render with Gemini Veo + Fal.
           </p>
         </div>
         <button
@@ -411,6 +456,11 @@ export default function AppMarketingVideoTab({
                       {LANGUAGES.find((item) => item.code === draft.language)?.label ?? draft.language}
                     </span>
                     <span>Scene model: <span className="font-medium">Gemini Veo (latest)</span></span>
+                    {draft.characterReferenceImages?.length ? (
+                      <span>
+                        Character lock: <span className="font-medium">{draft.characterReferenceImages.length} ref</span>
+                      </span>
+                    ) : null}
                   </div>
                 </div>
                 <button
@@ -573,7 +623,7 @@ export default function AppMarketingVideoTab({
                 <div className="min-w-0">
                   <h3 className="text-lg sm:text-xl font-bold text-stone-900">New App Marketing Video</h3>
                   <p className="text-stone-500 text-sm mt-1">
-                    Upload app assets, generate the plan with Gemini Vision, generate scenes with Gemini Veo, then join with ElevenLabs voiceover.
+                    Upload app assets, optionally add character face anchors, generate the plan with Gemini Vision, then render scenes with Gemini Veo + voiceover merge.
                   </p>
                 </div>
                 <button
@@ -701,6 +751,42 @@ export default function AppMarketingVideoTab({
                   >
                     <Upload className="w-4 h-4" />
                     {referenceImages.length > 0 ? 'Change Screenshots' : 'Upload Screenshots'}
+                  </button>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-stone-700 mb-1.5">
+                    Character Face References (optional, up to 4)
+                  </label>
+                  <p className="text-xs text-stone-500 mb-2">
+                    Upload clear face photos to keep the exact same person across all generated scenes.
+                  </p>
+                  <input
+                    ref={characterImageInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={handleCharacterReferenceImagesUpload}
+                  />
+                  {characterReferenceImages.length > 0 && (
+                    <div className="grid grid-cols-4 gap-2 mb-3">
+                      {characterReferenceImages.map((image, index) => (
+                        <img
+                          key={`character-${index}`}
+                          src={image}
+                          alt={`character reference ${index + 1}`}
+                          className="w-full aspect-square object-cover rounded-lg border border-emerald-200"
+                        />
+                      ))}
+                    </div>
+                  )}
+                  <button
+                    onClick={() => characterImageInputRef.current?.click()}
+                    className="w-full py-2.5 border border-dashed border-stone-300 hover:border-emerald-400 hover:bg-emerald-50 text-stone-600 hover:text-emerald-700 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Upload className="w-4 h-4" />
+                    {characterReferenceImages.length > 0 ? 'Change Character References' : 'Upload Character References'}
                   </button>
                 </div>
 

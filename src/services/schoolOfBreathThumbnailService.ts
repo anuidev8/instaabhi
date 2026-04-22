@@ -1,4 +1,4 @@
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, Type } from '@google/genai';
 import {
   DEFAULT_SOB_VARIANT_COUNT,
   buildSobPromptVariantsFromRenderSpec,
@@ -32,9 +32,16 @@ const IMAGE_MODEL =
 const IMAGE_MODEL_CANDIDATES = Array.from(
   new Set([IMAGE_MODEL, 'gemini-3.1-flash-image-preview', 'gemini-3-pro-image-preview'])
 );
+const TEXT_MODEL_CANDIDATES = [
+  (process.env.GEMINI_MODEL_POST as string | undefined)?.trim(),
+  (process.env.GEMINI_MODEL_DRAFT as string | undefined)?.trim(),
+  'gemini-2.5-pro',
+  'gemini-2.0-flash',
+].filter(Boolean) as string[];
 const IMAGE_GENERATION_MAX_ATTEMPTS = 2;
 const MAX_ABHI_REFERENCE_IMAGES = 4;
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+type GenerateContentParams = Parameters<typeof ai.models.generateContent>[0];
 
 type InlineImagePart = {
   inlineData: {
@@ -63,6 +70,9 @@ export interface SchoolOfBreathThumbnailSuggestion {
   title: string;
   hooks: [string, string, string];
   topLine: string;
+  hookOverride?: string;
+  topStripOverride?: string;
+  ctaOverride?: string;
 }
 
 export const SOB_THUMBNAIL_TOPICS = getSobTopics();
@@ -182,24 +192,137 @@ function buildSuggestedTitle(input: {
   return `${toTitleCase(input.hook)} | ${topicLabel} Breathwork | ${modeSuffix}`;
 }
 
+function isModelNotFoundError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes('not found') || message.includes('NOT_FOUND');
+}
+
+async function generateTextWithModelFallback(
+  params: Omit<GenerateContentParams, 'model'>
+) {
+  let lastError: unknown;
+  for (const model of TEXT_MODEL_CANDIDATES) {
+    try {
+      return await ai.models.generateContent({ ...params, model });
+    } catch (error) {
+      lastError = error;
+      if (!isModelNotFoundError(error)) throw error;
+    }
+  }
+  throw lastError ?? new Error('No Gemini text model candidates were configured');
+}
+
+function normalizeTitle(value: string): string {
+  return value.replace(/\s+/g, ' ').trim();
+}
+
+function sanitizeUppercaseWords(value: string | undefined, maxWords: number): string {
+  if (!value) return '';
+
+  const cleaned = value
+    .replace(/[\r\n]+/g, ' ')
+    .replace(/[^A-Za-z0-9/&'\- ]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toUpperCase();
+
+  if (!cleaned) return '';
+  return cleaned.split(' ').filter(Boolean).slice(0, maxWords).join(' ');
+}
+
 export async function suggestSchoolOfBreathInput(params: {
   topic: SobTopicKey;
   mode: SobMode;
   topicSeed?: string;
+  generateIdeas?: boolean;
 }): Promise<SchoolOfBreathThumbnailSuggestion> {
+  const topicConfig = getSobTopicConfig(params.topic);
   const hooks = getSobHookOptions(params.topic);
-  const title = buildSuggestedTitle({
+  const fallbackTitle = buildSuggestedTitle({
     topic: params.topic,
     hook: hooks[0],
     mode: params.mode,
     seed: params.topicSeed,
   });
+  const maxHookWords = Math.max(1, getSobPromptContext(params.topic).style.text.maxWords || 6);
 
-  return {
-    title,
-    hooks,
-    topLine: getSobTopicConfig(params.topic).topLine,
-  };
+  if (!params.generateIdeas || !GEMINI_API_KEY) {
+    return {
+      title: fallbackTitle,
+      hooks,
+      topLine: topicConfig.topLine,
+    };
+  }
+
+  try {
+    const response = await generateTextWithModelFallback({
+      contents: [
+        `Topic key: ${params.topic}`,
+        `Topic label: ${topicConfig.label}`,
+        `Mode: ${params.mode}`,
+        `Default top strip: ${topicConfig.topLine}`,
+        `Default CTA: ${topicConfig.cta}`,
+        `Approved hooks: ${hooks.join(' | ')}`,
+        params.topicSeed?.trim() ? `Topic seed: ${params.topicSeed.trim()}` : null,
+      ]
+        .filter(Boolean)
+        .join('\n'),
+      config: {
+        systemInstruction: `You are the School of Breath thumbnail idea strategist.
+
+Return strict JSON only.
+
+Rules:
+- Keep ideas aligned to breathwork/meditation and the selected topic.
+- hook: UPPERCASE, 1-${maxHookWords} words, punchy and mobile-readable.
+- topStrip: UPPERCASE, 2-5 words.
+- cta: UPPERCASE, 1-4 words.
+- title: YouTube-ready, clickworthy, no emojis.
+- Prefer fresh wording instead of simply repeating approved hooks.
+- Avoid medical guarantees or extreme claims.`,
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            title: { type: Type.STRING },
+            hook: { type: Type.STRING },
+            topStrip: { type: Type.STRING },
+            cta: { type: Type.STRING },
+          },
+          required: ['title', 'hook', 'topStrip', 'cta'],
+        },
+      },
+    });
+
+    const parsed = response.text ? (JSON.parse(response.text) as Partial<Record<string, string>>) : {};
+    const hookOverride = sanitizeUppercaseWords(parsed.hook, maxHookWords);
+    const topStripOverride = sanitizeUppercaseWords(parsed.topStrip, 5);
+    const ctaOverride = sanitizeUppercaseWords(parsed.cta, 4);
+    const title = normalizeTitle(
+      parsed.title ||
+        buildSuggestedTitle({
+          topic: params.topic,
+          hook: hookOverride || hooks[0],
+          mode: params.mode,
+          seed: params.topicSeed,
+        })
+    );
+
+    return {
+      title: title || fallbackTitle,
+      hooks,
+      topLine: topicConfig.topLine,
+      hookOverride: hookOverride || undefined,
+      topStripOverride: topStripOverride || undefined,
+      ctaOverride: ctaOverride || undefined,
+    };
+  } catch {
+    return {
+      title: fallbackTitle,
+      hooks,
+      topLine: topicConfig.topLine,
+    };
+  }
 }
 
 function buildRenderSpec(

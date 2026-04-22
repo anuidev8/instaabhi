@@ -125,8 +125,16 @@ export interface VideoReelInput {
   referenceVideoKind?: VideoReferenceKind;
   referenceVideoTitle?: string;
   /** How uploaded reference images should be interpreted by the scene generator. */
-  referenceImageIntent?: 'general' | 'app_ui_exact';
+  referenceImageIntent?:
+    | 'general'
+    | 'app_ui_exact'
+    | 'character_face_exact'
+    | 'app_ui_plus_character_face';
   referenceImages?: string[]; // base64 data URLs
+  /** Optional explicit app UI reference set (screenshots) for multimodal analysis/prompting. */
+  appUiReferenceImages?: string[];
+  /** Optional explicit character identity reference set (same person across scenes). */
+  characterReferenceImages?: string[];
   targetDurationSeconds: number;
   language: string;
 }
@@ -182,7 +190,9 @@ export interface AppMarketingVideoInput {
   appUrl?: string;
   targetDurationSeconds: number;
   language: string;
-  referenceImages: string[]; // base64 data URLs
+  referenceImages: string[]; // app UI screenshots (base64 data URLs)
+  /** Optional face identity anchors for strict character continuity in generated scenes. */
+  characterReferenceImages?: string[];
   referenceVideoUrl?: string;
   referenceVideoKind?: VideoReferenceKind;
 }
@@ -201,7 +211,8 @@ export interface AppMarketingVideoDraft {
   targetDurationSeconds: number;
   normalizedDurationSeconds: number;
   sceneVideoProvider: SceneVideoProvider;
-  referenceImages: string[];
+  referenceImages: string[]; // app UI screenshots
+  characterReferenceImages?: string[];
   referenceVideoUrl?: string;
   referenceVideoKind?: VideoReferenceKind;
   headline: string;

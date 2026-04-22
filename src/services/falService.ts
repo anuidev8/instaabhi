@@ -64,6 +64,8 @@ const GEMINI_VIDEO_API_BASE =
 const DEFAULT_ELEVENLABS_MODEL_ID = 'eleven_multilingual_v2';
 const REFERENCE_ANALYSIS_MODEL = 'gemini-2.5-flash';
 const MAX_REFERENCE_IMAGES_FOR_ANALYSIS = 3;
+const MAX_APP_UI_REFERENCE_IMAGES_FOR_ANALYSIS = 4;
+const MAX_CHARACTER_REFERENCE_IMAGES_FOR_ANALYSIS = 4;
 const TARGET_VIDEO_FPS = 30;
 const TARGET_VIDEO_WIDTH = 1080;
 const TARGET_VIDEO_HEIGHT = 1920;
@@ -143,6 +145,63 @@ export async function uploadLocalReferenceVideo(file: File): Promise<string> {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+function normalizeDataUrlReferences(values?: string[]): string[] {
+  return (Array.isArray(values) ? values : [])
+    .map((value) => String(value || '').trim())
+    .filter(Boolean);
+}
+
+function getCharacterReferenceImages(videoReelInput?: VideoReelInput): string[] {
+  if (!videoReelInput) return [];
+
+  const explicitCharacterRefs = normalizeDataUrlReferences(videoReelInput.characterReferenceImages);
+  if (explicitCharacterRefs.length > 0) return explicitCharacterRefs;
+
+  if (
+    videoReelInput.referenceImageIntent === 'character_face_exact' ||
+    videoReelInput.referenceImageIntent === 'app_ui_plus_character_face'
+  ) {
+    return normalizeDataUrlReferences(videoReelInput.referenceImages);
+  }
+
+  return [];
+}
+
+function getAppUiReferenceImages(videoReelInput?: VideoReelInput): string[] {
+  if (!videoReelInput) return [];
+
+  const explicitAppUiRefs = normalizeDataUrlReferences(videoReelInput.appUiReferenceImages);
+  if (explicitAppUiRefs.length > 0) return explicitAppUiRefs;
+
+  if (videoReelInput.referenceImageIntent === 'app_ui_exact') {
+    return normalizeDataUrlReferences(videoReelInput.referenceImages);
+  }
+
+  return [];
+}
+
+function pickSceneReferenceFrameDataUrl(videoReelInput: VideoReelInput, sceneIndex: number): string | undefined {
+  if (videoReelInput.mode !== 'FROM_IMAGES') return undefined;
+
+  const characterRefs = getCharacterReferenceImages(videoReelInput);
+  if (characterRefs.length > 0) {
+    // Use the first strict face anchor on every scene to reduce identity drift.
+    return characterRefs[0];
+  }
+
+  const appUiRefs = getAppUiReferenceImages(videoReelInput);
+  if (appUiRefs.length > 0 && videoReelInput.referenceImageIntent === 'app_ui_exact') {
+    return appUiRefs[sceneIndex % appUiRefs.length];
+  }
+
+  const genericRefs = normalizeDataUrlReferences(videoReelInput.referenceImages);
+  if (genericRefs.length > 0 && videoReelInput.referenceImageIntent === 'general') {
+    return genericRefs[sceneIndex % genericRefs.length];
+  }
+
+  return undefined;
+}
+
 /**
  * Builds the per-scene video prompt used for text-to-video generation.
  * Exported so it can be reused / displayed in the UI.
@@ -159,18 +218,38 @@ export function buildSceneVideoPrompt(
       return 'Character anchor: derive identity from the topic and narrative only; keep one consistent main character across all scenes.';
     }
 
+    const characterRefs = getCharacterReferenceImages(videoReelInput);
+    const appUiRefs = getAppUiReferenceImages(videoReelInput);
+    const genericRefs = normalizeDataUrlReferences(videoReelInput.referenceImages);
+
     if (videoReelInput.mode === 'FROM_IMAGES') {
-      const imageCount = videoReelInput.referenceImages?.length ?? 0;
       if (videoReelInput.referenceImageIntent === 'app_ui_exact') {
+        const imageCount = appUiRefs.length || genericRefs.length;
         return `UI anchor: use uploaded app screenshot(s) as strict UI source (${imageCount} image(s)). Keep app structure exact: same information architecture, same button hierarchy, same label style, same layout logic. Place those real screens inside realistic phone interactions; do not redesign or invent a different app UI.`;
       }
-      return `Character anchor: use the uploaded reference image(s) as the primary identity source (${imageCount} image(s)). Preserve the same face, age range, skin tone, hair, body shape, and styling across every scene.`;
+      if (videoReelInput.referenceImageIntent === 'app_ui_plus_character_face') {
+        return `Dual anchor mode:
+- Character identity anchor: strict same-face lock from uploaded character reference image(s) (${characterRefs.length} image(s)). Keep identical facial structure, skin tone, hairline, and age band in every scene.
+- App UI anchor: preserve uploaded app screenshot fidelity (${appUiRefs.length} image(s)); keep real layout and labels without redesign.
+- Cinematic realism: natural skin texture, natural movement, and believable lighting only (no glamour filter look).`;
+      }
+      if (videoReelInput.referenceImageIntent === 'character_face_exact') {
+        return `Character anchor: use uploaded reference image(s) as strict identity source (${characterRefs.length || genericRefs.length} image(s)). Keep the exact same face across every scene (no face swap, no identity drift), while maintaining natural documentary-style behavior.`;
+      }
+      return `Character anchor: use uploaded reference image(s) as guidance (${genericRefs.length} image(s)). Preserve one coherent protagonist identity across every scene.`;
     }
 
     if (videoReelInput.mode === 'FROM_REFERENCE_VIDEO') {
       const sourceKind = videoReelInput.referenceVideoKind || 'DIRECT_URL';
       const sourceTitle = videoReelInput.referenceVideoTitle || videoReelInput.prompt;
-      return `Character anchor: use the reference video style and subject identity as baseline. Keep the same protagonist look and energy while adapting to this new script.
+      const characterAnchorLine = characterRefs.length > 0
+        ? `\nAdditional character anchors provided (${characterRefs.length} image(s)): lock face identity to those references as highest priority.`
+        : '';
+      const appUiAnchorLine = appUiRefs.length > 0
+        ? `\nAdditional app UI anchors provided (${appUiRefs.length} image(s)): preserve app layout and labels from those screenshots.`
+        : '';
+      return `Character anchor: use the reference video style and subject identity as baseline. Keep the same protagonist look and energy while adapting to this new script.${characterAnchorLine}
+${appUiAnchorLine}
 Reference type: ${sourceKind}
 Reference title/context: ${sourceTitle}
 Reference video URL: ${videoReelInput.referenceVideoUrl || 'not provided'}.`;
@@ -217,6 +296,7 @@ Rules:
 - Dynamic but calm pacing: smooth motion, no extreme camera shake.
 - Keep subject and style consistent across scenes.
 - Keep realism high: documentary-style behavior and believable environments; avoid fantasy or made-up character styling.
+- Natural cinematic realism only: realistic skin pores, natural facial proportions, natural fabric/lighting response, no beautification filter look.
 - ${humanDirection}
 - ${cameraDirection}
 - ${styleDirection}
@@ -1272,34 +1352,76 @@ async function analyzeReferenceContext(videoReelInput: VideoReelInput): Promise<
   if (!gemini) return '';
 
   try {
-    if (videoReelInput.mode === 'FROM_IMAGES' && (videoReelInput.referenceImages?.length ?? 0) > 0) {
-      const imageParts = videoReelInput.referenceImages!
-        .slice(0, MAX_REFERENCE_IMAGES_FOR_ANALYSIS)
-        .map(dataUrlToInlineDataPart);
+    if (videoReelInput.mode === 'FROM_IMAGES') {
+      const characterRefs = getCharacterReferenceImages(videoReelInput);
+      const appUiRefs = getAppUiReferenceImages(videoReelInput);
+      const genericRefs = normalizeDataUrlReferences(videoReelInput.referenceImages);
+      const hasExplicitReferenceGroups = characterRefs.length > 0 || appUiRefs.length > 0;
+      const fallbackGenericRefs = hasExplicitReferenceGroups ? [] : genericRefs;
 
-      const response = await gemini.models.generateContent({
-        model: REFERENCE_ANALYSIS_MODEL,
-        contents: [
+      if (characterRefs.length > 0 || appUiRefs.length > 0 || fallbackGenericRefs.length > 0) {
+        const contents: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [
           {
             text: `Analyze these reference images for video continuity.
 Return concise plain text with:
-- Main character profile (face, age, hair, skin tone, body type, clothing)
+- Main character profile (face geometry, skin tone, age band, hairline, expression baseline)
+- Face continuity lock rules to preserve the same person in all scenes
+- App UI continuity rules (if app screenshots are provided)
 - Visual style and mood
 - Environment/props
 - Continuity rules across scenes
 - Storyline direction for this prompt: "${videoReelInput.prompt}"`,
           },
-          ...imageParts,
-        ],
-      });
+        ];
 
-      return (response.text || '').trim();
+        if (characterRefs.length > 0) {
+          contents.push({
+            text: `Character anchor set (${characterRefs.length} image(s)): treat these as strict identity references for same-face continuity.`,
+          });
+          contents.push(
+            ...characterRefs
+              .slice(0, MAX_CHARACTER_REFERENCE_IMAGES_FOR_ANALYSIS)
+              .map(dataUrlToInlineDataPart)
+          );
+        }
+
+        if (appUiRefs.length > 0) {
+          contents.push({
+            text: `App UI anchor set (${appUiRefs.length} image(s)): preserve UI layout, labels, and interaction logic exactly.`,
+          });
+          contents.push(
+            ...appUiRefs
+              .slice(0, MAX_APP_UI_REFERENCE_IMAGES_FOR_ANALYSIS)
+              .map(dataUrlToInlineDataPart)
+          );
+        }
+
+        if (fallbackGenericRefs.length > 0) {
+          contents.push({
+            text: `General visual references (${fallbackGenericRefs.length} image(s)).`,
+          });
+          contents.push(
+            ...fallbackGenericRefs
+              .slice(0, MAX_REFERENCE_IMAGES_FOR_ANALYSIS)
+              .map(dataUrlToInlineDataPart)
+          );
+        }
+
+        const response = await gemini.models.generateContent({
+          model: REFERENCE_ANALYSIS_MODEL,
+          contents,
+        });
+
+        return (response.text || '').trim();
+      }
     }
 
     if (videoReelInput.mode === 'FROM_REFERENCE_VIDEO' && videoReelInput.referenceVideoUrl) {
       const videoUrl = videoReelInput.referenceVideoUrl;
       const sourceKind = videoReelInput.referenceVideoKind || 'DIRECT_URL';
       const sourceTitle = videoReelInput.referenceVideoTitle || videoReelInput.prompt;
+      const characterRefs = getCharacterReferenceImages(videoReelInput);
+      const appUiRefs = getAppUiReferenceImages(videoReelInput);
       const contents: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [
         {
           text: `Analyze this reference video and propose a NEW continuation storyline for short-form content.
@@ -1318,6 +1440,28 @@ Prompt: "${videoReelInput.prompt}"
 Reference URL: ${videoUrl}`,
         },
       ];
+
+      if (characterRefs.length > 0) {
+        contents.push({
+          text: `Additional character anchors (${characterRefs.length} image(s)): preserve this exact face identity across all generated scenes.`,
+        });
+        contents.push(
+          ...characterRefs
+            .slice(0, MAX_CHARACTER_REFERENCE_IMAGES_FOR_ANALYSIS)
+            .map(dataUrlToInlineDataPart)
+        );
+      }
+
+      if (appUiRefs.length > 0) {
+        contents.push({
+          text: `Additional app UI anchors (${appUiRefs.length} image(s)): preserve real app layout and labels.`,
+        });
+        contents.push(
+          ...appUiRefs
+            .slice(0, MAX_APP_UI_REFERENCE_IMAGES_FOR_ANALYSIS)
+            .map(dataUrlToInlineDataPart)
+        );
+      }
 
       try {
         const videoRes = await fetch(videoUrl);
@@ -1424,13 +1568,7 @@ export async function generateReelVideo(payload: FalJobPayload): Promise<FalJobR
           videoReelInput,
           referenceAnalysis
         );
-        const referenceFrameDataUrl = (() => {
-          if (videoReelInput.mode !== 'FROM_IMAGES') return undefined;
-          const images = videoReelInput.referenceImages || [];
-          if (images.length === 0) return undefined;
-          if (videoReelInput.referenceImageIntent !== 'app_ui_exact') return undefined;
-          return images[index % images.length];
-        })();
+        const referenceFrameDataUrl = pickSceneReferenceFrameDataUrl(videoReelInput, index);
         return await generateSceneVideoWithProvider(
           provider,
           scenePrompt,
