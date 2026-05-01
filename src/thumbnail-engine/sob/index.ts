@@ -1,10 +1,21 @@
 import hooksData from './hooks.json';
-import { buildSobRenderSpec, deriveDefaultLayoutStyle } from './renderSpec';
+import {
+  buildSobRenderSpec,
+  deriveDefaultLayoutStyle,
+  deriveHookLineBreak,
+  deriveViralHookBreak,
+  isViralTypographicLayout,
+} from './renderSpec';
 import type { SobRenderSpec } from './renderSpec';
 import styleData from './style.json';
 import topicsData from './topics.json';
 import { getAbhiReferenceImageUrls, ABHI_REFERENCE_IMAGES, filterAbhiReferencesByTags } from './abhiReferences';
-import { getLayoutCompositionReferenceUrl } from './layoutReferenceImages';
+import {
+  getLayoutCompositionReferenceUrl,
+  getViralExternalReferenceUrls,
+  getViralExternalReferenceUrlsForLayout,
+  getViralReferenceInstruction,
+} from './layoutReferenceImages';
 import {
   buildSobBasePrompt,
   buildSobBasePromptFromRenderSpec,
@@ -15,6 +26,7 @@ import { DEFAULT_SOB_VARIANT_COUNT, getSobVariantPrompts } from './variants';
 import { validateSobInput } from './validator';
 import {
   SobLayoutStyle,
+  SobClassicLayoutStyle,
   SobMode,
   SobPromptContext,
   SobPromptInput,
@@ -22,6 +34,7 @@ import {
   SobTopicConfig,
   SobTopicKey,
   SobVariant,
+  SobViralLayoutStyle,
 } from './types';
 
 const style = styleData as SobStyleConfig;
@@ -41,6 +54,7 @@ const hooks = hooksData as {
 
 export type {
   SobLayoutStyle,
+  SobClassicLayoutStyle,
   SobMode,
   SobPromptContext,
   SobPromptInput,
@@ -48,6 +62,7 @@ export type {
   SobTopicConfig,
   SobTopicKey,
   SobVariant,
+  SobViralLayoutStyle,
 };
 
 export function getSobStyle(): SobStyleConfig {
@@ -109,8 +124,14 @@ export {
   buildSobBasePromptFromRenderSpec,
   buildSobPromptVariantsFromRenderSpec,
   buildSobRenderSpec,
+  deriveHookLineBreak,
+  deriveViralHookBreak,
   getAbhiReferenceImageUrls,
   getLayoutCompositionReferenceUrl,
+  getViralExternalReferenceUrls,
+  getViralExternalReferenceUrlsForLayout,
+  getViralReferenceInstruction,
+  isViralTypographicLayout,
   filterAbhiReferencesByTags,
   buildSobBasePrompt,
   buildSobPromptVariants,

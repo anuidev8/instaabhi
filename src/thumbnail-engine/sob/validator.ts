@@ -1,4 +1,4 @@
-import { buildSobRenderSpec } from './renderSpec';
+import { buildSobRenderSpec, isViralTypographicLayout } from './renderSpec';
 import { SobPromptContext, SobPromptInput, SobValidationResult } from './types';
 
 function words(text: string): string[] {
@@ -13,9 +13,11 @@ export function validateSobInput(input: SobPromptInput, context: SobPromptContex
     errors.push('Video title is required.');
   }
 
+  const isViralLayout = input.layoutStyle ? isViralTypographicLayout(input.layoutStyle) : false;
+  const maxHookWords = isViralLayout ? 4 : context.style.text.maxWords;
   const hookWords = words(input.hook);
-  if (hookWords.length < 1 || hookWords.length > context.style.text.maxWords) {
-    errors.push(`Hook must be between 1 and ${context.style.text.maxWords} words.`);
+  if (hookWords.length < 1 || hookWords.length > maxHookWords) {
+    errors.push(`Hook must be between 1 and ${maxHookWords} words.`);
   }
 
   if (input.topStripOverride?.trim()) {
@@ -56,7 +58,7 @@ export function validateSobInput(input: SobPromptInput, context: SobPromptContex
     warnings.push('Topic top line is empty; readability may drop.');
   }
 
-  if (!context.topic.cta.trim()) {
+  if (!isViralLayout && !context.topic.cta.trim()) {
     warnings.push('Topic CTA strip is empty; style may not match channel thumbnails.');
   }
 
@@ -90,6 +92,10 @@ export function validateSobInput(input: SobPromptInput, context: SobPromptContex
   // Warn if hook is too long for giant_hook_left
   if (spec.layoutStyle === 'giant_hook_left' && hookWords.length > 5) {
     warnings.push('Hook has more than 5 words. Giant Hook Left layout works best with ≤5 words.');
+  }
+
+  if (isViralTypographicLayout(spec.layoutStyle) && hookWords.length > 4) {
+    warnings.push('Viral typographic layouts work best with 4 or fewer hook words.');
   }
 
   // Warn if custom hook is not channel-proven

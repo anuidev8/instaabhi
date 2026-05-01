@@ -1,10 +1,19 @@
-import { buildSobRenderSpec } from './renderSpec';
+import { buildSobRenderSpec, isViralTypographicLayout } from './renderSpec';
 import type { SobRenderSpec } from './renderSpec';
 import { SobLayoutStyle, SobPromptContext, SobPromptInput, SobVariant } from './types';
 
 function layoutFamilyLabel(style: SobLayoutStyle): string {
   if (style === 'giant_hook_left') return 'Giant Hook Left';
   if (style === 'centered_cosmic_hero') return 'Centered Cosmic Hero';
+  if (style === 'mega_word_micro_sub') return 'Mega Word';
+  if (style === 'diagonal_slash_story') return 'Diagonal Slash Story';
+  if (style === 'vertical_text_tower') return 'Text Tower';
+  if (style === 'number_badge_micro_hook') return 'Number Badge';
+  if (style === 'photo_heavy_outline_text') return 'Photo + Outline Text';
+  if (style === 'text_behind_subject') return 'Text Behind Subject';
+  if (style === 'dual_depth_dynamic_text') return 'Dual Depth Dynamic Text';
+  if (style === 'color_word_stack') return 'Color Word Stack';
+  if (style === 'subject_bleed_overlap') return 'Subject Bleed Overlap';
   return 'Balanced Subject Right';
 }
 
@@ -52,6 +61,74 @@ function getBackgroundMatchRules(backgroundTheme: string): string[] {
 }
 
 function getLayoutGeometryRules(spec: SobRenderSpec): string[] {
+  if (isViralTypographicLayout(spec.layoutStyle)) {
+    const shared = [
+      `LAYOUT FAMILY: ${layoutFamilyLabel(spec.layoutStyle)} (viral typographic board).`,
+      '- Full-bleed 16:9 thumbnail with one dominant mobile-readable type system.',
+      '- Keep critical text away from extreme edges and the bottom-right timestamp area.',
+      '- Use strong subject/text overlap, depth, scale, or contrast instead of a rigid strip stack.',
+    ];
+
+    switch (spec.layoutStyle) {
+      case 'mega_word_micro_sub':
+        return [
+          ...shared,
+          '- One giant word or ultra-short phrase owns the center/left mass of the frame.',
+          '- Micro subtitle or CTA stays secondary and clearly smaller.',
+        ];
+      case 'diagonal_slash_story':
+        return [
+          ...shared,
+          '- Use a dramatic diagonal split with stressed state on one side and calm/payoff state on the other.',
+          '- The diagonal line must be a visual divider, not a classic rectangular bar.',
+        ];
+      case 'vertical_text_tower':
+        return [
+          ...shared,
+          '- Build a tall stacked headline column with three large words when possible.',
+          '- Subject/support visual sits beside or partially behind the text tower.',
+        ];
+      case 'number_badge_micro_hook':
+        return [
+          ...shared,
+          '- A giant circular number badge is the first read.',
+          '- The hook and CTA orbit the badge without turning into a three-strip template.',
+        ];
+      case 'photo_heavy_outline_text':
+        return [
+          ...shared,
+          '- Full-bleed cinematic photo carries the emotion.',
+          '- Use only oversized outline text, 1-2 words if possible.',
+        ];
+      case 'text_behind_subject':
+        return [
+          ...shared,
+          '- Oversized text sits behind Abhi or the support visual.',
+          '- Subject overlaps and masks part of the letters for depth.',
+        ];
+      case 'dual_depth_dynamic_text':
+        return [
+          ...shared,
+          '- Put one backdrop phrase behind the subject and one punch word in front.',
+          '- Preserve clear z-depth separation between background, subject, and front text.',
+        ];
+      case 'color_word_stack':
+        return [
+          ...shared,
+          '- Stack two or three words with white / red / gold hierarchy.',
+          '- Color contrast replaces the classic yellow hook bar.',
+        ];
+      case 'subject_bleed_overlap':
+        return [
+          ...shared,
+          '- Abhi bleeds from the right past center with energetic overlap.',
+          '- Left-side hook text can overlap the subject edge but must stay readable.',
+        ];
+      default:
+        return shared;
+    }
+  }
+
   if (spec.layoutStyle === 'giant_hook_left') {
     return [
       'LAYOUT FAMILY: Giant Hook Left (channel reference B — split column).',
@@ -152,6 +229,18 @@ function getChannelStripColorLock(spec: SobRenderSpec): string[] {
 }
 
 function getBackgroundSuppressionRules(spec: SobRenderSpec): string[] {
+  if (isViralTypographicLayout(spec.layoutStyle)) {
+    return [
+      'BACKGROUND ROLE: support_only.',
+      '- Background must amplify the viral typography, not compete with it.',
+      `- Background theme: ${spec.backgroundTheme}.`,
+      '- Use contrast falloff, shadow, or depth behind every text slot so it reads at 120px width.',
+      '- No scenic wallpaper focal point unless the selected viral style is Photo + Outline.',
+      '- Visual hierarchy: viral headline system > Abhi/support visual > CTA/micro text > background.',
+      ...getBackgroundMatchRules(spec.backgroundTheme),
+    ];
+  }
+
   const layering =
     spec.layoutStyle === 'centered_cosmic_hero'
       ? [
@@ -176,6 +265,17 @@ function getBackgroundSuppressionRules(spec: SobRenderSpec): string[] {
 }
 
 function getLockedFrameRules(spec: SobRenderSpec): string[] {
+  if (isViralTypographicLayout(spec.layoutStyle)) {
+    return [
+      'LOCKED FRAME (VIRAL TYPOGRAPHIC):',
+      '- Full-bleed 1280x720. No device mockup, no outer white frame.',
+      '- Generate one single thumbnail, not a collage, grid, style board, or template sheet.',
+      '- Do not use the classic dark-top / yellow-gold hook / red-CTA strip stack.',
+      '- Keep one dominant typographic idea readable on mobile with thick stroke/shadow where needed.',
+      '- Bottom-right stays free of critical text for the YouTube duration overlay.',
+    ];
+  }
+
   if (spec.layoutStyle === 'centered_cosmic_hero') {
     const lowerZone =
       spec.subjectType === 'abhi'
@@ -352,7 +452,7 @@ function getTopicIntentVisualRules(spec: SobRenderSpec): string[] {
       ];
     default:
       return [
-        '- Topic intent: adapt icon and glow style to the emotional promise while preserving brand blocks.',
+        '- Topic intent: adapt icon and glow style to the emotional promise while preserving brand clarity.',
       ];
   }
 }
@@ -436,7 +536,335 @@ function getCenteredTextReplicationRules(spec: SobRenderSpec): string[] {
   ];
 }
 
+function getViralMobileFeedReadabilityRules(): string[] {
+  return [
+    'MOBILE FEED READABILITY:',
+    '- Design for the 120px-wide mobile test: one idea must read instantly.',
+    '- Maximum 1-4 large words for the primary hook unless the selected style explicitly splits before/after text.',
+    '- Use ultra-bold condensed type with thick shadow, stroke, or contrast edge.',
+    '- Avoid small captions, thin fonts, and low-contrast text.',
+  ];
+}
+
+function getViralForbiddenRules(_spec: SobRenderSpec): string[] {
+  return [
+    'VIRAL STYLE FORBIDDEN RULES:',
+    '- Do not use the classic School of Breath three-strip layout.',
+    '- Do not use the centered cosmic wide yellow-gold hook bar.',
+    '- Do not add meta words like MAIN HOOK, CTA, TEXT SLOT, LAYOUT, or SUBJECT ZONE.',
+    '- Do not create small unreadable captions.',
+    '- Do not add extra text beyond the approved text slots.',
+    '- Do not create a collage, 3x3 grid, poster board, UI mockup, or template sheet.',
+    '- Do not copy text from the reference board unless it matches the user text.',
+  ];
+}
+
+function getViralTextSlotRules(spec: SobRenderSpec): string[] {
+  switch (spec.layoutStyle) {
+    case 'mega_word_micro_sub':
+      return [
+        'TEXT SLOTS:',
+        `- Giant word: "${spec.mainHookText}"`,
+        `- Micro subtitle / CTA: "${spec.ctaText}"`,
+        '- Do not render top-strip category text in this style.',
+      ];
+
+    case 'diagonal_slash_story':
+      return [
+        'TEXT SLOTS:',
+        `- Before / left-side phrase: "${spec.hookLine1 || spec.mainHookText}"`,
+        `- After / right-side phrase: "${spec.hookLine2 || spec.ctaText}"`,
+        `- CTA tag: "${spec.ctaText}" only if it does not clutter.`,
+      ];
+
+    case 'vertical_text_tower':
+      return [
+        'TEXT SLOTS:',
+        `- Stack words from: "${spec.mainHookText}"`,
+        '- Render as exactly 3 stacked headline lines when possible.',
+        `- CTA tag: "${spec.ctaText}" small but readable.`,
+      ];
+
+    case 'number_badge_micro_hook':
+      return [
+        'TEXT SLOTS:',
+        '- Number badge: use the number provided in SPECIAL NOTE if present; otherwise use the strongest relevant number.',
+        `- Micro hook: "${spec.mainHookText}"`,
+        `- CTA tag: "${spec.ctaText}" only if it does not clutter.`,
+      ];
+
+    case 'photo_heavy_outline_text':
+      return [
+        'TEXT SLOTS:',
+        `- Outline word only: "${spec.mainHookText}"`,
+        '- No CTA unless explicitly requested.',
+        '- No top strip unless explicitly requested.',
+      ];
+
+    case 'text_behind_subject':
+      return [
+        'TEXT SLOTS:',
+        `- Oversized background text: "${spec.mainHookText}"`,
+        `- CTA bottom-left: "${spec.ctaText}"`,
+      ];
+
+    case 'dual_depth_dynamic_text':
+      return [
+        'TEXT SLOTS:',
+        `- Backdrop phrase: "${spec.mainHookText}"`,
+        '- Foreground punch: use the short front word from SPECIAL NOTE if provided.',
+        `- CTA bottom-left: "${spec.ctaText}"`,
+      ];
+
+    case 'color_word_stack':
+      return [
+        'TEXT SLOTS:',
+        `- Three-color word stack from: "${spec.mainHookText}"`,
+        '- Word 1 white, Word 2 red, Word 3 gold.',
+        '- Do not use a yellow hook bar.',
+      ];
+
+    case 'subject_bleed_overlap':
+      return [
+        'TEXT SLOTS:',
+        `- Left hook text: "${spec.mainHookText}"`,
+        `- CTA bottom-left: "${spec.ctaText}"`,
+      ];
+
+    default:
+      return [
+        'TEXT SLOTS:',
+        `- Main hook text: "${spec.mainHookText}"`,
+        `- CTA text: "${spec.ctaText}"`,
+        `- Top strip text: "${spec.topStripText}"`,
+      ];
+  }
+}
+
+function getViralPanelCompositionRules(spec: SobRenderSpec): string[] {
+  switch (spec.layoutStyle) {
+    case 'mega_word_micro_sub':
+      return [
+        'PANEL MATCH LOCK (MEGA WORD):',
+        '- Main white headline dominates upper half and spans most of frame width.',
+        '- Abhi sits in lower half, centered or slightly right of center.',
+        '- Red CTA rectangle sits lower-left and stays secondary to the headline.',
+        '- Dark cinematic cosmic/fire background with warm glow behind Abhi.',
+      ];
+    case 'diagonal_slash_story':
+      return [
+        'PANEL MATCH LOCK (DIAGONAL SLASH):',
+        '- Hard diagonal split from top to bottom separating problem and solution states.',
+        '- Left side = stressed/problem mood, right side = calm/solution mood.',
+        '- Use a clear directional arrow between states.',
+        '- Keep highest contrast text blocks in center-right area of the solution side.',
+      ];
+    case 'vertical_text_tower':
+      return [
+        'PANEL MATCH LOCK (TEXT TOWER):',
+        '- Build a tall left text tower: line 1 white, line 2 yellow, line 3 white.',
+        '- Subject occupies right half and should feel large and close.',
+        '- CTA red tag anchors bottom-left.',
+      ];
+    case 'number_badge_micro_hook':
+      return [
+        'PANEL MATCH LOCK (NUMBER BADGE):',
+        '- Giant gold circular number badge dominates the left side.',
+        '- Hook text stack sits to the right of the badge.',
+        '- CTA red tag anchors lower-left under the hook stack.',
+      ];
+    case 'photo_heavy_outline_text':
+      return [
+        'PANEL MATCH LOCK (PHOTO + OUTLINE):',
+        '- Full-bleed cinematic photo with subject centered in lower-middle.',
+        '- Main word appears as huge white outline text behind subject.',
+        '- Keep text minimal and avoid extra boxes.',
+      ];
+    case 'text_behind_subject':
+      return [
+        'PANEL MATCH LOCK (TEXT BEHIND SUBJECT):',
+        '- Massive background word layer sits behind Abhi.',
+        '- Secondary yellow word block sits below/overlapping the white word layer.',
+        '- CTA red tag anchors bottom-left.',
+      ];
+    case 'dual_depth_dynamic_text':
+      return [
+        'PANEL MATCH LOCK (DUAL DEPTH DYNAMIC):',
+        '- Back text layer is dark/gray and oversized.',
+        '- Front punch word layer is bright and high-contrast in the foreground.',
+        '- Strong depth separation between back text, subject, and front text.',
+      ];
+    case 'color_word_stack':
+      return [
+        'PANEL MATCH LOCK (COLOR WORD STACK):',
+        '- Left text stack uses color hierarchy: white first word, red second word, yellow CTA line.',
+        '- Subject occupies right side with warm halo/rim light.',
+        '- Keep background dark with ember/cosmic texture.',
+      ];
+    case 'subject_bleed_overlap':
+      return [
+        'PANEL MATCH LOCK (SUBJECT BLEED OVERLAP):',
+        '- Subject is close-up on the right and bleeds across center.',
+        '- Left stacked headline remains white + yellow with red CTA strip below.',
+        '- Create energetic overlap and strong foreground depth.',
+      ];
+    default:
+      return [];
+  }
+}
+
+function getViralModeRules(spec: SobRenderSpec): string[] {
+  if (spec.subjectType === 'abhi') {
+    return [
+      'MODE RULES:',
+      '- WITH CHARACTER mode.',
+      '- Use only attached Abhi reference images for face identity.',
+      '- External viral board is style-only, not identity.',
+      '- Preserve Abhi face identity, mature Indian male teacher appearance, and calm-alert expression.',
+      `- Required pose guidance: ${spec.characterPose || 'seated breath teacher pose'}.`,
+      '- Do not invent a different person.',
+      '- Do not beautify, de-age, or change ethnicity.',
+      '- Keep eyes clearly open with a calm, alert gaze.',
+      '- Keep Abhi visually integrated with the chosen viral layout.',
+      '- Wardrobe lock for viral mode: dark green/deep teal robe from the provided viral Abhi references.',
+      '- Do not switch to light blue or white clothing in viral mode unless explicitly requested.',
+    ];
+  }
+
+  return [
+    'MODE RULES:',
+    '- WITHOUT CHARACTER mode.',
+    '- No human subject, no face, no silhouette, no body parts.',
+    '- Use one strong support visual only.',
+    `- Support visual: ${spec.supportVisual}`,
+    '- Do not add text inside the support visual zone.',
+  ];
+}
+
+function getViralStyleContractRules(spec: SobRenderSpec): string[] {
+  switch (spec.layoutStyle) {
+    case 'mega_word_micro_sub':
+      return [
+        'STYLE CONTRACT: MEGA WORD',
+        '- One giant primary word dominates the frame.',
+        '- Tiny subtitle below.',
+        '- No gold bar. No classic strip stack.',
+      ];
+
+    case 'diagonal_slash_story':
+      return [
+        'STYLE CONTRACT: DIAGONAL SLASH',
+        '- Clear diagonal split between stressed state and calm state.',
+        '- Strong before to after emotional contrast.',
+        '- Do not use flat single background.',
+      ];
+
+    case 'vertical_text_tower':
+      return [
+        'STYLE CONTRACT: TEXT TOWER',
+        '- Three stacked headline words in a left column.',
+        '- Each word must read clearly on mobile.',
+        '- No horizontal gold bar.',
+      ];
+
+    case 'number_badge_micro_hook':
+      return [
+        'STYLE CONTRACT: NUMBER BADGE',
+        '- Giant circular number badge is the hero.',
+        '- Micro hook supports the number.',
+        '- Number must dominate at mobile size.',
+      ];
+
+    case 'photo_heavy_outline_text':
+      return [
+        'STYLE CONTRACT: PHOTO + OUTLINE',
+        '- Full-bleed cinematic photo is the main conversion element.',
+        '- Only 1-2 outline words.',
+        '- No CTA strip unless explicitly requested.',
+      ];
+
+    case 'text_behind_subject':
+      return [
+        'STYLE CONTRACT: TEXT BEHIND SUBJECT',
+        '- Oversized text behind Abhi.',
+        '- Abhi overlaps and covers part of the text.',
+        '- Strong depth and readable stroke.',
+      ];
+
+    case 'dual_depth_dynamic_text':
+      return [
+        'STYLE CONTRACT: DUAL DEPTH DYNAMIC',
+        '- Back phrase behind subject.',
+        '- Front punch word in front of subject.',
+        '- Clear z-depth separation.',
+      ];
+
+    case 'color_word_stack':
+      return [
+        'STYLE CONTRACT: COLOR WORD STACK',
+        '- Three stacked words: white, red, gold.',
+        '- Color hierarchy replaces the gold hook bar.',
+        '- Text stack must be the hero.',
+      ];
+
+    case 'subject_bleed_overlap':
+      return [
+        'STYLE CONTRACT: SUBJECT BLEED OVERLAP',
+        '- Abhi bleeds from right past the center.',
+        '- Left text reads over subject edge.',
+        '- Maximum energy and overlap.',
+      ];
+
+    default:
+      return [];
+  }
+}
+
+function buildViralTypographicPrompt(spec: SobRenderSpec): string {
+  return [
+    'Create a 1280x720 mobile-first viral thumbnail for The School of Breath.',
+    `Layout preset: ${spec.layoutPreset} / Layout family: ${layoutFamilyLabel(spec.layoutStyle)}.`,
+    '',
+    ...getLockedFrameRules(spec),
+    '',
+    ...getLayoutGeometryRules(spec),
+    '',
+    ...getViralMobileFeedReadabilityRules(),
+    '',
+    ...getViralStyleContractRules(spec),
+    '',
+    ...getViralPanelCompositionRules(spec),
+    '',
+    ...getViralTextSlotRules(spec),
+    '',
+    ...getViralForbiddenRules(spec),
+    '',
+    ...getBackgroundSuppressionRules(spec),
+    ...getTopicIntentVisualRules(spec),
+    '',
+    ...getViralModeRules(spec),
+    '',
+    'STYLE LOCK:',
+    '- Follow the selected viral style only.',
+    '- Use the attached viral board only for style reference, typography, contrast, and composition.',
+    '- Match the selected panel composition as closely as possible: same hierarchy, similar block placement, and similar depth rhythm.',
+    '- Do not copy the face identity from the viral board. Use Abhi reference images only.',
+    '- Do not add extra labels, UI words, or placeholder text.',
+    spec.specialNote ? `SPECIAL NOTE: ${spec.specialNote}` : null,
+  ]
+    .filter((line) => line !== null && line !== undefined)
+    .join('\n');
+}
+
 function buildSobRenderPrompt(spec: SobRenderSpec): string {
+  if (isViralTypographicLayout(spec.layoutStyle)) {
+    return buildViralTypographicPrompt(spec);
+  }
+
+  return buildClassicSobPrompt(spec);
+}
+
+function buildClassicSobPrompt(spec: SobRenderSpec): string {
   const layoutGeometryRules = getLayoutGeometryRules(spec);
   const backgroundSuppressionRules = getBackgroundSuppressionRules(spec);
   const hookLineBreakRule = getHookLineBreakRule(spec);
@@ -571,6 +999,34 @@ export function buildSobPromptVariantsFromRenderSpec(
   variantCount: number
 ): SobVariant[] {
   const basePrompt = buildSobBasePromptFromRenderSpec(spec);
+
+  if (isViralTypographicLayout(spec.layoutStyle)) {
+    const viralMatch: SobVariant = {
+      id: 'A',
+      label: 'Viral Style Match',
+      prompt: [
+        basePrompt,
+        'VARIANT A: Viral Style Match.',
+        '- Match the selected panel from the viral reference board for composition language only.',
+        '- Keep the School of Breath topic, Abhi identity rules, and approved text slots from this prompt.',
+        '- Do not fall back to the classic dark/yellow/red strip system.',
+      ].join('\n'),
+    };
+
+    const viralPush: SobVariant = {
+      id: 'B',
+      label: 'Viral Contrast Push',
+      prompt: [
+        basePrompt,
+        'VARIANT B: Viral Contrast Push.',
+        '- Keep the same viral layout style but push scale, contrast, overlap, and motion energy 15-25% harder.',
+        '- Keep text readable at mobile size and do not add extra words.',
+        '- Do not fall back to the classic dark/yellow/red strip system.',
+      ].join('\n'),
+    };
+
+    return variantCount <= 1 ? [viralMatch] : [viralMatch, viralPush];
+  }
 
   const channelMatch: SobVariant = {
     id: 'A',

@@ -32,15 +32,42 @@ import {
   SOB_THUMBNAIL_TOPICS,
   suggestSchoolOfBreathInput,
 } from '../../services/schoolOfBreathThumbnailService';
-import { SchoolOfBreathMode, ThumbnailDraft } from '../../types';
+import { SchoolOfBreathLayoutStyle, SchoolOfBreathMode, ThumbnailDraft } from '../../types';
 import { downloadThumbnailDraftAsZip } from '../../utils/thumbnailZipDownload';
-import { deriveHookLineBreak } from '../../thumbnail-engine/sob/renderSpec';
+import {
+  deriveHookLineBreak,
+  deriveViralHookBreak,
+  isViralTypographicLayout,
+} from '../../thumbnail-engine/sob/renderSpec';
 
 interface SchoolOfBreathThumbnailsTabProps {
   thumbnailDrafts: ThumbnailDraft[];
   setThumbnailDrafts: React.Dispatch<React.SetStateAction<ThumbnailDraft[]>>;
   initialPrompt?: string;
   onInitialPromptConsumed?: () => void;
+}
+
+type LayoutOption = {
+  key: SchoolOfBreathLayoutStyle;
+  label: string;
+  description: string;
+};
+
+function isViralLayoutStyle(layoutStyle?: SchoolOfBreathLayoutStyle): boolean {
+  return Boolean(layoutStyle && isViralTypographicLayout(layoutStyle));
+}
+
+function getLayoutLabel(layoutStyle?: SchoolOfBreathLayoutStyle): string {
+  const option = [...CLASSIC_LAYOUT_OPTIONS, ...VIRAL_LAYOUT_OPTIONS].find(
+    (item) => item.key === layoutStyle
+  );
+  return option?.label ?? 'Centered Cosmic Hero';
+}
+
+function getHookBreakForLayout(hook: string, layoutStyle?: SchoolOfBreathLayoutStyle) {
+  return layoutStyle && isViralLayoutStyle(layoutStyle)
+    ? deriveViralHookBreak(hook, layoutStyle)
+    : deriveHookLineBreak(hook, { layoutStyle });
 }
 
 function StatusBadge({ status }: { status: ThumbnailDraft['status'] }) {
@@ -79,13 +106,134 @@ function HookPreview({
   characterSide: 'left' | 'right';
   backgroundTheme: string;
   supportVisual: string;
-  layoutStyle?: 'giant_hook_left' | 'balanced_subject_right' | 'centered_cosmic_hero';
+  layoutStyle?: SchoolOfBreathLayoutStyle;
   hookLine1?: string;
   hookLine2?: string;
 }) {
   const cinematicBackground = getCinematicSceneStyle(backgroundTheme, accent);
   const isGiant = layoutStyle === 'giant_hook_left';
   const isCenteredCosmic = layoutStyle === 'centered_cosmic_hero';
+  const isViral = isViralLayoutStyle(layoutStyle);
+  const normalizedHook = (hook || 'RESET').toUpperCase();
+  const hookWords = normalizedHook.split(/\s+/).filter(Boolean);
+
+  if (isViral) {
+    const towerWords = hookWords.slice(0, 3);
+    const outlinedTextStyle: React.CSSProperties = {
+      WebkitTextStroke: '1.5px rgba(255,255,255,0.94)',
+      color: 'transparent',
+    };
+
+    return (
+      <div
+        className="rounded-xl overflow-hidden border border-stone-300 min-h-[140px] relative"
+        style={cinematicBackground}
+      >
+        <div className="absolute inset-0 bg-black/25" />
+        {layoutStyle === 'diagonal_slash_story' && (
+          <>
+            <div className="absolute inset-y-0 left-0 w-[58%] bg-red-600/65 [clip-path:polygon(0_0,82%_0,58%_100%,0_100%)]" />
+            <div className="absolute inset-y-0 right-0 w-[58%] bg-emerald-400/50 [clip-path:polygon(42%_0,100%_0,100%_100%,18%_100%)]" />
+            <div className="absolute left-4 top-5 max-w-[42%] text-white text-2xl sm:text-3xl font-black leading-none uppercase">
+              {hookLine1 || normalizedHook}
+            </div>
+            <div className="absolute right-4 bottom-5 max-w-[42%] text-right text-white text-2xl sm:text-3xl font-black leading-none uppercase">
+              {hookLine2 || cta}
+            </div>
+          </>
+        )}
+        {layoutStyle === 'vertical_text_tower' && (
+          <div className="absolute left-4 top-3 bottom-3 flex flex-col justify-center">
+            {(towerWords.length ? towerWords : ['BREATHE', 'BETTER', 'NOW']).map((word) => (
+              <span key={word} className="text-white text-[32px] sm:text-[40px] font-black leading-[0.86] uppercase drop-shadow">
+                {word}
+              </span>
+            ))}
+          </div>
+        )}
+        {layoutStyle === 'number_badge_micro_hook' && (
+          <div className="absolute inset-0 flex items-center gap-4 px-5">
+            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-amber-300 border-[6px] border-white shadow-xl flex items-center justify-center text-5xl sm:text-6xl font-black text-stone-950">
+              {normalizedHook.match(/\d+/)?.[0] || '3'}
+            </div>
+            <div className="text-white text-2xl sm:text-3xl font-black leading-none uppercase drop-shadow max-w-[56%]">
+              {normalizedHook}
+            </div>
+          </div>
+        )}
+        {layoutStyle === 'photo_heavy_outline_text' && (
+          <div className="absolute inset-0 flex items-end px-5 pb-5">
+            <span className="text-[42px] sm:text-[54px] font-black leading-none uppercase" style={outlinedTextStyle}>
+              {normalizedHook}
+            </span>
+          </div>
+        )}
+        {layoutStyle === 'text_behind_subject' && (
+          <>
+            <div className="absolute inset-x-3 top-5 text-center text-[42px] sm:text-[54px] font-black leading-none uppercase text-white/25">
+              {hookLine1 || normalizedHook}
+            </div>
+            <div className="absolute right-7 bottom-0 top-8 w-24 rounded-t-full bg-white/20 border border-white/30 flex items-center justify-center">
+              <span className="text-[9px] font-bold tracking-wider text-white/80 uppercase">Abhi</span>
+            </div>
+            <div className="absolute left-4 bottom-4 text-white text-sm font-black uppercase bg-red-600 px-2 py-1">
+              {cta}
+            </div>
+          </>
+        )}
+        {layoutStyle === 'dual_depth_dynamic_text' && (
+          <>
+            <div className="absolute left-4 top-4 right-4 text-white/25 text-[38px] sm:text-[48px] font-black leading-none uppercase">
+              {normalizedHook}
+            </div>
+            <div className="absolute right-8 top-8 bottom-0 w-24 rounded-t-full bg-white/20 border border-white/30" />
+            <div className="absolute left-5 bottom-5 text-amber-300 text-4xl sm:text-5xl font-black leading-none uppercase drop-shadow">
+              {hookWords[0] || 'RESET'}
+            </div>
+          </>
+        )}
+        {layoutStyle === 'color_word_stack' && (
+          <div className="absolute left-5 top-4 bottom-4 flex flex-col justify-center">
+            {(towerWords.length ? towerWords : ['CALM', 'YOUR', 'BODY']).map((word, index) => (
+              <span
+                key={`${word}-${index}`}
+                className="text-[34px] sm:text-[44px] font-black leading-[0.88] uppercase drop-shadow"
+                style={{ color: index === 1 ? '#E21313' : index === 2 ? '#FFD84A' : '#FFFFFF' }}
+              >
+                {word}
+              </span>
+            ))}
+          </div>
+        )}
+        {layoutStyle === 'subject_bleed_overlap' && (
+          <>
+            <div className="absolute left-4 top-5 max-w-[55%] text-white text-3xl sm:text-4xl font-black leading-none uppercase drop-shadow">
+              {normalizedHook}
+            </div>
+            <div className="absolute right-0 bottom-0 top-4 w-[45%] bg-white/18 border-l border-white/30 rounded-tl-[40px] flex items-center justify-center">
+              <span className="text-[9px] font-bold tracking-wider text-white/80 uppercase">Abhi overlap</span>
+            </div>
+            <div className="absolute left-4 bottom-4 text-white text-sm font-black uppercase bg-red-600 px-2 py-1">
+              {cta}
+            </div>
+          </>
+        )}
+        {layoutStyle === 'mega_word_micro_sub' && (
+          <div className="absolute inset-0 flex flex-col justify-center px-5">
+            <span className="text-white text-[44px] sm:text-[58px] font-black leading-[0.86] uppercase drop-shadow">
+              {normalizedHook}
+            </span>
+            <span className="mt-2 text-white/90 text-xs sm:text-sm font-black tracking-wider uppercase">
+              {cta}
+            </span>
+          </div>
+        )}
+        <span className="absolute top-2 right-3 text-[9px] font-black uppercase tracking-wider text-white/70">
+          Viral
+        </span>
+      </div>
+    );
+  }
 
   const textPanel = (
     <div className="flex flex-col h-full">
@@ -194,11 +342,12 @@ function HookPreview({
 }
 
 function getCharacterSideForLayout(
-  layoutStyle: 'giant_hook_left' | 'balanced_subject_right' | 'centered_cosmic_hero' | undefined,
+  layoutStyle: SchoolOfBreathLayoutStyle | undefined,
   fallback: 'left' | 'right'
 ): 'left' | 'right' {
   if (layoutStyle === 'balanced_subject_right') return 'left';
   if (layoutStyle === 'giant_hook_left') return 'right';
+  if (layoutStyle && isViralLayoutStyle(layoutStyle)) return 'right';
   return fallback;
 }
 
@@ -269,6 +418,8 @@ function buildSpecText(draft: ThumbnailDraft): string {
     `TITLE: ${draft.prompt.title}`,
     `TOPIC: ${sob?.category ?? ''}`,
     `MODE: ${sob?.mode ?? ''}`,
+    `STYLE SYSTEM: ${sob?.styleSystem ?? ''}`,
+    `LAYOUT STYLE: ${sob?.layoutStyle ?? draft.canvaSpec.layoutStyle ?? ''}`,
     `HOOK: ${draft.canvaSpec.hookWord}`,
     `TOP LINE: ${sob?.topLine ?? ''}`,
     `CTA: ${sob?.bottomStrip ?? draft.canvaSpec.ctaText ?? ''}`,
@@ -286,11 +437,7 @@ const MODE_OPTIONS: Array<{ key: SchoolOfBreathMode; label: string }> = [
   { key: 'without_character', label: 'Without Character' },
 ];
 
-const LAYOUT_OPTIONS: Array<{
-  key: 'giant_hook_left' | 'balanced_subject_right' | 'centered_cosmic_hero';
-  label: string;
-  description: string;
-}> = [
+const CLASSIC_LAYOUT_OPTIONS: LayoutOption[] = [
   {
     key: 'centered_cosmic_hero',
     label: 'Centered Cosmic Hero',
@@ -308,9 +455,73 @@ const LAYOUT_OPTIONS: Array<{
   },
 ];
 
+const VIRAL_LAYOUT_OPTIONS: LayoutOption[] = [
+  {
+    key: 'mega_word_micro_sub',
+    label: 'Mega Word',
+    description: 'One giant hook word with a tiny readable CTA.',
+  },
+  {
+    key: 'diagonal_slash_story',
+    label: 'Diagonal Slash',
+    description: 'Before/after split with a hard diagonal visual divide.',
+  },
+  {
+    key: 'vertical_text_tower',
+    label: 'Text Tower',
+    description: 'Three stacked headline words built for mobile scanning.',
+  },
+  {
+    key: 'number_badge_micro_hook',
+    label: 'Number Badge',
+    description: 'Huge numbered badge with short supporting hook.',
+  },
+  {
+    key: 'photo_heavy_outline_text',
+    label: 'Photo + Outline',
+    description: 'Cinematic image-first frame with outline typography.',
+  },
+  {
+    key: 'text_behind_subject',
+    label: 'Text Behind Subject',
+    description: 'Oversized text sits behind Abhi for depth.',
+  },
+  {
+    key: 'dual_depth_dynamic_text',
+    label: 'Dual Depth',
+    description: 'Back phrase and front punch word around subject.',
+  },
+  {
+    key: 'color_word_stack',
+    label: 'Color Word Stack',
+    description: 'White, red, and gold stacked words without the classic bar.',
+  },
+  {
+    key: 'subject_bleed_overlap',
+    label: 'Subject Bleed',
+    description: 'Abhi overlaps the hook for maximum energy.',
+  },
+];
+
 const VARIANT_LABELS: Array<{ id: string; label: string; description: string }> = [
   { id: 'A', label: 'Channel Match', description: 'On-channel layout & colors' },
 ];
+
+function getVariantLabelForDraft(draft: ThumbnailDraft | null, index: number) {
+  const fallback = VARIANT_LABELS[index] ?? {
+    id: String(index + 1),
+    label: `Variant ${index + 1}`,
+    description: `Variant ${index + 1}`,
+  };
+  const layoutStyle = draft?.canvaSpec.layoutStyle ?? draft?.prompt.schoolOfBreath?.layoutStyle;
+  if (index === 0 && isViralLayoutStyle(layoutStyle)) {
+    return { id: 'A', label: 'Viral Match', description: 'Selected viral typographic style' };
+  }
+  if (index === 1 && isViralLayoutStyle(layoutStyle)) {
+    return { id: 'B', label: 'Viral Push', description: 'Higher contrast viral variant' };
+  }
+  return fallback;
+}
 
 const CUSTOM_TOPIC_VALUE = '__custom_topic__';
 
@@ -346,10 +557,11 @@ export default function SchoolOfBreathThumbnailsTab({
   const hookOptions = useMemo(() => getSchoolOfBreathHookOptions(input.topic), [input.topic]);
   const effectiveTopStrip = (input.topStripOverride?.trim() || topicMeta.topLine).toUpperCase();
   const effectiveCta = (input.ctaOverride?.trim() || topicMeta.cta).toUpperCase();
+  const selectedStyleSystem = isViralLayoutStyle(input.layoutStyle) ? 'viral' : 'classic';
 
   // Match engine hook breaks (e.g. centered two-word hooks stack for huge type)
   const hookPreviewBreak = useMemo(
-    () => deriveHookLineBreak(input.hook, { layoutStyle: input.layoutStyle }),
+    () => getHookBreakForLayout(input.hook, input.layoutStyle),
     [input.hook, input.layoutStyle]
   );
   const formHookLine1 =
@@ -384,6 +596,7 @@ export default function SchoolOfBreathThumbnailsTab({
           hook:
             suggestion.hookOverride ||
             (hookOptions.includes(prev.hook) ? prev.hook : suggestion.hooks[0]),
+          layoutStyle: suggestion.layoutStyle ?? prev.layoutStyle,
           topStripOverride: suggestion.topStripOverride ?? prev.topStripOverride ?? '',
           ctaOverride: suggestion.ctaOverride ?? prev.ctaOverride ?? '',
         }));
@@ -437,6 +650,7 @@ export default function SchoolOfBreathThumbnailsTab({
         ...prev,
         title: suggestion.title || prev.title,
         hook: suggestion.hookOverride || prev.hook,
+        layoutStyle: suggestion.layoutStyle ?? prev.layoutStyle,
         topStripOverride: suggestion.topStripOverride ?? prev.topStripOverride ?? '',
         ctaOverride: suggestion.ctaOverride ?? prev.ctaOverride ?? '',
       }));
@@ -501,7 +715,7 @@ export default function SchoolOfBreathThumbnailsTab({
   const handlePickVariant = (variantIndex: number) => {
     if (!pendingGeneratedDraft) return;
     const pickedImage = pendingGeneratedDraft.baseImages[variantIndex];
-    const variantLabel = VARIANT_LABELS[variantIndex];
+    const variantLabel = getVariantLabelForDraft(pendingGeneratedDraft, variantIndex);
     const finalDraft: ThumbnailDraft = {
       ...pendingGeneratedDraft,
       baseImages: [pickedImage],
@@ -547,6 +761,7 @@ export default function SchoolOfBreathThumbnailsTab({
           ? sob.mode
           : fallback.mode,
       hook: draft.canvaSpec.hookWord || hookOptionsForTopic[0],
+      layoutStyle: sob?.layoutStyle || draft.canvaSpec.layoutStyle || fallback.layoutStyle,
       topStripOverride,
       ctaOverride,
       specialNote: draft.prompt.special || '',
@@ -667,7 +882,7 @@ export default function SchoolOfBreathThumbnailsTab({
                       <div>
                         <h3 className="text-lg font-semibold text-stone-900">{draft.prompt.title}</h3>
                         <p className="text-sm text-stone-500 mt-1">
-                          {sob?.category ?? 'pranayama'} · {mode}
+                          {sob?.category ?? 'pranayama'} · {mode} · {getLayoutLabel(draft.canvaSpec.layoutStyle ?? sob?.layoutStyle)}
                         </p>
                       </div>
                     </div>
@@ -729,7 +944,7 @@ export default function SchoolOfBreathThumbnailsTab({
                               />
                             </div>
                             <div className="px-3 py-2 text-xs text-stone-500 border-t border-stone-200">
-                              {VARIANT_LABELS[index]?.label ?? `Image ${index + 1}`}
+                              {getVariantLabelForDraft(draft, index).label ?? `Image ${index + 1}`}
                             </div>
                           </div>
                         ))}
@@ -901,7 +1116,7 @@ export default function SchoolOfBreathThumbnailsTab({
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {pendingGeneratedDraft?.baseImages.map((image, index) => {
-                        const vl = VARIANT_LABELS[index];
+                        const vl = getVariantLabelForDraft(pendingGeneratedDraft, index);
                         return (
                           <div key={index} className="space-y-2">
                             <div className="flex items-center gap-2">
@@ -972,7 +1187,9 @@ export default function SchoolOfBreathThumbnailsTab({
                             topic,
                             mode: prev.mode,
                             hook: hooks[0],
-                            layoutStyle: getSchoolOfBreathDefaultLayoutStyle(topic),
+                            layoutStyle: isViralLayoutStyle(prev.layoutStyle)
+                              ? prev.layoutStyle
+                              : getSchoolOfBreathDefaultLayoutStyle(topic),
                             topStripOverride: '',
                             ctaOverride: '',
                           }));
@@ -1016,9 +1233,51 @@ export default function SchoolOfBreathThumbnailsTab({
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-stone-800">Layout Family</label>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        {LAYOUT_OPTIONS.map((opt) => (
+                      <label className="text-sm font-medium text-stone-800">Style System</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() =>
+                            setInput((prev) => ({
+                              ...prev,
+                              layoutStyle: isViralLayoutStyle(prev.layoutStyle)
+                                ? getSchoolOfBreathDefaultLayoutStyle(prev.topic)
+                                : prev.layoutStyle,
+                            }))
+                          }
+                          className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors border ${
+                            selectedStyleSystem === 'classic'
+                              ? 'bg-stone-900 text-white border-stone-900'
+                              : 'bg-white border-stone-200 text-stone-700 hover:border-stone-400'
+                          }`}
+                        >
+                          Classic SOB
+                        </button>
+                        <button
+                          onClick={() =>
+                            setInput((prev) => ({
+                              ...prev,
+                              layoutStyle: isViralLayoutStyle(prev.layoutStyle)
+                                ? prev.layoutStyle
+                                : 'mega_word_micro_sub',
+                            }))
+                          }
+                          className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors border ${
+                            selectedStyleSystem === 'viral'
+                              ? 'bg-stone-900 text-white border-stone-900'
+                              : 'bg-white border border-stone-200 text-stone-700 hover:border-stone-400'
+                          }`}
+                        >
+                          Viral Styles
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-stone-800">
+                        {selectedStyleSystem === 'viral' ? 'Viral Style' : 'Layout Family'}
+                      </label>
+                      <div className={`grid grid-cols-1 gap-2 ${selectedStyleSystem === 'viral' ? 'sm:grid-cols-3' : 'sm:grid-cols-3'}`}>
+                        {(selectedStyleSystem === 'viral' ? VIRAL_LAYOUT_OPTIONS : CLASSIC_LAYOUT_OPTIONS).map((opt) => (
                           <button
                             key={opt.key}
                             onClick={() => setInput((prev: SchoolOfBreathThumbnailInput) => ({ ...prev, layoutStyle: opt.key }))}
@@ -1277,13 +1536,7 @@ export default function SchoolOfBreathThumbnailsTab({
                             </p>
                             <p>
                               <span className="font-semibold text-stone-900">Layout Family:</span>{' '}
-                              {previewPlan.canvaSpec.layoutStyle === 'giant_hook_left'
-                                ? 'Giant Hook Left'
-                                : previewPlan.canvaSpec.layoutStyle === 'balanced_subject_right'
-                                ? 'Balanced Subject Right'
-                                : previewPlan.canvaSpec.layoutStyle === 'centered_cosmic_hero'
-                                ? 'Centered Cosmic Hero'
-                                : '—'}
+                              {getLayoutLabel(previewPlan.canvaSpec.layoutStyle)}
                             </p>
                             <p>
                               <span className="font-semibold text-stone-900">Character Pose:</span>{' '}
@@ -1294,7 +1547,7 @@ export default function SchoolOfBreathThumbnailsTab({
                         </div>
 
                         {previewPlan.generationPrompts?.map((prompt, index) => {
-                          const vl = VARIANT_LABELS[index];
+                          const vl = getVariantLabelForDraft(previewPlan, index);
                           return (
                           <div
                             key={index}

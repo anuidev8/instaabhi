@@ -1,4 +1,20 @@
-export type SobLayoutStyle = 'giant_hook_left' | 'balanced_subject_right' | 'centered_cosmic_hero';
+export type SobClassicLayoutStyle =
+  | 'giant_hook_left'
+  | 'balanced_subject_right'
+  | 'centered_cosmic_hero';
+
+export type SobViralLayoutStyle =
+  | 'mega_word_micro_sub'
+  | 'diagonal_slash_story'
+  | 'vertical_text_tower'
+  | 'number_badge_micro_hook'
+  | 'photo_heavy_outline_text'
+  | 'text_behind_subject'
+  | 'dual_depth_dynamic_text'
+  | 'color_word_stack'
+  | 'subject_bleed_overlap';
+
+export type SobLayoutStyle = SobClassicLayoutStyle | SobViralLayoutStyle;
 
 export type SobMode = 'with_character' | 'without_character';
 

@@ -232,6 +232,20 @@ export type ThumbnailBrand = 'school_of_mantras' | 'school_of_breath';
 
 export type SchoolOfBreathMode = 'with_character' | 'without_character';
 
+export type SchoolOfBreathLayoutStyle =
+  | 'giant_hook_left'
+  | 'balanced_subject_right'
+  | 'centered_cosmic_hero'
+  | 'mega_word_micro_sub'
+  | 'diagonal_slash_story'
+  | 'vertical_text_tower'
+  | 'number_badge_micro_hook'
+  | 'photo_heavy_outline_text'
+  | 'text_behind_subject'
+  | 'dual_depth_dynamic_text'
+  | 'color_word_stack'
+  | 'subject_bleed_overlap';
+
 export type SchoolOfBreathCategory =
   | 'pranayama'
   | 'tummo'
@@ -268,8 +282,9 @@ export interface SchoolOfBreathSettings {
   mode: SchoolOfBreathMode;
   category: SchoolOfBreathCategory;
   hookFamily: SchoolOfBreathHookFamily;
-  layoutPreset?: 'sob-channel-hard-stack';
-  layoutStyle?: 'giant_hook_left' | 'balanced_subject_right' | 'centered_cosmic_hero';
+  layoutPreset?: 'sob-channel-hard-stack' | 'sob-viral-typographic';
+  styleSystem?: 'classic' | 'viral_typographic';
+  layoutStyle?: SchoolOfBreathLayoutStyle;
   subjectType?: 'abhi' | 'support_visual';
   textSide?: 'left' | 'right';
   subjectSide?: 'left' | 'right';
@@ -344,7 +359,7 @@ export interface ThumbnailCanvaSpec {
   visualBadgeType?: string;
   characterPose?: string;
   subjectType?: 'abhi' | 'support_visual';
-  layoutStyle?: 'giant_hook_left' | 'balanced_subject_right' | 'centered_cosmic_hero';
+  layoutStyle?: SchoolOfBreathLayoutStyle;
   hookLine1?: string;
   hookLine2?: string;
 }

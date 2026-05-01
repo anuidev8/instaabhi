@@ -5,6 +5,8 @@ import {
   buildSobRenderSpec,
   getAbhiReferenceImageUrls,
   getLayoutCompositionReferenceUrl,
+  getViralExternalReferenceUrlsForLayout,
+  getViralReferenceInstruction,
   getSobDefaultMode,
   getSobDefaultLayoutStyle,
   getSobDefaultTopic,
@@ -13,6 +15,7 @@ import {
   getSobPromptContext,
   getSobTopics,
   getSobTopicConfig,
+  isViralTypographicLayout,
   SobLayoutStyle,
   SobMode,
   SobTopicKey,
@@ -32,6 +35,9 @@ const IMAGE_MODEL =
 const IMAGE_MODEL_CANDIDATES = Array.from(
   new Set([IMAGE_MODEL, 'gemini-3.1-flash-image-preview', 'gemini-3-pro-image-preview'])
 );
+const VIRAL_IMAGE_MODEL_CANDIDATES = Array.from(
+  new Set(['gemini-3-pro-image-preview', IMAGE_MODEL, 'gemini-3.1-flash-image-preview'])
+);
 const TEXT_MODEL_CANDIDATES = [
   (process.env.GEMINI_MODEL_POST as string | undefined)?.trim(),
   (process.env.GEMINI_MODEL_DRAFT as string | undefined)?.trim(),
@@ -50,10 +56,22 @@ type InlineImagePart = {
   };
 };
 
+const viralAbhiReferenceModules = import.meta.glob<string>(
+  '../../images-reference/abhi_references/*.{png,jpg,jpeg,webp}',
+  {
+    eager: true,
+    import: 'default',
+  }
+) as Record<string, string>;
+
 let cachedAbhiReferenceParts: InlineImagePart[] | null = null;
 let cachedAbhiReferencePromise: Promise<InlineImagePart[]> | null = null;
+let cachedViralAbhiReferenceParts: InlineImagePart[] | null = null;
+let cachedViralAbhiReferencePromise: Promise<InlineImagePart[]> | null = null;
 const cachedCompositionReferenceParts = new Map<string, InlineImagePart>();
 const cachedCompositionReferencePromises = new Map<string, Promise<InlineImagePart | null>>();
+const cachedViralReferencePartsByLayout = new Map<SobLayoutStyle, InlineImagePart[]>();
+const cachedViralReferencePromiseByLayout = new Map<SobLayoutStyle, Promise<InlineImagePart[]>>();
 
 export interface SchoolOfBreathThumbnailInput {
   title: string;
@@ -70,6 +88,7 @@ export interface SchoolOfBreathThumbnailSuggestion {
   title: string;
   hooks: [string, string, string];
   topLine: string;
+  layoutStyle?: SobLayoutStyle;
   hookOverride?: string;
   topStripOverride?: string;
   ctaOverride?: string;
@@ -77,6 +96,33 @@ export interface SchoolOfBreathThumbnailSuggestion {
 
 export const SOB_THUMBNAIL_TOPICS = getSobTopics();
 export const SOB_THUMBNAIL_CATEGORIES = SOB_THUMBNAIL_TOPICS;
+
+const VALID_LAYOUTS: SobLayoutStyle[] = [
+  'centered_cosmic_hero',
+  'giant_hook_left',
+  'balanced_subject_right',
+  'mega_word_micro_sub',
+  'diagonal_slash_story',
+  'vertical_text_tower',
+  'number_badge_micro_hook',
+  'photo_heavy_outline_text',
+  'text_behind_subject',
+  'dual_depth_dynamic_text',
+  'color_word_stack',
+  'subject_bleed_overlap',
+];
+
+const VIRAL_LAYOUT_PANEL_INDEX: Partial<Record<SobLayoutStyle, number>> = {
+  mega_word_micro_sub: 0,
+  diagonal_slash_story: 1,
+  vertical_text_tower: 2,
+  number_badge_micro_hook: 3,
+  photo_heavy_outline_text: 4,
+  text_behind_subject: 5,
+  dual_depth_dynamic_text: 6,
+  color_word_stack: 7,
+  subject_bleed_overlap: 8,
+};
 
 const TOPIC_TO_INTENT: Record<SobTopicKey, IntentKey> = {
   pranayama: 'knowledge',
@@ -230,6 +276,11 @@ function sanitizeUppercaseWords(value: string | undefined, maxWords: number): st
   return cleaned.split(' ').filter(Boolean).slice(0, maxWords).join(' ');
 }
 
+function sanitizeLayoutStyle(value: string | undefined): SobLayoutStyle | undefined {
+  if (!value) return undefined;
+  return VALID_LAYOUTS.includes(value as SobLayoutStyle) ? (value as SobLayoutStyle) : undefined;
+}
+
 export async function suggestSchoolOfBreathInput(params: {
   topic: SobTopicKey;
   mode: SobMode;
@@ -279,7 +330,18 @@ Rules:
 - cta: UPPERCASE, 1-4 words.
 - title: YouTube-ready, clickworthy, no emojis.
 - Prefer fresh wording instead of simply repeating approved hooks.
-- Avoid medical guarantees or extreme claims.`,
+- Avoid medical guarantees or extreme claims.
+VIRAL STYLE DECISION LOGIC:
+- mega_word_micro_sub: use when one emotional state word should dominate, like CALM, SLEEP, ENERGY, RESET.
+- diagonal_slash_story: use when the prompt contains a before to after transformation.
+- vertical_text_tower: use when the idea can be expressed as 3 stacked payoff words.
+- number_badge_micro_hook: use when the prompt includes a number, minutes, steps, breaths, or count.
+- photo_heavy_outline_text: use for premium cinematic mood-first thumbnails with 1-2 words.
+- text_behind_subject: use when Abhi authority plus big title depth is needed.
+- dual_depth_dynamic_text: use when back phrase plus front punch can create depth.
+- color_word_stack: use for high-contrast emotional hooks with 2-3 words.
+- subject_bleed_overlap: use for maximum energy and Abhi-forward thumbnails.
+- If the creator asks for viral, bold, high CTR, mobile-first, aggressive, or thumbnail style options, prefer a Viral Style layout unless the topic clearly needs classic channel format.`,
         responseMimeType: 'application/json',
         responseSchema: {
           type: Type.OBJECT,
@@ -288,8 +350,9 @@ Rules:
             hook: { type: Type.STRING },
             topStrip: { type: Type.STRING },
             cta: { type: Type.STRING },
+            layoutStyle: { type: Type.STRING },
           },
-          required: ['title', 'hook', 'topStrip', 'cta'],
+          required: ['title', 'hook', 'topStrip', 'cta', 'layoutStyle'],
         },
       },
     });
@@ -298,6 +361,7 @@ Rules:
     const hookOverride = sanitizeUppercaseWords(parsed.hook, maxHookWords);
     const topStripOverride = sanitizeUppercaseWords(parsed.topStrip, 5);
     const ctaOverride = sanitizeUppercaseWords(parsed.cta, 4);
+    const layoutStyle = sanitizeLayoutStyle(parsed.layoutStyle);
     const title = normalizeTitle(
       parsed.title ||
         buildSuggestedTitle({
@@ -312,6 +376,7 @@ Rules:
       title: title || fallbackTitle,
       hooks,
       topLine: topicConfig.topLine,
+      layoutStyle,
       hookOverride: hookOverride || undefined,
       topStripOverride: topStripOverride || undefined,
       ctaOverride: ctaOverride || undefined,
@@ -399,6 +464,7 @@ function buildThumbnailPrompt(input: SchoolOfBreathThumbnailInput, renderSpec: S
       category: input.topic,
       hookFamily: buildHookFamily(input.hook, input.topic),
       layoutPreset: renderSpec.layoutPreset,
+      styleSystem: renderSpec.styleSystem,
       subjectType: renderSpec.subjectType,
       textSide: renderSpec.textSide,
       subjectSide: renderSpec.subjectSide,
@@ -437,6 +503,7 @@ export async function generateSchoolOfBreathThumbnailPlan(
       topic: normalizedInput.topic,
       mode: normalizedInput.mode,
       hook: normalizedInput.hook,
+      layoutStyle: normalizedInput.layoutStyle,
       topStripOverride: normalizedInput.topStripOverride,
       ctaOverride: normalizedInput.ctaOverride,
       specialNote: normalizedInput.specialNote,
@@ -449,9 +516,12 @@ export async function generateSchoolOfBreathThumbnailPlan(
   }
 
   const renderSpec = buildRenderSpec(normalizedInput, context);
+  const variantCount = isViralTypographicLayout(renderSpec.layoutStyle)
+    ? 2
+    : DEFAULT_SOB_VARIANT_COUNT;
   const generationPrompts = buildSobPromptVariantsFromRenderSpec(
     renderSpec,
-    DEFAULT_SOB_VARIANT_COUNT
+    variantCount
   ).map((variant) => variant.prompt);
 
   return {
@@ -462,13 +532,13 @@ export async function generateSchoolOfBreathThumbnailPlan(
     canvaSpec: buildCanvaSpec(normalizedInput, renderSpec),
     createdAt: new Date(),
     generationPrompts,
-    templateId: `sob-lightweight-${normalizedInput.mode}-v1`,
+    templateId: `sob-${renderSpec.styleSystem}-${normalizedInput.mode}-v1`,
     validationSummary: [
       ...validation.warnings,
       `Flow: topic=${normalizedInput.topic} mode=${normalizedInput.mode} hook=${normalizedInput.hook}`,
       `Layout family: ${renderSpec.layoutStyle} / Title dominance: ${renderSpec.titleDominance}`,
       `Hook break: ${renderSpec.hookLineBreakMode}${renderSpec.hookLine1 ? ` ("${renderSpec.hookLine1}" / "${renderSpec.hookLine2}")` : ''}`,
-      `Render spec: preset=${renderSpec.layoutPreset} subjectType=${renderSpec.subjectType}`,
+      `Render spec: preset=${renderSpec.layoutPreset} styleSystem=${renderSpec.styleSystem} subjectType=${renderSpec.subjectType}`,
       `Top strip: ${renderSpec.topStripText}`,
       `CTA: ${renderSpec.ctaText}`,
       `Background theme: ${renderSpec.backgroundTheme}`,
@@ -557,7 +627,7 @@ async function resizeReferenceImageForModel(blob: Blob): Promise<InlineImagePart
     ctx.drawImage(image, 0, 0, targetWidth, targetHeight);
     const dataUrl = canvas.toDataURL('image/jpeg', 0.86);
     const base64Data = dataUrl.split(',')[1];
-    if (!base64Data) throw new Error('Failed to encode Abhi reference image.');
+    if (!base64Data) throw new Error('Failed to encode reference image.');
 
     return {
       inlineData: {
@@ -572,8 +642,54 @@ async function resizeReferenceImageForModel(blob: Blob): Promise<InlineImagePart
 
 async function imageUrlToInlinePart(url: string): Promise<InlineImagePart> {
   const response = await fetch(url);
-  if (!response.ok) throw new Error(`Failed to load Abhi reference image: ${url}`);
+  if (!response.ok) throw new Error(`Failed to load reference image: ${url}`);
   return resizeReferenceImageForModel(await response.blob());
+}
+
+async function cropViralBoardPanelToInlinePart(
+  boardUrl: string,
+  panelIndex: number
+): Promise<InlineImagePart> {
+  const response = await fetch(boardUrl);
+  if (!response.ok) throw new Error(`Failed to load viral board image: ${boardUrl}`);
+
+  const boardBlob = await response.blob();
+  const blobUrl = URL.createObjectURL(boardBlob);
+  try {
+    const image = await loadImage(blobUrl);
+    const cols = 3;
+    const rows = 3;
+    const col = panelIndex % cols;
+    const row = Math.floor(panelIndex / cols);
+
+    const panelWidth = image.width / cols;
+    const panelHeight = image.height / rows;
+    const trim = 4;
+    const sx = Math.round(col * panelWidth + trim);
+    const sy = Math.round(row * panelHeight + trim);
+    const sw = Math.max(1, Math.round(panelWidth - trim * 2));
+    const sh = Math.max(1, Math.round(panelHeight - trim * 2));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = sw;
+    canvas.height = sh;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas is not available in this browser');
+
+    ctx.drawImage(image, sx, sy, sw, sh, 0, 0, sw, sh);
+    const panelDataUrl = canvas.toDataURL('image/jpeg', 0.92);
+    const base64Data = panelDataUrl.split(',')[1];
+    if (!base64Data) throw new Error('Failed to encode viral panel reference image.');
+
+    return {
+      inlineData: {
+        mimeType: 'image/jpeg',
+        data: base64Data,
+      },
+    };
+  } finally {
+    URL.revokeObjectURL(blobUrl);
+  }
 }
 
 async function getAbhiReferenceInlineParts(): Promise<InlineImagePart[]> {
@@ -592,6 +708,39 @@ async function getAbhiReferenceInlineParts(): Promise<InlineImagePart[]> {
     });
 
   return cachedAbhiReferencePromise;
+}
+
+function getViralAbhiReferenceImageUrls(limit?: number): string[] {
+  const urls = Object.entries(viralAbhiReferenceModules)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([, url]) => url)
+    .filter((url): url is string => typeof url === 'string');
+
+  if (!limit || limit <= 0) return urls;
+  return urls.slice(0, limit);
+}
+
+async function getViralAbhiReferenceInlineParts(): Promise<InlineImagePart[]> {
+  if (cachedViralAbhiReferenceParts) return cachedViralAbhiReferenceParts;
+  if (cachedViralAbhiReferencePromise) return cachedViralAbhiReferencePromise;
+
+  const viralUrls = getViralAbhiReferenceImageUrls(MAX_ABHI_REFERENCE_IMAGES);
+  if (viralUrls.length === 0) {
+    return getAbhiReferenceInlineParts();
+  }
+
+  cachedViralAbhiReferencePromise = Promise.all(
+    viralUrls.map((url) => imageUrlToInlinePart(url))
+  )
+    .then((parts) => {
+      cachedViralAbhiReferenceParts = parts;
+      return parts;
+    })
+    .finally(() => {
+      cachedViralAbhiReferencePromise = null;
+    });
+
+  return cachedViralAbhiReferencePromise;
 }
 
 async function getCompositionReferenceInlinePart(url?: string): Promise<InlineImagePart | null> {
@@ -616,12 +765,55 @@ async function getCompositionReferenceInlinePart(url?: string): Promise<InlineIm
   return promise;
 }
 
+async function getViralReferenceInlineParts(
+  layoutStyle?: SobLayoutStyle
+): Promise<InlineImagePart[]> {
+  if (!layoutStyle) return [];
+
+  const cached = cachedViralReferencePartsByLayout.get(layoutStyle);
+  if (cached) return cached;
+
+  const pending = cachedViralReferencePromiseByLayout.get(layoutStyle);
+  if (pending) return pending;
+
+  const urls = getViralExternalReferenceUrlsForLayout(layoutStyle);
+  const panelIndex = VIRAL_LAYOUT_PANEL_INDEX[layoutStyle];
+  const promise = Promise.allSettled(
+    panelIndex !== undefined && urls[0]
+      ? [cropViralBoardPanelToInlinePart(urls[0], panelIndex)]
+      : urls.map((url) => imageUrlToInlinePart(url))
+  )
+    .then(async (results) => {
+      let parts = results
+        .filter((result): result is PromiseFulfilledResult<InlineImagePart> => result.status === 'fulfilled')
+        .map((result) => result.value);
+
+      // Fallback: if panel crop fails, attach the whole board so viral generation still has a reference.
+      if (parts.length === 0 && urls.length > 0) {
+        const fallback = await Promise.allSettled(urls.map((url) => imageUrlToInlinePart(url)));
+        parts = fallback
+          .filter((result): result is PromiseFulfilledResult<InlineImagePart> => result.status === 'fulfilled')
+          .map((result) => result.value);
+      }
+
+      cachedViralReferencePartsByLayout.set(layoutStyle, parts);
+      return parts;
+    })
+    .finally(() => {
+      cachedViralReferencePromiseByLayout.delete(layoutStyle);
+    });
+
+  cachedViralReferencePromiseByLayout.set(layoutStyle, promise);
+  return promise;
+}
+
 async function generateImageDataUrlWithFallback(
-  contents: string | Array<{ text: string } | InlineImagePart>
+  contents: string | Array<{ text: string } | InlineImagePart>,
+  modelCandidates: string[] = IMAGE_MODEL_CANDIDATES
 ): Promise<{ imageDataUrl: string; model: string }> {
   const failures: string[] = [];
 
-  for (const model of IMAGE_MODEL_CANDIDATES) {
+  for (const model of modelCandidates) {
     for (let attempt = 1; attempt <= IMAGE_GENERATION_MAX_ATTEMPTS; attempt += 1) {
       try {
         const response = await ai.models.generateContent({
@@ -660,12 +852,19 @@ export async function generateSchoolOfBreathThumbnailImages(
     throw new Error('No generation prompts in the plan.');
   }
 
-  const shouldUseCharacterReferences = plan.prompt.schoolOfBreath?.mode === 'with_character';
-  const referenceParts = shouldUseCharacterReferences ? await getAbhiReferenceInlineParts() : [];
-
   const layoutStyle = plan.prompt.schoolOfBreath?.layoutStyle;
-  const compositionRefUrl = layoutStyle ? getLayoutCompositionReferenceUrl(layoutStyle) : undefined;
+  const isViralStyle = layoutStyle ? isViralTypographicLayout(layoutStyle) : false;
+  const shouldUseCharacterReferences = plan.prompt.schoolOfBreath?.mode === 'with_character';
+  const referenceParts = shouldUseCharacterReferences
+    ? isViralStyle
+      ? await getViralAbhiReferenceInlineParts()
+      : await getAbhiReferenceInlineParts()
+    : [];
+
+  const compositionRefUrl =
+    layoutStyle && !isViralStyle ? getLayoutCompositionReferenceUrl(layoutStyle) : undefined;
   const compositionRefPart = await getCompositionReferenceInlinePart(compositionRefUrl);
+  const viralRefParts = isViralStyle ? await getViralReferenceInlineParts(layoutStyle) : [];
 
   const twoStackedHookLock =
     plan.canvaSpec?.hookLine1 && plan.canvaSpec.hookLine2
@@ -686,7 +885,9 @@ export async function generateSchoolOfBreathThumbnailImages(
   const generationResults = await Promise.allSettled(
     prompts.map(async (prompt) => {
       const characterLockText =
-        'Use only attached Abhi references. Do not invent another person. Preserve exact Abhi face identity and mature Indian male teacher appearance. Keep core facial structure consistent with references: hairline/temple shape, eyebrow thickness, eye spacing and eye shape, straight nose bridge, jawline, and skin tone. Keep Abhi in seated or breath-teaching pose. Expression lock: calm-alert teacher intensity, closed mouth, focused gaze (no stock-photo smile). Eyes must be clearly open with visible catchlights (never closed). Do not beautify/de-age or change ethnicity. Match real School of Breath thumbnail style, not portrait-photography ad style. No sticker/cutout look. No white frame or mockup border.';
+        isViralStyle
+          ? 'Use only attached Abhi references. Do not invent another person. Preserve exact Abhi face identity and mature Indian male teacher appearance. Keep core facial structure consistent with references: hairline/temple shape, eyebrow thickness, eye spacing and eye shape, straight nose bridge, jawline, and skin tone. Keep Abhi in seated or breath-teaching pose. Expression lock: calm-alert teacher intensity, closed mouth, focused gaze (no stock-photo smile). Eyes must be clearly open with visible catchlights (never closed). Do not beautify/de-age or change ethnicity. Integrate Abhi into the selected viral typographic layout. Viral wardrobe lock: use the dark green/deep teal robe tone from the attached viral Abhi references. Do not output light-blue or white yoga clothing. No sticker/cutout look. No white frame or mockup border.'
+          : 'Use only attached Abhi references. Do not invent another person. Preserve exact Abhi face identity and mature Indian male teacher appearance. Keep core facial structure consistent with references: hairline/temple shape, eyebrow thickness, eye spacing and eye shape, straight nose bridge, jawline, and skin tone. Keep Abhi in seated or breath-teaching pose. Expression lock: calm-alert teacher intensity, closed mouth, focused gaze (no stock-photo smile). Eyes must be clearly open with visible catchlights (never closed). Do not beautify/de-age or change ethnicity. Match real School of Breath thumbnail style, not portrait-photography ad style. No sticker/cutout look. No white frame or mockup border.';
 
       const compositionLockText =
         plan.prompt.schoolOfBreath?.mode === 'without_character'
@@ -713,10 +914,38 @@ export async function generateSchoolOfBreathThumbnailImages(
         parts.push({ text: twoStackedHookLock + compositionLockText });
         parts.push(compositionRefPart);
       }
+      if (viralRefParts.length > 0) {
+        parts.push({
+          text: [
+            'VIRAL STYLE BOARD ATTACHED.',
+            layoutStyle ? getViralReferenceInstruction(layoutStyle) : '',
+            'Use the board as style-only reference: typography, composition, contrast, depth, and hierarchy.',
+            'Do not copy the grid layout. Do not create a collage. Generate one single 16:9 thumbnail.',
+            'Do not copy the face identity from the board. Use attached Abhi references only for identity.',
+            'Do not copy any panel labels like MEGA WORD, DIAGONAL SLASH, or VIRAL unless they are part of the requested text.',
+          ]
+            .filter(Boolean)
+            .join(' '),
+        });
+        parts.push(...viralRefParts);
+      }
+      if (isViralStyle) {
+        parts.push({
+          text: [
+            'VIRAL EXECUTION LOCK:',
+            'Render like a polished high-CTR YouTube thumbnail with clean typography and sharp letter edges.',
+            'Preserve exact spelling for provided words and keep text fully readable at mobile size.',
+            'Use dark cinematic background, warm halo/rim light around subject, and strong contrast.',
+          ].join(' '),
+        });
+      }
       parts.push({ text: prompt });
 
       const contents = parts.length > 1 ? parts : prompt;
-      return generateImageDataUrlWithFallback(contents);
+      return generateImageDataUrlWithFallback(
+        contents,
+        isViralStyle ? VIRAL_IMAGE_MODEL_CANDIDATES : IMAGE_MODEL_CANDIDATES
+      );
     })
   );
 
@@ -766,10 +995,17 @@ export async function generateSchoolOfBreathThumbnailImages(
     validationSummary: [
       ...(plan.validationSummary ?? []),
       ...(referenceParts.length > 0
-        ? [`Character lock: used ${referenceParts.length} approved Abhi references.`]
+        ? [
+            isViralStyle
+              ? `Character lock: used ${referenceParts.length} viral Abhi references from images-reference/abhi_references.`
+              : `Character lock: used ${referenceParts.length} approved Abhi references.`,
+          ]
         : ['No-character mode: confirmed no reference person images used.']),
       ...(compositionRefPart
         ? [`Layout composition reference: centered cosmic hero (bundled PNG) attached for Gemini.`]
+        : []),
+      ...(viralRefParts.length > 0 && layoutStyle
+        ? [`Viral style board: ${getViralReferenceInstruction(layoutStyle)}`]
         : []),
       `Gemini image models used: ${usedModels.join(', ')}.`,
       ...normalizedVariantResults.map(
