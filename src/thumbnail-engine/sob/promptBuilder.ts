@@ -718,16 +718,15 @@ function getViralModeRules(spec: SobRenderSpec): string[] {
     return [
       'MODE RULES:',
       '- WITH CHARACTER mode.',
-      '- Use only attached Abhi reference images for face identity.',
-      '- External viral board is style-only, not identity.',
-      '- Preserve Abhi face identity, mature Indian male teacher appearance, and calm-alert expression.',
+      '- Use the attached viral character anchor as the exact single face/profile identity source.',
+      '- Use the attached selected viral style panel only for layout, typography, pose energy, lighting, and composition.',
+      '- Match the same face/profile, age, hairline, skin tone, expression style, and wardrobe from the character anchor as closely as possible.',
       `- Required pose guidance: ${spec.characterPose || 'seated breath teacher pose'}.`,
       '- Do not invent a different person.',
       '- Do not beautify, de-age, or change ethnicity.',
       '- Keep eyes clearly open with a calm, alert gaze.',
-      '- Keep Abhi visually integrated with the chosen viral layout.',
-      '- Wardrobe lock for viral mode: dark green/deep teal robe from the provided viral Abhi references.',
-      '- Do not switch to light blue or white clothing in viral mode unless explicitly requested.',
+      '- Keep the character visually integrated with the chosen viral layout.',
+      '- Do not replace the anchor character with the panel character, a generic guru, stock-photo model, or alternate Abhi anchor.',
     ];
   }
 
@@ -846,9 +845,9 @@ function buildViralTypographicPrompt(spec: SobRenderSpec): string {
     '',
     'STYLE LOCK:',
     '- Follow the selected viral style only.',
-    '- Use the attached viral board only for style reference, typography, contrast, and composition.',
-    '- Match the selected panel composition as closely as possible: same hierarchy, similar block placement, and similar depth rhythm.',
-    '- Do not copy the face identity from the viral board. Use Abhi reference images only.',
+    '- Use the attached selected viral style panel for style reference, typography, contrast, and composition.',
+    '- Match the selected viral style composition language closely: same hierarchy, similar block placement, and similar depth rhythm.',
+    '- In WITH CHARACTER mode, keep the character/profile from the viral character anchor, not from the layout panel.',
     '- Do not add extra labels, UI words, or placeholder text.',
     spec.specialNote ? `SPECIAL NOTE: ${spec.specialNote}` : null,
   ]
@@ -1001,31 +1000,21 @@ export function buildSobPromptVariantsFromRenderSpec(
   const basePrompt = buildSobBasePromptFromRenderSpec(spec);
 
   if (isViralTypographicLayout(spec.layoutStyle)) {
-    const viralMatch: SobVariant = {
+    const viralSingle: SobVariant = {
       id: 'A',
-      label: 'Viral Style Match',
+      label: 'Selected viral typographic style',
       prompt: [
         basePrompt,
-        'VARIANT A: Viral Style Match.',
-        '- Match the selected panel from the viral reference board for composition language only.',
-        '- Keep the School of Breath topic, Abhi identity rules, and approved text slots from this prompt.',
+        spec.subjectType === 'abhi'
+          ? '- Use the viral character anchor for the single character identity.'
+          : '- Keep this viral render without any human character.',
+        '- Match the selected viral style panel for composition language only.',
+        '- Keep the School of Breath topic and approved text slots from this prompt.',
         '- Do not fall back to the classic dark/yellow/red strip system.',
       ].join('\n'),
     };
 
-    const viralPush: SobVariant = {
-      id: 'B',
-      label: 'Viral Contrast Push',
-      prompt: [
-        basePrompt,
-        'VARIANT B: Viral Contrast Push.',
-        '- Keep the same viral layout style but push scale, contrast, overlap, and motion energy 15-25% harder.',
-        '- Keep text readable at mobile size and do not add extra words.',
-        '- Do not fall back to the classic dark/yellow/red strip system.',
-      ].join('\n'),
-    };
-
-    return variantCount <= 1 ? [viralMatch] : [viralMatch, viralPush];
+    return [viralSingle];
   }
 
   const channelMatch: SobVariant = {

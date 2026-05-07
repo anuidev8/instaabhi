@@ -4,10 +4,13 @@ export interface AbhiReference {
   tags: string[];
 }
 
-const imageModules = import.meta.glob('../../../docs/resources/images/*.png', {
+const imageModules = import.meta.glob(
+  '../../../images-reference/abhi_references/*.{png,jpg,jpeg,webp}',
+  {
   eager: true,
   import: 'default',
-}) as Record<string, string>;
+  }
+) as Record<string, string>;
 
 const sortedEntries = Object.entries(imageModules).sort(([a], [b]) => a.localeCompare(b));
 
@@ -17,11 +20,14 @@ export const ABHI_REFERENCE_IMAGES: AbhiReference[] = sortedEntries.map(([key, p
   tags: inferTagsFromPath(key),
 }));
 
-const CURATED_ABHI_REFERENCE_IDS: string[] = ['abhi_02', 'abhi_04', 'abhi_05', 'abhi_08'];
+const CURATED_ABHI_REFERENCE_PATH_HINTS: string[] = [
+  '4.41.31',
+  'image may 6',
+];
 
 function getCuratedAbhiReferences(): AbhiReference[] {
-  const curated = CURATED_ABHI_REFERENCE_IDS.map((id) =>
-    ABHI_REFERENCE_IMAGES.find((image) => image.id === id)
+  const curated = CURATED_ABHI_REFERENCE_PATH_HINTS.map((hint) =>
+    ABHI_REFERENCE_IMAGES.find((image) => image.path.toLowerCase().includes(hint))
   ).filter((value): value is AbhiReference => Boolean(value));
 
   return curated.length > 0 ? curated : ABHI_REFERENCE_IMAGES;
@@ -43,15 +49,8 @@ export function filterAbhiReferencesByTags(tags: string[]): AbhiReference[] {
 
 function inferTagsFromPath(path: string): string[] {
   const lower = path.toLowerCase();
-  const tags = ['abhi', 'approved'];
-
-  if (lower.includes('45.20')) tags.push('front', 'calm', 'instruction');
-  if (lower.includes('45.43')) tags.push('close', 'serious', 'energy');
-  if (lower.includes('46.07')) tags.push('centered', 'teacher', 'routine');
-  if (lower.includes('46.27')) tags.push('dynamic', 'heat', 'biohack');
-  if (lower.includes('46.42')) tags.push('calm', 'focus', 'sleep');
-  if (lower.includes('47.43')) tags.push('intense', 'performance');
-  if (lower.includes('48.04')) tags.push('close', 'mudra');
+  const tags = ['abhi', 'approved', 'identity'];
+  if (lower.includes('screenshot')) tags.push('screenshot');
 
   return tags;
 }

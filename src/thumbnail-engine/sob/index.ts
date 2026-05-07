@@ -12,6 +12,7 @@ import topicsData from './topics.json';
 import { getAbhiReferenceImageUrls, ABHI_REFERENCE_IMAGES, filterAbhiReferencesByTags } from './abhiReferences';
 import {
   getLayoutCompositionReferenceUrl,
+  getViralCharacterAnchorReferenceUrl,
   getViralExternalReferenceUrls,
   getViralExternalReferenceUrlsForLayout,
   getViralReferenceInstruction,
@@ -128,6 +129,7 @@ export {
   deriveViralHookBreak,
   getAbhiReferenceImageUrls,
   getLayoutCompositionReferenceUrl,
+  getViralCharacterAnchorReferenceUrl,
   getViralExternalReferenceUrls,
   getViralExternalReferenceUrlsForLayout,
   getViralReferenceInstruction,

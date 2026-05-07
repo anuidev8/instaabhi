@@ -5,6 +5,7 @@ import {
   buildSobRenderSpec,
   getAbhiReferenceImageUrls,
   getLayoutCompositionReferenceUrl,
+  getViralCharacterAnchorReferenceUrl,
   getViralExternalReferenceUrlsForLayout,
   getViralReferenceInstruction,
   getSobDefaultMode,
@@ -22,7 +23,18 @@ import {
   validateSobInput,
 } from '../thumbnail-engine/sob';
 import type { SobRenderSpec } from '../thumbnail-engine/sob';
-import { IntentKey, ThumbnailCanvaSpec, ThumbnailDraft, ThumbnailPrompt } from '../types';
+import {
+  IntentKey,
+  ThumbnailCanvaSpec,
+  ThumbnailDraft,
+  ThumbnailImageProvider,
+  ThumbnailPrompt,
+} from '../types';
+import {
+  ensureOpenAiImageAccess,
+  generateThumbnailWithOpenAi,
+  getOpenAiThumbnailModel,
+} from './openaiThumbnailImageService';
 
 const GEMINI_API_KEY =
   (process.env.GEMINI_API_KEY as string | undefined)?.trim() ||
@@ -46,6 +58,7 @@ const TEXT_MODEL_CANDIDATES = [
 ].filter(Boolean) as string[];
 const IMAGE_GENERATION_MAX_ATTEMPTS = 2;
 const MAX_ABHI_REFERENCE_IMAGES = 4;
+const STRICT_IDENTITY_ANCHOR_COUNT = 1;
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 type GenerateContentParams = Parameters<typeof ai.models.generateContent>[0];
 
@@ -56,18 +69,8 @@ type InlineImagePart = {
   };
 };
 
-const viralAbhiReferenceModules = import.meta.glob<string>(
-  '../../images-reference/abhi_references/*.{png,jpg,jpeg,webp}',
-  {
-    eager: true,
-    import: 'default',
-  }
-) as Record<string, string>;
-
 let cachedAbhiReferenceParts: InlineImagePart[] | null = null;
 let cachedAbhiReferencePromise: Promise<InlineImagePart[]> | null = null;
-let cachedViralAbhiReferenceParts: InlineImagePart[] | null = null;
-let cachedViralAbhiReferencePromise: Promise<InlineImagePart[]> | null = null;
 const cachedCompositionReferenceParts = new Map<string, InlineImagePart>();
 const cachedCompositionReferencePromises = new Map<string, Promise<InlineImagePart | null>>();
 const cachedViralReferencePartsByLayout = new Map<SobLayoutStyle, InlineImagePart[]>();
@@ -111,18 +114,6 @@ const VALID_LAYOUTS: SobLayoutStyle[] = [
   'color_word_stack',
   'subject_bleed_overlap',
 ];
-
-const VIRAL_LAYOUT_PANEL_INDEX: Partial<Record<SobLayoutStyle, number>> = {
-  mega_word_micro_sub: 0,
-  diagonal_slash_story: 1,
-  vertical_text_tower: 2,
-  number_badge_micro_hook: 3,
-  photo_heavy_outline_text: 4,
-  text_behind_subject: 5,
-  dual_depth_dynamic_text: 6,
-  color_word_stack: 7,
-  subject_bleed_overlap: 8,
-};
 
 const TOPIC_TO_INTENT: Record<SobTopicKey, IntentKey> = {
   pranayama: 'knowledge',
@@ -646,50 +637,10 @@ async function imageUrlToInlinePart(url: string): Promise<InlineImagePart> {
   return resizeReferenceImageForModel(await response.blob());
 }
 
-async function cropViralBoardPanelToInlinePart(
-  boardUrl: string,
-  panelIndex: number
-): Promise<InlineImagePart> {
-  const response = await fetch(boardUrl);
-  if (!response.ok) throw new Error(`Failed to load viral board image: ${boardUrl}`);
-
-  const boardBlob = await response.blob();
-  const blobUrl = URL.createObjectURL(boardBlob);
-  try {
-    const image = await loadImage(blobUrl);
-    const cols = 3;
-    const rows = 3;
-    const col = panelIndex % cols;
-    const row = Math.floor(panelIndex / cols);
-
-    const panelWidth = image.width / cols;
-    const panelHeight = image.height / rows;
-    const trim = 4;
-    const sx = Math.round(col * panelWidth + trim);
-    const sy = Math.round(row * panelHeight + trim);
-    const sw = Math.max(1, Math.round(panelWidth - trim * 2));
-    const sh = Math.max(1, Math.round(panelHeight - trim * 2));
-
-    const canvas = document.createElement('canvas');
-    canvas.width = sw;
-    canvas.height = sh;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('Canvas is not available in this browser');
-
-    ctx.drawImage(image, sx, sy, sw, sh, 0, 0, sw, sh);
-    const panelDataUrl = canvas.toDataURL('image/jpeg', 0.92);
-    const base64Data = panelDataUrl.split(',')[1];
-    if (!base64Data) throw new Error('Failed to encode viral panel reference image.');
-
-    return {
-      inlineData: {
-        mimeType: 'image/jpeg',
-        data: base64Data,
-      },
-    };
-  } finally {
-    URL.revokeObjectURL(blobUrl);
-  }
+async function imageUrlToBlob(url: string): Promise<Blob> {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Failed to load reference image: ${url}`);
+  return response.blob();
 }
 
 async function getAbhiReferenceInlineParts(): Promise<InlineImagePart[]> {
@@ -708,39 +659,6 @@ async function getAbhiReferenceInlineParts(): Promise<InlineImagePart[]> {
     });
 
   return cachedAbhiReferencePromise;
-}
-
-function getViralAbhiReferenceImageUrls(limit?: number): string[] {
-  const urls = Object.entries(viralAbhiReferenceModules)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([, url]) => url)
-    .filter((url): url is string => typeof url === 'string');
-
-  if (!limit || limit <= 0) return urls;
-  return urls.slice(0, limit);
-}
-
-async function getViralAbhiReferenceInlineParts(): Promise<InlineImagePart[]> {
-  if (cachedViralAbhiReferenceParts) return cachedViralAbhiReferenceParts;
-  if (cachedViralAbhiReferencePromise) return cachedViralAbhiReferencePromise;
-
-  const viralUrls = getViralAbhiReferenceImageUrls(MAX_ABHI_REFERENCE_IMAGES);
-  if (viralUrls.length === 0) {
-    return getAbhiReferenceInlineParts();
-  }
-
-  cachedViralAbhiReferencePromise = Promise.all(
-    viralUrls.map((url) => imageUrlToInlinePart(url))
-  )
-    .then((parts) => {
-      cachedViralAbhiReferenceParts = parts;
-      return parts;
-    })
-    .finally(() => {
-      cachedViralAbhiReferencePromise = null;
-    });
-
-  return cachedViralAbhiReferencePromise;
 }
 
 async function getCompositionReferenceInlinePart(url?: string): Promise<InlineImagePart | null> {
@@ -777,18 +695,13 @@ async function getViralReferenceInlineParts(
   if (pending) return pending;
 
   const urls = getViralExternalReferenceUrlsForLayout(layoutStyle);
-  const panelIndex = VIRAL_LAYOUT_PANEL_INDEX[layoutStyle];
-  const promise = Promise.allSettled(
-    panelIndex !== undefined && urls[0]
-      ? [cropViralBoardPanelToInlinePart(urls[0], panelIndex)]
-      : urls.map((url) => imageUrlToInlinePart(url))
-  )
+  const promise = Promise.allSettled(urls.map((url) => imageUrlToInlinePart(url)))
     .then(async (results) => {
       let parts = results
         .filter((result): result is PromiseFulfilledResult<InlineImagePart> => result.status === 'fulfilled')
         .map((result) => result.value);
 
-      // Fallback: if panel crop fails, attach the whole board so viral generation still has a reference.
+      // Fallback: retry direct loading if initial conversion fails.
       if (parts.length === 0 && urls.length > 0) {
         const fallback = await Promise.allSettled(urls.map((url) => imageUrlToInlinePart(url)));
         parts = fallback
@@ -841,9 +754,11 @@ async function generateImageDataUrlWithFallback(
 }
 
 export async function generateSchoolOfBreathThumbnailImages(
-  plan: ThumbnailDraft
+  plan: ThumbnailDraft,
+  options?: { provider?: ThumbnailImageProvider }
 ): Promise<ThumbnailDraft> {
-  if (!GEMINI_API_KEY) {
+  const provider = options?.provider ?? plan.imageProvider ?? 'google';
+  if (provider === 'google' && !GEMINI_API_KEY) {
     throw new Error('Gemini API key not configured. Add GEMINI_API_KEY or VITE_GEMINI_API_KEY.');
   }
 
@@ -851,20 +766,55 @@ export async function generateSchoolOfBreathThumbnailImages(
   if (prompts.length === 0) {
     throw new Error('No generation prompts in the plan.');
   }
+  if (provider === 'openai') {
+    await ensureOpenAiImageAccess();
+  }
 
   const layoutStyle = plan.prompt.schoolOfBreath?.layoutStyle;
   const isViralStyle = layoutStyle ? isViralTypographicLayout(layoutStyle) : false;
   const shouldUseCharacterReferences = plan.prompt.schoolOfBreath?.mode === 'with_character';
-  const referenceParts = shouldUseCharacterReferences
-    ? isViralStyle
-      ? await getViralAbhiReferenceInlineParts()
-      : await getAbhiReferenceInlineParts()
+  const shouldUseViralCharacterAnchorReference = isViralStyle && shouldUseCharacterReferences;
+  const shouldUseAbhiIdentityReferences =
+    shouldUseCharacterReferences && !shouldUseViralCharacterAnchorReference;
+  const identityAnchorCount = STRICT_IDENTITY_ANCHOR_COUNT;
+  const referenceParts = shouldUseAbhiIdentityReferences
+    ? (await getAbhiReferenceInlineParts()).slice(0, identityAnchorCount)
     : [];
 
   const compositionRefUrl =
-    layoutStyle && !isViralStyle ? getLayoutCompositionReferenceUrl(layoutStyle) : undefined;
+    layoutStyle && !isViralStyle && !shouldUseCharacterReferences
+      ? getLayoutCompositionReferenceUrl(layoutStyle)
+      : undefined;
   const compositionRefPart = await getCompositionReferenceInlinePart(compositionRefUrl);
   const viralRefParts = isViralStyle ? await getViralReferenceInlineParts(layoutStyle) : [];
+  const viralCharacterAnchorUrl = shouldUseViralCharacterAnchorReference
+    ? getViralCharacterAnchorReferenceUrl()
+    : undefined;
+  const viralCharacterAnchorPart = await getCompositionReferenceInlinePart(viralCharacterAnchorUrl);
+  const openAiReferenceUrls = provider === 'openai'
+    ? Array.from(
+        new Set(
+          [
+            ...(shouldUseAbhiIdentityReferences
+              ? getAbhiReferenceImageUrls(MAX_ABHI_REFERENCE_IMAGES)
+              : []),
+            ...(viralCharacterAnchorUrl ? [viralCharacterAnchorUrl] : []),
+            ...(compositionRefUrl ? [compositionRefUrl] : []),
+            ...(isViralStyle && layoutStyle
+              ? getViralExternalReferenceUrlsForLayout(layoutStyle)
+              : []),
+          ].filter((url): url is string => Boolean(url))
+        )
+      )
+    : [];
+  const openAiReferenceBlobs =
+    provider === 'openai' && openAiReferenceUrls.length > 0
+      ? (
+          await Promise.allSettled(openAiReferenceUrls.map((url) => imageUrlToBlob(url)))
+        )
+          .filter((result): result is PromiseFulfilledResult<Blob> => result.status === 'fulfilled')
+          .map((result) => result.value)
+      : [];
 
   const twoStackedHookLock =
     plan.canvaSpec?.hookLine1 && plan.canvaSpec.hookLine2
@@ -885,9 +835,7 @@ export async function generateSchoolOfBreathThumbnailImages(
   const generationResults = await Promise.allSettled(
     prompts.map(async (prompt) => {
       const characterLockText =
-        isViralStyle
-          ? 'Use only attached Abhi references. Do not invent another person. Preserve exact Abhi face identity and mature Indian male teacher appearance. Keep core facial structure consistent with references: hairline/temple shape, eyebrow thickness, eye spacing and eye shape, straight nose bridge, jawline, and skin tone. Keep Abhi in seated or breath-teaching pose. Expression lock: calm-alert teacher intensity, closed mouth, focused gaze (no stock-photo smile). Eyes must be clearly open with visible catchlights (never closed). Do not beautify/de-age or change ethnicity. Integrate Abhi into the selected viral typographic layout. Viral wardrobe lock: use the dark green/deep teal robe tone from the attached viral Abhi references. Do not output light-blue or white yoga clothing. No sticker/cutout look. No white frame or mockup border.'
-          : 'Use only attached Abhi references. Do not invent another person. Preserve exact Abhi face identity and mature Indian male teacher appearance. Keep core facial structure consistent with references: hairline/temple shape, eyebrow thickness, eye spacing and eye shape, straight nose bridge, jawline, and skin tone. Keep Abhi in seated or breath-teaching pose. Expression lock: calm-alert teacher intensity, closed mouth, focused gaze (no stock-photo smile). Eyes must be clearly open with visible catchlights (never closed). Do not beautify/de-age or change ethnicity. Match real School of Breath thumbnail style, not portrait-photography ad style. No sticker/cutout look. No white frame or mockup border.';
+        'Use only attached Abhi references. Do not invent another person. Preserve exact Abhi face identity and mature Indian male teacher appearance. Keep core facial structure consistent with references: hairline/temple shape, eyebrow thickness, eye spacing and eye shape, straight nose bridge, jawline, and skin tone. Keep Abhi in seated or breath-teaching pose. Expression lock: calm-alert teacher intensity, closed mouth, focused gaze (no stock-photo smile). Eyes must be clearly open with visible catchlights (never closed). Do not beautify/de-age or change ethnicity. Match real School of Breath thumbnail style, not portrait-photography ad style. No sticker/cutout look. No white frame or mockup border.';
 
       const compositionLockText =
         plan.prompt.schoolOfBreath?.mode === 'without_character'
@@ -897,32 +845,39 @@ export async function generateSchoolOfBreathThumbnailImages(
       const parts: Array<{ text: string } | InlineImagePart> = [];
       if (referenceParts.length > 0) {
         parts.push({ text: characterLockText });
-        const identityAnchorParts = referenceParts.slice(0, 2);
-        const secondaryReferenceParts = referenceParts.slice(2);
+        const identityAnchorParts = referenceParts.slice(0, identityAnchorCount);
         parts.push({
-          text: 'Identity anchor priority: the first two attached photos are strict face anchors. Match the same person exactly.',
+          text: 'Identity anchor priority: attached anchor photo is the strict face source. Match the same person exactly. Never infer face identity from any non-anchor image.',
         });
         parts.push(...identityAnchorParts);
-        if (secondaryReferenceParts.length > 0) {
-          parts.push({
-            text: 'Secondary references are for pose/wardrobe support only. Never override face identity anchors.',
-          });
-          parts.push(...secondaryReferenceParts);
-        }
+        parts.push({
+          text: 'STRICT FACE LOCK: keep identical person identity from the attached anchor image set in every variant and every regeneration.',
+        });
       }
       if (compositionRefPart) {
         parts.push({ text: twoStackedHookLock + compositionLockText });
         parts.push(compositionRefPart);
       }
+      if (viralCharacterAnchorPart) {
+        parts.push({
+          text: [
+            'VIRAL CHARACTER ANCHOR ATTACHED.',
+            'Use this anchor image as the only face/profile identity source for the character.',
+            'Match face structure, hairline, brow shape, eye shape, nose bridge, jawline, skin tone, age, robe color, and calm serious expression from this anchor.',
+            'Do not invent a new teacher and do not take identity from the selected style panel.',
+          ].join(' '),
+        });
+        parts.push(viralCharacterAnchorPart);
+      }
       if (viralRefParts.length > 0) {
         parts.push({
           text: [
-            'VIRAL STYLE BOARD ATTACHED.',
+            'VIRAL STYLE PANEL ATTACHED (SELECTED LAYOUT ONLY).',
             layoutStyle ? getViralReferenceInstruction(layoutStyle) : '',
-            'Use the board as style-only reference: typography, composition, contrast, depth, and hierarchy.',
-            'Do not copy the grid layout. Do not create a collage. Generate one single 16:9 thumbnail.',
-            'Do not copy the face identity from the board. Use attached Abhi references only for identity.',
-            'Do not copy any panel labels like MEGA WORD, DIAGONAL SLASH, or VIRAL unless they are part of the requested text.',
+            'Use the attached viral style panel as style-only guidance: typography, composition, contrast, depth, lighting, and subject placement.',
+            'Do not copy or inherit face identity from the style panel subject.',
+            'Generate one single 16:9 thumbnail (not a collage).',
+            'Do not copy any words from references unless those words are explicitly requested text.',
           ]
             .filter(Boolean)
             .join(' '),
@@ -933,6 +888,11 @@ export async function generateSchoolOfBreathThumbnailImages(
         parts.push({
           text: [
             'VIRAL EXECUTION LOCK:',
+            shouldUseViralCharacterAnchorReference
+              ? 'Use the viral character anchor for identity. Use the selected viral panel for composition/style language only.'
+              : shouldUseCharacterReferences && referenceParts.length > 0
+                ? 'Use Abhi anchor images for identity and the viral style panel for composition/style language.'
+              : 'Use only the attached viral style panel for visual language.',
             'Render like a polished high-CTR YouTube thumbnail with clean typography and sharp letter edges.',
             'Preserve exact spelling for provided words and keep text fully readable at mobile size.',
             'Use dark cinematic background, warm halo/rim light around subject, and strong contrast.',
@@ -942,10 +902,20 @@ export async function generateSchoolOfBreathThumbnailImages(
       parts.push({ text: prompt });
 
       const contents = parts.length > 1 ? parts : prompt;
-      return generateImageDataUrlWithFallback(
-        contents,
-        isViralStyle ? VIRAL_IMAGE_MODEL_CANDIDATES : IMAGE_MODEL_CANDIDATES
-      );
+      if (provider === 'openai') {
+        const promptText = [
+          ...parts
+            .map((part) => ('text' in part ? part.text : null))
+            .filter((value): value is string => Boolean(value)),
+          'Render a single 16:9 thumbnail frame.',
+        ].join('\n\n');
+        return generateThumbnailWithOpenAi({
+          prompt: promptText,
+          referenceImages: openAiReferenceBlobs,
+        });
+      }
+
+      return generateImageDataUrlWithFallback(contents, isViralStyle ? VIRAL_IMAGE_MODEL_CANDIDATES : IMAGE_MODEL_CANDIDATES);
     })
   );
 
@@ -991,23 +961,28 @@ export async function generateSchoolOfBreathThumbnailImages(
   return {
     ...plan,
     status: 'ready',
+    imageProvider: provider,
     baseImages: normalizedImages,
     validationSummary: [
       ...(plan.validationSummary ?? []),
       ...(referenceParts.length > 0
         ? [
-            isViralStyle
-              ? `Character lock: used ${referenceParts.length} viral Abhi references from images-reference/abhi_references.`
-              : `Character lock: used ${referenceParts.length} approved Abhi references.`,
+            `Character lock: used ${referenceParts.length} Abhi identity reference image(s) from images-reference/abhi_references.`,
           ]
-        : ['No-character mode: confirmed no reference person images used.']),
+        : shouldUseViralCharacterAnchorReference
+          ? ['Character lock: used images-reference/viralThumbnails/viral_character_anchor.png as the single character reference.']
+          : isViralStyle
+            ? ['Viral style mode: no Abhi identity anchors attached; selected panel used only for style/layout.']
+            : ['No-character mode: confirmed no reference person images used.']),
       ...(compositionRefPart
         ? [`Layout composition reference: centered cosmic hero (bundled PNG) attached for Gemini.`]
         : []),
       ...(viralRefParts.length > 0 && layoutStyle
-        ? [`Viral style board: ${getViralReferenceInstruction(layoutStyle)}`]
+        ? [`Viral style panel attached for selected layout from images-reference/viralThumbnails/panels. ${getViralReferenceInstruction(layoutStyle)}`]
         : []),
-      `Gemini image models used: ${usedModels.join(', ')}.`,
+      provider === 'google'
+        ? `Gemini image models used: ${usedModels.join(', ')}.`
+        : `OpenAI image model used: ${getOpenAiThumbnailModel()}.`,
       ...normalizedVariantResults.map(
         (variant) =>
           `Variant ${variant.variant}: generated with ${variant.model} and normalized to 1280x720.`
@@ -1021,8 +996,9 @@ export async function generateSchoolOfBreathThumbnailImages(
 }
 
 export async function generateSchoolOfBreathThumbnailDraft(
-  input: SchoolOfBreathThumbnailInput
+  input: SchoolOfBreathThumbnailInput,
+  options?: { provider?: ThumbnailImageProvider }
 ): Promise<ThumbnailDraft> {
   const plan = await generateSchoolOfBreathThumbnailPlan(input);
-  return generateSchoolOfBreathThumbnailImages(plan);
+  return generateSchoolOfBreathThumbnailImages(plan, options);
 }

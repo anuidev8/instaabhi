@@ -365,10 +365,12 @@ export interface ThumbnailCanvaSpec {
 }
 
 export type ThumbnailDraftStatus = 'draft' | 'generating' | 'ready' | 'error';
+export type ThumbnailImageProvider = 'google' | 'openai';
 
 export interface ThumbnailDraft {
   id: string;
   status: ThumbnailDraftStatus;
+  imageProvider?: ThumbnailImageProvider;
   prompt: ThumbnailPrompt;
   baseImages: string[];
   canvaSpec: ThumbnailCanvaSpec;

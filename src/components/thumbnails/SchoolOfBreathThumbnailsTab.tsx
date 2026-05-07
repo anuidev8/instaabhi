@@ -11,9 +11,7 @@ import {
   Loader2,
   Lock,
   Plus,
-  RefreshCcw,
   Sparkles,
-  Trash2,
   Unlock,
   X,
 } from 'lucide-react';
@@ -32,8 +30,17 @@ import {
   SOB_THUMBNAIL_TOPICS,
   suggestSchoolOfBreathInput,
 } from '../../services/schoolOfBreathThumbnailService';
-import { SchoolOfBreathLayoutStyle, SchoolOfBreathMode, ThumbnailDraft } from '../../types';
-import { downloadThumbnailDraftAsZip } from '../../utils/thumbnailZipDownload';
+import {
+  SchoolOfBreathLayoutStyle,
+  SchoolOfBreathMode,
+  ThumbnailDraft,
+  ThumbnailImageProvider,
+} from '../../types';
+import {
+  alertChatGptThumbnailExportInstructionsOnce,
+  downloadThumbnailBriefJson,
+  downloadThumbnailImage,
+} from '../../utils/thumbnailZipDownload';
 import {
   deriveHookLineBreak,
   deriveViralHookBreak,
@@ -123,12 +130,17 @@ function HookPreview({
       WebkitTextStroke: '1.5px rgba(255,255,255,0.94)',
       color: 'transparent',
     };
+    const viralTopStrip = (topLine || 'PRANAYAMA SEQUENCE').trim() || 'PRANAYAMA SEQUENCE';
+    const viralCta = (cta || 'WATCH NOW').trim() || 'WATCH NOW';
 
     return (
-      <div
-        className="rounded-xl overflow-hidden border border-stone-300 min-h-[140px] relative"
-        style={cinematicBackground}
-      >
+      <div className="rounded-xl overflow-hidden border border-stone-300 min-h-[140px] flex flex-col">
+        <div
+          className={`flex-shrink-0 bg-stone-800 px-3 text-[11px] font-extrabold tracking-wide text-white uppercase leading-tight ${isGiant ? 'py-1' : 'py-1.5'}`}
+        >
+          {viralTopStrip}
+        </div>
+        <div className="relative flex-1 min-h-[100px] overflow-hidden" style={cinematicBackground}>
         <div className="absolute inset-0 bg-black/25" />
         {layoutStyle === 'diagonal_slash_story' && (
           <>
@@ -138,7 +150,7 @@ function HookPreview({
               {hookLine1 || normalizedHook}
             </div>
             <div className="absolute right-4 bottom-5 max-w-[42%] text-right text-white text-2xl sm:text-3xl font-black leading-none uppercase">
-              {hookLine2 || cta}
+              {hookLine2 || ''}
             </div>
           </>
         )}
@@ -163,7 +175,10 @@ function HookPreview({
         )}
         {layoutStyle === 'photo_heavy_outline_text' && (
           <div className="absolute inset-0 flex items-end px-5 pb-5">
-            <span className="text-[42px] sm:text-[54px] font-black leading-none uppercase" style={outlinedTextStyle}>
+            <span
+              className="text-[42px] sm:text-[54px] font-black leading-[0.95] uppercase whitespace-normal break-words max-w-full"
+              style={outlinedTextStyle}
+            >
               {normalizedHook}
             </span>
           </div>
@@ -176,14 +191,11 @@ function HookPreview({
             <div className="absolute right-7 bottom-0 top-8 w-24 rounded-t-full bg-white/20 border border-white/30 flex items-center justify-center">
               <span className="text-[9px] font-bold tracking-wider text-white/80 uppercase">Abhi</span>
             </div>
-            <div className="absolute left-4 bottom-4 text-white text-sm font-black uppercase bg-red-600 px-2 py-1">
-              {cta}
-            </div>
           </>
         )}
         {layoutStyle === 'dual_depth_dynamic_text' && (
           <>
-            <div className="absolute left-4 top-4 right-4 text-white/25 text-[38px] sm:text-[48px] font-black leading-none uppercase">
+            <div className="absolute left-4 top-4 right-4 text-white/25 text-[38px] sm:text-[48px] font-black leading-[0.95] uppercase whitespace-normal break-words">
               {normalizedHook}
             </div>
             <div className="absolute right-8 top-8 bottom-0 w-24 rounded-t-full bg-white/20 border border-white/30" />
@@ -213,9 +225,6 @@ function HookPreview({
             <div className="absolute right-0 bottom-0 top-4 w-[45%] bg-white/18 border-l border-white/30 rounded-tl-[40px] flex items-center justify-center">
               <span className="text-[9px] font-bold tracking-wider text-white/80 uppercase">Abhi overlap</span>
             </div>
-            <div className="absolute left-4 bottom-4 text-white text-sm font-black uppercase bg-red-600 px-2 py-1">
-              {cta}
-            </div>
           </>
         )}
         {layoutStyle === 'mega_word_micro_sub' && (
@@ -223,14 +232,18 @@ function HookPreview({
             <span className="text-white text-[44px] sm:text-[58px] font-black leading-[0.86] uppercase drop-shadow">
               {normalizedHook}
             </span>
-            <span className="mt-2 text-white/90 text-xs sm:text-sm font-black tracking-wider uppercase">
-              {cta}
-            </span>
           </div>
         )}
         <span className="absolute top-2 right-3 text-[9px] font-black uppercase tracking-wider text-white/70">
           Viral
         </span>
+        </div>
+        <div
+          className={`flex-shrink-0 px-3 text-[12px] sm:text-[13px] font-extrabold tracking-wide text-white uppercase leading-tight ${isGiant ? 'py-1.5' : 'py-2'}`}
+          style={{ backgroundColor: '#E21313' }}
+        >
+          {viralCta}
+        </div>
       </div>
     );
   }
@@ -411,27 +424,6 @@ function formatCreatedAt(value: Date): string {
   });
 }
 
-function buildSpecText(draft: ThumbnailDraft): string {
-  const sob = draft.prompt.schoolOfBreath;
-  return [
-    'BRAND: THE SCHOOL OF BREATH',
-    `TITLE: ${draft.prompt.title}`,
-    `TOPIC: ${sob?.category ?? ''}`,
-    `MODE: ${sob?.mode ?? ''}`,
-    `STYLE SYSTEM: ${sob?.styleSystem ?? ''}`,
-    `LAYOUT STYLE: ${sob?.layoutStyle ?? draft.canvaSpec.layoutStyle ?? ''}`,
-    `HOOK: ${draft.canvaSpec.hookWord}`,
-    `TOP LINE: ${sob?.topLine ?? ''}`,
-    `CTA: ${sob?.bottomStrip ?? draft.canvaSpec.ctaText ?? ''}`,
-    `SUPPORT VISUAL: ${sob?.supportVisual ?? ''}`,
-    `VISUAL BADGE: ${sob?.visualBadgeType ?? ''}`,
-    `CHARACTER POSE: ${sob?.characterPose ?? ''}`,
-    `ACCENT: ${sob?.colorEmphasis ?? ''}`,
-    `BACKGROUND STYLE: ${sob?.backgroundStyle ?? ''}`,
-    `SEO TITLE: ${draft.canvaSpec.seoTitle ?? ''}`,
-  ].join('\n');
-}
-
 const MODE_OPTIONS: Array<{ key: SchoolOfBreathMode; label: string }> = [
   { key: 'with_character', label: 'With Character' },
   { key: 'without_character', label: 'Without Character' },
@@ -515,10 +507,11 @@ function getVariantLabelForDraft(draft: ThumbnailDraft | null, index: number) {
   };
   const layoutStyle = draft?.canvaSpec.layoutStyle ?? draft?.prompt.schoolOfBreath?.layoutStyle;
   if (index === 0 && isViralLayoutStyle(layoutStyle)) {
-    return { id: 'A', label: 'Viral Match', description: 'Selected viral typographic style' };
-  }
-  if (index === 1 && isViralLayoutStyle(layoutStyle)) {
-    return { id: 'B', label: 'Viral Push', description: 'Higher contrast viral variant' };
+    return {
+      id: 'A',
+      label: 'Selected viral typographic style',
+      description: 'Single viral output with locked identity + style rules',
+    };
   }
   return fallback;
 }
@@ -538,20 +531,19 @@ export default function SchoolOfBreathThumbnailsTab({
   const [isPlanning, setIsPlanning] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSuggestingInput, setIsSuggestingInput] = useState(false);
-  const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
   const [exportingId, setExportingId] = useState<string | null>(null);
-  const [copiedSpecId, setCopiedSpecId] = useState<string | null>(null);
   const [modalError, setModalError] = useState<string | null>(null);
   const [lockUserText, setLockUserText] = useState(false);
   const [titleTouched, setTitleTouched] = useState(false);
   const [isCustomTopicEnabled, setIsCustomTopicEnabled] = useState(false);
   const [customTopicText, setCustomTopicText] = useState('');
+  const [imageProvider, setImageProvider] = useState<ThumbnailImageProvider>('google');
 
   const [input, setInput] = useState<SchoolOfBreathThumbnailInput>(() =>
     getSchoolOfBreathDefaultInput()
   );
 
-  useWakeLock(isPlanning || isGenerating || isSuggestingInput || !!regeneratingId);
+  useWakeLock(isPlanning || isGenerating || isSuggestingInput);
 
   const topicMeta = useMemo(() => getSchoolOfBreathTopicMeta(input.topic), [input.topic]);
   const hookOptions = useMemo(() => getSchoolOfBreathHookOptions(input.topic), [input.topic]);
@@ -634,6 +626,7 @@ export default function SchoolOfBreathThumbnailsTab({
     setTitleTouched(false);
     setIsCustomTopicEnabled(false);
     setCustomTopicText('');
+    setImageProvider('google');
   };
 
   const handleGenerateIdeas = async () => {
@@ -695,7 +688,9 @@ export default function SchoolOfBreathThumbnailsTab({
     setIsGenerating(true);
 
     try {
-      const completed = await generateSchoolOfBreathThumbnailImages(previewPlan);
+      const completed = await generateSchoolOfBreathThumbnailImages(previewPlan, {
+        provider: imageProvider,
+      });
       if (completed.baseImages.length <= 1) {
         setThumbnailDrafts((prev) => [completed, ...prev]);
         setIsModalOpen(false);
@@ -729,75 +724,27 @@ export default function SchoolOfBreathThumbnailsTab({
     resetModal();
   };
 
-  const handleRegenerate = async (draft: ThumbnailDraft) => {
-    setRegeneratingId(draft.id);
-    setThumbnailDrafts((prev) =>
-      prev.map((d) =>
-        d.id === draft.id ? { ...d, status: 'generating', errorMessage: undefined } : d
-      )
-    );
-
-    const fallback = getSchoolOfBreathDefaultInput();
-    const sob = draft.prompt.schoolOfBreath;
-    const topic = sob?.category && isSchoolOfBreathTopic(sob.category) ? sob.category : fallback.topic;
-    const hookOptionsForTopic = getSchoolOfBreathHookOptions(topic);
-    const topicMetaForRegen = getSchoolOfBreathTopicMeta(topic);
-    const topStripOverride =
-      sob?.topLine &&
-      sob.topLine.trim().toUpperCase() !== topicMetaForRegen.topLine.trim().toUpperCase()
-        ? sob.topLine
-        : '';
-    const ctaOverride =
-      sob?.bottomStrip &&
-      sob.bottomStrip.trim().toUpperCase() !== topicMetaForRegen.cta.trim().toUpperCase()
-        ? sob.bottomStrip
-        : '';
-
-    const regenerateInput: SchoolOfBreathThumbnailInput = {
-      title: draft.prompt.title,
-      topic,
-      mode:
-        sob?.mode === 'with_character' || sob?.mode === 'without_character'
-          ? sob.mode
-          : fallback.mode,
-      hook: draft.canvaSpec.hookWord || hookOptionsForTopic[0],
-      layoutStyle: sob?.layoutStyle || draft.canvaSpec.layoutStyle || fallback.layoutStyle,
-      topStripOverride,
-      ctaOverride,
-      specialNote: draft.prompt.special || '',
-    };
-
+  const handleDownloadChatGptThumbnailPng = async (draft: ThumbnailDraft) => {
+    alertChatGptThumbnailExportInstructionsOnce();
+    setExportingId(draft.id);
     try {
-      const regenerated = await generateSchoolOfBreathThumbnailDraft(regenerateInput);
-      setThumbnailDrafts((prev) =>
-        prev.map((d) => (d.id === draft.id ? { ...regenerated, id: draft.id } : d))
-      );
+      await downloadThumbnailImage(draft);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to regenerate thumbnail.';
-      setThumbnailDrafts((prev) =>
-        prev.map((d) =>
-          d.id === draft.id ? { ...d, status: 'error', errorMessage: message } : d
-        )
-      );
+      const message = error instanceof Error ? error.message : 'Failed to download image.';
+      window.alert(message);
     } finally {
-      setRegeneratingId(null);
+      setExportingId(null);
     }
   };
 
-  const handleDelete = (id: string) => {
-    setThumbnailDrafts((prev) => prev.filter((d) => d.id !== id));
-  };
-
-  const handleCopySpec = async (draft: ThumbnailDraft) => {
-    await navigator.clipboard.writeText(buildSpecText(draft));
-    setCopiedSpecId(draft.id);
-    setTimeout(() => setCopiedSpecId(null), 1800);
-  };
-
-  const handleExport = async (draft: ThumbnailDraft) => {
+  const handleDownloadChatGptBriefJson = async (draft: ThumbnailDraft) => {
+    alertChatGptThumbnailExportInstructionsOnce();
     setExportingId(draft.id);
     try {
-      await downloadThumbnailDraftAsZip(draft);
+      await downloadThumbnailBriefJson(draft);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to download brief.';
+      window.alert(message);
     } finally {
       setExportingId(null);
     }
@@ -882,31 +829,14 @@ export default function SchoolOfBreathThumbnailsTab({
                       <div>
                         <h3 className="text-lg font-semibold text-stone-900">{draft.prompt.title}</h3>
                         <p className="text-sm text-stone-500 mt-1">
-                          {sob?.category ?? 'pranayama'} · {mode} · {getLayoutLabel(draft.canvaSpec.layoutStyle ?? sob?.layoutStyle)}
+                          {sob?.category ?? 'pranayama'} · {mode} · {getLayoutLabel(draft.canvaSpec.layoutStyle ?? sob?.layoutStyle)} · {draft.imageProvider === 'openai' ? 'OpenAI' : 'Google'}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <button
-                        onClick={() => handleCopySpec(draft)}
-                        className="px-3 py-2 rounded-lg border border-stone-200 hover:border-stone-300 hover:bg-stone-50 text-sm font-medium text-stone-700 transition-colors min-h-[40px]"
-                      >
-                        {copiedSpecId === draft.id ? 'Copied!' : 'Copy Thumbnail Spec'}
-                      </button>
-                      <button
-                        onClick={() => handleRegenerate(draft)}
-                        disabled={regeneratingId === draft.id || draft.status === 'generating'}
-                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-stone-200 hover:border-amber-300 hover:bg-amber-50 text-sm font-medium text-stone-700 hover:text-amber-700 transition-colors disabled:opacity-60 min-h-[40px]"
-                      >
-                        {regeneratingId === draft.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <RefreshCcw className="w-4 h-4" />
-                        )}
-                        Regenerate
-                      </button>
-                      <button
-                        onClick={() => handleExport(draft)}
+                        type="button"
+                        onClick={() => handleDownloadChatGptThumbnailPng(draft)}
                         disabled={draft.baseImages.length === 0 || exportingId === draft.id}
                         className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium transition-colors disabled:opacity-60 min-h-[40px]"
                       >
@@ -915,13 +845,20 @@ export default function SchoolOfBreathThumbnailsTab({
                         ) : (
                           <Download className="w-4 h-4" />
                         )}
-                        Export ZIP
+                        Download image
                       </button>
                       <button
-                        onClick={() => handleDelete(draft.id)}
-                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-stone-200 hover:border-red-300 hover:bg-red-50 text-sm font-medium text-stone-700 hover:text-red-700 transition-colors min-h-[40px]"
+                        type="button"
+                        onClick={() => handleDownloadChatGptBriefJson(draft)}
+                        disabled={exportingId === draft.id}
+                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-stone-200 hover:border-emerald-400 hover:bg-emerald-50 text-sm font-medium text-stone-800 transition-colors disabled:opacity-60 min-h-[40px]"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        {exportingId === draft.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Download className="w-4 h-4" />
+                        )}
+                        Download ChatGPT brief (.json)
                       </button>
                     </div>
                   </div>
@@ -959,82 +896,11 @@ export default function SchoolOfBreathThumbnailsTab({
                   </div>
 
                   <div className="space-y-4">
-                    <div className="rounded-2xl border border-stone-200 bg-stone-50 p-4 space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-amber-600" />
-                        <p className="text-sm font-semibold text-stone-900">Thumbnail Text Plan</p>
-                      </div>
-                      <HookPreview
-                        topLine={sob?.topLine ?? draftTopicMeta.topLine}
-                        hook={draft.canvaSpec.hookWord}
-                        cta={sob?.bottomStrip ?? draftTopicMeta.cta}
-                        accent={accent}
-                        mode={mode}
-                        characterSide={draftTopicMeta.characterSide}
-                        backgroundTheme={draftTopicMeta.backgroundTheme}
-                        supportVisual={sob?.supportVisual ?? draftTopicMeta.supportVisual}
-                        layoutStyle={draft.canvaSpec.layoutStyle ?? sob?.layoutStyle}
-                        hookLine1={draft.canvaSpec.hookLine1}
-                        hookLine2={draft.canvaSpec.hookLine2}
-                      />
-                      <div className="space-y-1.5 text-sm text-stone-600">
-                        <p>
-                          <span className="font-semibold text-stone-900">Hook:</span>{' '}
-                          {draft.canvaSpec.hookWord || 'Pending'}
-                        </p>
-                        <p>
-                          <span className="font-semibold text-stone-900">Top Line:</span>{' '}
-                          {sob?.topLine || 'Pending'}
-                        </p>
-                        <p>
-                          <span className="font-semibold text-stone-900">CTA:</span>{' '}
-                          {sob?.bottomStrip || draft.canvaSpec.ctaText || draftTopicMeta.cta || 'Pending'}
-                        </p>
-                        <p>
-                          <span className="font-semibold text-stone-900">Support Visual:</span>{' '}
-                          {sob?.supportVisual || draftTopicMeta.supportVisual || 'Pending'}
-                        </p>
-                        <p>
-                          <span className="font-semibold text-stone-900">Background Theme:</span>{' '}
-                          {(draft.canvaSpec.backgroundTheme || draftTopicMeta.backgroundTheme || 'Pending').replace(
-                            /_/g,
-                            ' '
-                          )}
-                        </p>
-                        <p>
-                          <span className="font-semibold text-stone-900">Character Pose:</span>{' '}
-                          {draft.canvaSpec.characterPose || sob?.characterPose || 'n/a (support visual mode)'}
-                        </p>
-                        <p>
-                          <span className="font-semibold text-stone-900">SEO Title:</span>{' '}
-                          {draft.canvaSpec.seoTitle || 'Pending'}
-                        </p>
-                      </div>
-                    </div>
-
                     {draft.errorMessage && (
                       <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
                         <div className="flex items-start gap-2">
                           <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
                           <p>{draft.errorMessage}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {!!draft.validationSummary?.length && (
-                      <div className="rounded-2xl border border-stone-200 bg-white p-4">
-                        <p className="text-sm font-semibold text-stone-900">Validation Notes</p>
-                        <div className="mt-3 space-y-2">
-                          {draft.validationSummary.map((item, index) => (
-                            <div key={index} className="flex items-start gap-2 text-sm text-stone-600">
-                              {item.toLowerCase().includes('lock') || item.toLowerCase().includes('normalized') ? (
-                                <CheckCircle2 className="w-4 h-4 mt-0.5 text-emerald-600 shrink-0" />
-                              ) : (
-                                <AlertCircle className="w-4 h-4 mt-0.5 text-amber-600 shrink-0" />
-                              )}
-                              <span>{item}</span>
-                            </div>
-                          ))}
                         </div>
                       </div>
                     )}
@@ -1230,6 +1096,20 @@ export default function SchoolOfBreathThumbnailsTab({
                           </button>
                         ))}
                       </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-stone-800">Image Model Provider</label>
+                      <select
+                        value={imageProvider}
+                        onChange={(e) =>
+                          setImageProvider((e.target.value as ThumbnailImageProvider) || 'google')
+                        }
+                        className="w-full px-4 py-3 rounded-xl border border-stone-200 bg-white text-stone-800 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400"
+                      >
+                        <option value="google">Google (Gemini) - Default</option>
+                        <option value="openai">OpenAI (GPT Image)</option>
+                      </select>
                     </div>
 
                     <div className="space-y-2">

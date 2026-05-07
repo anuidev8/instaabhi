@@ -1,5 +1,6 @@
 import { GoogleGenAI, Type } from '@google/genai';
 import { BrandContext, VideoReelInput, ReelScene } from '../types';
+import { ensureOpenAiImageAccess } from './openaiThumbnailImageService';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -404,11 +405,12 @@ export async function generateCarouselImages(draft: {
   return { images, modelUsed: IMAGE_MODEL };
 }
 
-// ─── OpenAI (GPT Image 1.5) Image Generation ───────────────────────────────────
-// GPT Image 1.5 is OpenAI's flagship image model (replaces DALL·E 3, deprecated May 2026).
+// ─── OpenAI (GPT Image 2) Image Generation ─────────────────────────────────────
+// GPT Image 2 is OpenAI's latest flagship image model.
 // Better text rendering, prompt adherence, and design-system constraints for carousel slides.
 
-const OPENAI_IMAGE_MODEL = 'gpt-image-1.5';
+const OPENAI_IMAGE_MODEL =
+  (process.env.OPENAI_IMAGE_MODEL as string | undefined)?.trim() || 'gpt-image-2';
 
 async function generateImageWithOpenAI(
   prompt: string,
@@ -451,6 +453,7 @@ export async function generateCarouselImagesWithProvider(
   provider: ImageProvider
 ): Promise<GenerateCarouselImagesResult> {
   if (provider === 'openai') {
+    await ensureOpenAiImageAccess();
     const apiKey = (process.env.OPENAI_API_KEY as string | undefined)?.trim();
     if (!apiKey) throw new Error('OpenAI API key not configured. Add OPENAI_API_KEY to .env');
 
@@ -497,7 +500,7 @@ export async function generateCarouselImagesWithProvider(
       const dataUrl = await generateImageWithOpenAI(prompt, apiKey);
       images.push(dataUrl);
     }
-    return { images, modelUsed: `OpenAI ${OPENAI_IMAGE_MODEL} (GPT Image 1.5)` };
+    return { images, modelUsed: `OpenAI ${OPENAI_IMAGE_MODEL} (GPT Image)` };
   }
 
   return generateCarouselImages(draft);
@@ -541,6 +544,7 @@ export async function regenerateSingleSlideImage(
   const prompt = (base + TYPOGRAPHY_GUIDANCE).slice(0, provider === 'openai' ? 4000 : 600);
 
   if (provider === 'openai') {
+    await ensureOpenAiImageAccess();
     const apiKey = (process.env.OPENAI_API_KEY as string | undefined)?.trim();
     if (!apiKey) throw new Error('OpenAI API key not configured');
     return generateImageWithOpenAI(prompt, apiKey);
